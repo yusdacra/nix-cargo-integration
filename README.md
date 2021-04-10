@@ -19,7 +19,7 @@ Add:
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = inputs: inputs.nixCargoIntegration.lib.makeFlakeOutputs src;
+  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputsForSystems src;
 }
 ```
 to your `flake.nix`.
@@ -35,7 +35,7 @@ let
   nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
       sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; };
   };
-  outputs = nixCargoIntegration.makeFlakeOutputs src;
+  outputs = nixCargoIntegration.makeOutputsForSystems src;
 in
 ```
 

@@ -3,7 +3,7 @@ let
   importCargoToml = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
   flakeUtils = import sources.flakeUtils;
 
-  makeFlakeOutputs = root:
+  makeOutputsForSystems = root:
     let
       cargoToml = importCargoToml root;
     in
@@ -54,5 +54,5 @@ let
     })));
 in
 {
-  inherit makeOutputs makeFlakeOutputs;
+  inherit makeOutputs makeOutputsForSystems;
 }
