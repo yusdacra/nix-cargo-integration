@@ -8,7 +8,7 @@ let
   baseRustToolchain =
     if (isNull (nixMetadata.toolchain or null))
     then (pkgz.rust-bin.fromRustupToolchainFile (root + "/rust-toolchain"))
-    else pkgz.rust-bin."${nixMetadata.toolchain}".latest.rust;
+    else pkgz.rust-bin."${nixMetadata.toolchain}".latest.default;
   rust = baseRustToolchain.override {
     extensions = [ "rust-src" ];
   };
