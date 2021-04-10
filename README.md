@@ -9,7 +9,7 @@ Utilities to integrate Cargo projects with Nix. Uses [naersk] to build Cargo pac
     - Use it with `outputs = inputs: inputs.nixCargoIntegration.lib.makeFlakeOutputs src;`.
 - Without flakes:
     - Fetch this repository `nixCargoIntegrationSrc = builtins.fetchGit { ... };`.
-    - Import it `nixCargoIntegration = import nixCargoIntegrationSrc { sources = { inherit rustOverlay devshell naersk nixpkgs; }; }`.
+    - Import it `nixCargoIntegration = import nixCargoIntegrationSrc { sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; }; }`.
     - Use it with `outputs = nixCargoIntegration.makeFlakeOutputs src;`.
 
 ## `package.metadata.nix` attributes

@@ -1,11 +1,11 @@
 { sources }:
 let
   importCargoToml = src: builtins.fromTOML (builtins.readFile (src + "/Cargo.toml"));
+  flakeUtils = import sources.flakeUtils;
 
   makeFlakeOutputs = src:
     let
       cargoToml = importCargoToml src;
-      flakeUtils = import sources.flakeUtils;
     in
     with flakeUtils;
     eachSystem (cargoToml.package.metadata.nix.systems or defaultSystems) (makeOutputs src);
@@ -34,7 +34,7 @@ let
         # Compiles faster but has tests and slower executable
         "${cargoPkg.name}-tests" = import ./build.nix { inherit common; doCheck = true; };
       };
-      mkApp = n: v: mkApp {
+      mkApp = n: v: flakeUtils.mkApp {
         name = n;
         drv = v;
         exePath = "/bin/${nixMetadata.executable or cargoPkg.name}";
@@ -54,5 +54,5 @@ let
     })));
 in
 {
-  inherit makeOutputs;
-} // (if !(isNull (sources.flakeUtils or null)) then { inherit makeFlakeOutputs; } else { })
+  inherit makeOutputs makeFlakeOutputs;
+}
