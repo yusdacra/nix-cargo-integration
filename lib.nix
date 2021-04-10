@@ -8,7 +8,7 @@ let
       flakeUtils = import sources.flakeUtils;
     in
     with flakeUtils;
-    eachSystem (nixMetadata.systems or defaultSystems) (makeOutputs src);
+    eachSystem (cargoToml.package.metadata.nix.systems or defaultSystems) (makeOutputs src);
 
   makeOutputs = src: system:
     let
