@@ -1,16 +1,43 @@
 # nix-cargo-integration
 
-Utilities to integrate Cargo projects with Nix. Uses [naersk] to build Cargo packages.
+Utility to integrate Cargo projects with Nix.
+
+- Uses [naersk] to build Cargo packages and [devshell] to provide development shell.
+- Allows configuration from `Cargo.toml` via `package.metadata.nix` attribute.
 
 ## Usage
 
-- With flakes:
-    - Add `nixCargoIntegration.url = "github:yusdacra/nix-cargo-integration";` to your `inputs`.
-    - Use it with `outputs = inputs: inputs.nixCargoIntegration.lib.makeFlakeOutputs src;`.
-- Without flakes:
-    - Fetch this repository `nixCargoIntegrationSrc = builtins.fetchGit { ... };`.
-    - Import it `nixCargoIntegration = import nixCargoIntegrationSrc { sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; }; }`.
-    - Use it with `outputs = nixCargoIntegration.makeFlakeOutputs src;`.
+### With flakes
+
+Add:
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixCargoIntegration = {
+      url = "github:yusdacra/nix-cargo-integration";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+  outputs = inputs: inputs.nixCargoIntegration.lib.makeFlakeOutputs src;
+}
+```
+to your `flake.nix`.
+
+### Without flakes
+
+You can use [flake-compat] to provide the default outputs of the flake for non-flake users.
+
+If you aren't using flakes, you can do:
+```nix
+let
+  nixCargoIntegrationSrc = builtins.fetchGit { url = "https://github.com/yusdacra/nix-cargo-integration.git"; rev = <something>; sha256 = <something>; };
+  nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
+      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; };
+  };
+  outputs = nixCargoIntegration.makeFlakeOutputs src;
+in
+```
 
 ## `package.metadata.nix` attributes
 
@@ -53,3 +80,4 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 
 [devshell]: https://github.com/numtide/devshell "devshell"
 [naersk]: https://github.com/nmattia/naersk "naersk"
+[flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
