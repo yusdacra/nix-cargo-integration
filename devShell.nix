@@ -1,16 +1,16 @@
 { common }:
-with common; with pkgs;
+with common;
 let
   cachixMetadata = nixMetadata.cachix or null;
   cachixName = cachixMetadata.name or null;
   cachixKey = cachixMetadata.key or null;
 
   devshellAttr = nixMetadata.devshell or null;
-  devshellConfig = if lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
-  devshellFilePath = src + "/devshell.toml";
-  importedDevshell = if (builtins.pathExists devshellFilePath) then (devshell.importTOML devshellFilePath) else null;
+  devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
+  devshellFilePath = root + "/devshell.toml";
+  importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
 
-  baseConfig = {
+  baseConfig = with pkgs; {
     packages = [ rustc ] ++ crateDeps.nativeBuildInputs ++ crateDeps.buildInputs;
     commands =
       let
@@ -37,7 +37,7 @@ let
     env = baseConfig.env ++ (config.env or [ ]);
   } // (removeAttrs config [ "packages" "commands" "env" ]);
 in
-(devshell.eval {
+(pkgs.devshell.eval {
   configuration =
     if isNull importedDevshell
     then (combineWithBase devshellConfig)

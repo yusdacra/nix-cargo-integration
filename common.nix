@@ -1,4 +1,4 @@
-{ cargoPkg, sources, system, src }:
+{ cargoPkg, sources, system, root }:
 let
   nixMetadata = cargoPkg.metadata.nix;
   rustOverlay = import sources.rustOverlay;
@@ -7,7 +7,7 @@ let
   pkgz = import sources.nixpkgs { inherit system; overlays = [ rustOverlay ]; };
   baseRustToolchain =
     if (isNull (nixMetadata.toolchain or null))
-    then (pkgz.rust-bin.fromRustupToolchainFile (src + "/rust-toolchain"))
+    then (pkgz.rust-bin.fromRustupToolchainFile (root + "/rust-toolchain"))
     else pkgz.rust-bin."${nixMetadata.toolchain}".latest.rust;
   rust = baseRustToolchain.override {
     extensions = [ "rust-src" ];
@@ -30,7 +30,7 @@ let
   mapToPkgs = list: map (pkg: pkgs."${pkg}") list;
 in
 {
-  inherit pkgs cargoPkg nixMetadata src;
+  inherit pkgs cargoPkg nixMetadata root;
 
   /* You might need this if your application utilizes a GUI. Note that the dependencies
     might change from application to application. The example dependencies provided here

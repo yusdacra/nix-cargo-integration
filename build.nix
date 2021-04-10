@@ -21,7 +21,7 @@ let
       name = cargoPkg.name;
       makeIcon = icon:
         if (hasPrefix "./" icon)
-        then (src + "/" + (removePrefix "./" icon))
+        then (common.root + "/" + (removePrefix "./" icon))
         else icon;
     in
     ((pkgs.makeDesktopItem {
@@ -38,7 +38,7 @@ let
       library = nixMetadata.library or false;
     in
     naersk.buildPackage {
-      root = src;
+      inherit (common) root;
       nativeBuildInputs = crateDeps.nativeBuildInputs;
       buildInputs = crateDeps.buildInputs;
       # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
