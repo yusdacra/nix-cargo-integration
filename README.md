@@ -89,7 +89,7 @@ Arguments:
 - `buildInputs`: common build inputs (type: list)
 - `nativeBuildInputs`: common native build inputs (type: list)
 
-### `package.metadata.nix.cachix` attributes
+### `package.metadata.nix.env` attributes
 
 Key-value pairings that are put here will be exported into the development and build environment.
 For example:
