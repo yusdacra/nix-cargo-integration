@@ -1,4 +1,4 @@
-{ common }:
+{ common, override ? (_: _: { }) }:
 with common;
 let
   cachixMetadata = nixMetadata.cachix or null;
@@ -36,13 +36,15 @@ let
     commands = baseConfig.commands ++ (config.commands or [ ]);
     env = baseConfig.env ++ (config.env or [ ]);
   } // (removeAttrs config [ "packages" "commands" "env" ]);
+
+  resultConfig = {
+    configuration =
+      if isNull importedDevshell
+      then { config = combineWithBase devshellConfig; }
+      else {
+        config = combineWithBase importedDevshell.config;
+        inherit (importedDevshell) _file imports;
+      };
+  };
 in
-(pkgs.devshell.eval {
-  configuration =
-    if isNull importedDevshell
-    then (combineWithBase devshellConfig)
-    else {
-      config = combineWithBase importedDevshell.config;
-      inherit (importedDevshell) _file imports;
-    };
-}).shell 
+(pkgs.devshell.eval (resultConfig // (override common resultConfig))).shell

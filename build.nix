@@ -1,6 +1,7 @@
 { release ? false
 , doCheck ? false
 , doDoc ? false
+, override ? (_: _: { })
 , common
 ,
 }:
@@ -36,22 +37,23 @@ let
   package = with pkgs;
     let
       library = nixMetadata.library or false;
+      baseConfig = {
+        inherit (common) root;
+        nativeBuildInputs = crateDeps.nativeBuildInputs;
+        buildInputs = crateDeps.buildInputs;
+        # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
+        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
+        override = (prev: env);
+        overrideMain = (prev: {
+          inherit meta;
+        } // (
+          lib.optionalAttrs makeDesktopFile
+            { nativeBuildInputs = prev.nativeBuildInputs ++ [ copyDesktopItems ]; desktopItems = [ desktopFile ]; }
+        ));
+        copyLibs = library;
+        inherit release doCheck doDoc;
+      };
     in
-    naersk.buildPackage {
-      inherit (common) root;
-      nativeBuildInputs = crateDeps.nativeBuildInputs;
-      buildInputs = crateDeps.buildInputs;
-      # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-      cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
-      override = (prev: env);
-      overrideMain = (prev: {
-        inherit meta;
-      } // (
-        lib.optionalAttrs makeDesktopFile
-          { nativeBuildInputs = prev.nativeBuildInputs ++ [ copyDesktopItems ]; desktopItems = [ desktopFile ]; }
-      ));
-      copyLibs = library;
-      inherit release doCheck doDoc;
-    };
+    naersk.buildPackage (baseConfig // (override common baseConfig));
 in
 package

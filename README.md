@@ -19,7 +19,7 @@ Add:
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs src;
+  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs { root = ./.; };
 }
 ```
 to your `flake.nix`.
@@ -35,9 +35,42 @@ let
   nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
       sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; };
   };
-  outputs = nixCargoIntegration.makeOutputs src;
+  outputs = nixCargoIntegration.makeOutputs { root = ./.; };
 in
 ```
+
+## Library documentation
+
+### `makeOutputs = { root, overrides ? { }}: { ... }`
+
+Runs `makeOutput` for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
+
+Arguments:
+- `root`: directory where `Cargo.toml` is in (type: path)
+- `overrides`: overrides for devshell, build and common (type: attrset)
+    - `overrides.build`: override for build (type: `common: prev: { }`)
+        - this will override the [naersk] build derivation, refer to it for more information
+    - `overrides.shell`: override for devshell (type: `common: prev: { }`)
+        - this will override the [devshell] configuration, refer to it for more information
+    - `overrides.common`: override for common (type: `prev: { }`)
+        - this overrides the common attribute set, refer to [common.nix](./common.nix) for more information
+
+### `makeOutput = { root, cargoPkg, system, overrides ? { }}: { ... }`
+
+Makes `packages`, `apps`, `checks` and `devShell` output for one system.
+
+Arguments:
+- `root`: see `makeOutputs`' `root` argument
+- `overrides`: see `makeOutputs`' `overrides` argument
+- `cargoPkg`: `package` attribute set of the `Cargo.toml` that reside in `root`. (type: attrset)
+- `system`: machine system to build for (type: string)
+
+### `importCargoTOML = root: { ... }`
+
+Imports a `Cargo.toml` file from the specified root as an attribute set.
+
+Arguments:
+- `root`: see `makeOutput`'s `root` argument
 
 ## `package.metadata.nix` attributes
 
