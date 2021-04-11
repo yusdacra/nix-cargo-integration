@@ -14,9 +14,16 @@
   };
 
   outputs = inputs: with inputs;
-    {
+    let
+      libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./lib.nix {
         sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk; };
       };
+      mkCheck = path: (lib.makeOutputs { root = path; }).checks;
+    in
+    {
+      inherit lib;
+
+      checks = libb.recursiveUpdate (mkCheck ./tests/basic-bin) (mkCheck ./tests/basic-lib);
     };
 }

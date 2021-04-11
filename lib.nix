@@ -16,19 +16,17 @@ let
 
   makeOutput = { root, cargoPkg, system, overrides ? { } }:
     let
-      common = import ./common.nix {
-        override = overrides.common;
-        inherit system root sources cargoPkg;
-      };
+      mkOverride = name: if (builtins.hasAttr name overrides) then { override = overrides."${name}"; } else { };
+
+      common = import ./common.nix ({ inherit system root sources cargoPkg; } // (mkOverride "common"));
       nixMetadata = common.nixMetadata;
       lib = common.pkgs.lib;
 
-      mkBuild = r: c: import ./build.nix {
-        override = overrides.build;
+      mkBuild = r: c: import ./build.nix ({
         inherit common;
         doCheck = c;
         release = r;
-      };
+      } // (mkOverride "build"));
       mkApp = n: v: flakeUtils.mkApp {
         name = n;
         drv = v;
@@ -48,7 +46,7 @@ let
       apps = builtins.mapAttrs mkApp packages;
     in
     {
-      devShell = import ./devShell.nix { inherit common; override = overrides.shell; };
+      devShell = import ./devShell.nix ({ inherit common; } // (mkOverride "shell"));
     } // (lib.optionalAttrs (nixMetadata.build or false) ({
       inherit packages checks;
       # Release build is the default package
@@ -60,5 +58,5 @@ let
     })));
 in
 {
-  inherit importCargoTOML makeOutputs makeOutputs;
+  inherit importCargoTOML makeOutput makeOutputs;
 }
