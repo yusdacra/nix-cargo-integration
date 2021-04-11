@@ -89,6 +89,7 @@ Imports a `Cargo.toml` file from the specified root as an attribute set.
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
     - if not specified, `rust-toolchain` file will be used
 - `longDescription`: a longer description (type: string)
+- `runtimeLibs`: libraries that will be put in `LD_LIBRARY_PRELOAD` for both dev and build env (type: list)
 - `buildInputs`: common build inputs (type: list)
 - `nativeBuildInputs`: common native build inputs (type: list)
 
