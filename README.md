@@ -45,7 +45,8 @@ in
 
 Runs `makeOutput` for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
 
-Arguments:
+#### Arguments
+
 - `root`: directory where `Cargo.toml` is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset)
     - `overrides.build`: override for build (type: `common: prev: { }`)
@@ -59,7 +60,8 @@ Arguments:
 
 Makes `packages`, `apps`, `checks` and `devShell` output for one system.
 
-Arguments:
+#### Arguments
+
 - `root`: see `makeOutputs`' `root` argument
 - `overrides`: see `makeOutputs`' `overrides` argument
 - `cargoPkg`: `package` attribute set of the `Cargo.toml` that reside in `root`. (type: attrset)
@@ -69,7 +71,8 @@ Arguments:
 
 Imports a `Cargo.toml` file from the specified root as an attribute set.
 
-Arguments:
+#### Arguments
+
 - `root`: see `makeOutput`'s `root` argument
 
 ## `package.metadata.nix` attributes
