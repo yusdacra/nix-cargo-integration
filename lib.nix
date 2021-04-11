@@ -1,22 +1,20 @@
 { sources }:
 let
-  importCargoToml = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
+  importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
   flakeUtils = import sources.flakeUtils;
 
-  makeOutputsForSystems = root:
+  makeOutputs = root:
     let
-      cargoToml = importCargoToml root;
+      cargoPkg = (importCargoTOML root).package;
     in
     with flakeUtils;
-    eachSystem (cargoToml.package.metadata.nix.systems or defaultSystems) (makeOutputs root);
+    eachSystem (cargoPkg.metadata.nix.systems or defaultSystems) (makeOutput root cargoPkg);
 
-  makeOutputs = root: system:
+  makeOutput = root: cargoPkg: system:
     let
       common = import ./common.nix {
-        cargoPkg = (importCargoToml root).package;
-        inherit system root sources;
+        inherit system root sources cargoPkg;
       };
-      cargoPkg = common.cargoPkg;
       nixMetadata = common.nixMetadata;
       lib = common.pkgs.lib;
 
@@ -54,5 +52,5 @@ let
     })));
 in
 {
-  inherit makeOutputs makeOutputsForSystems;
+  inherit importCargoTOML makeOutputs makeOutputs;
 }

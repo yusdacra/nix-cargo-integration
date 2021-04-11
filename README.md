@@ -19,7 +19,7 @@ Add:
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputsForSystems src;
+  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs src;
 }
 ```
 to your `flake.nix`.
@@ -35,7 +35,7 @@ let
   nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
       sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; };
   };
-  outputs = nixCargoIntegration.makeOutputsForSystems src;
+  outputs = nixCargoIntegration.makeOutputs src;
 in
 ```
 
@@ -53,6 +53,17 @@ in
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
     - if not specified, `rust-toolchain` file will be used
 - `longDescription`: a longer description (type: string)
+- `buildInputs`: common build inputs (type: list)
+- `nativeBuildInputs`: common native build inputs (type: list)
+
+### `package.metadata.nix.cachix` attributes
+
+Key-value pairings that are put here will be exported into the development and build environment.
+For example:
+```toml
+[package.metadata.nix.env]
+PROTOC = "protoc"
+```
 
 ### `package.metadata.nix.cachix` attributes
 
