@@ -29,8 +29,6 @@ let
     ];
   };
 
-  mapToPkgs = list: map (pkg: pkgs."${pkg}") list;
-
   baseConfig = {
     inherit pkgs cargoPkg nixMetadata root sources system;
 
@@ -43,14 +41,14 @@ let
       runtimeLibs = with pkgs; (with xorg; [ libX11 libXcursor libXrandr libXi ])
       ++ [ vulkan-loader wayland wayland-protocols libxkbcommon ];
     */
-    runtimeLibs = with pkgs; ([ ] ++ (mapToPkgs (nixMetadata.runtimeLibs or [ ])));
+    runtimeLibs = with pkgs; ([ ] ++ (nixMetadata.runtimeLibs or [ ]));
 
     # Dependencies listed here will be passed to Nix build and development shell
     crateDeps =
       with pkgs;
       {
-        buildInputs = [ /* Add runtime dependencies here */ ] ++ (mapToPkgs (nixMetadata.buildInputs or [ ]));
-        nativeBuildInputs = [ /* Add compile time dependencies here */ ] ++ (mapToPkgs (nixMetadata.nativeBuildInputs or [ ]));
+        buildInputs = [ /* Add runtime dependencies here */ ] ++ (nixMetadata.buildInputs or [ ]);
+        nativeBuildInputs = [ /* Add compile time dependencies here */ ] ++ (nixMetadata.nativeBuildInputs or [ ]);
       };
 
     /* Put env variables here, like so:
