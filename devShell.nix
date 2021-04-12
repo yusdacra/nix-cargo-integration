@@ -39,11 +39,17 @@ let
 
   resultConfig = {
     configuration =
-      if isNull importedDevshell
-      then { config = (combineWithBase devshellConfig) // (override common resultConfig); }
-      else {
-        config = (combineWithBase importedDevshell.config) // (override common resultConfig);
-        inherit (importedDevshell) _file imports;
+      let
+        c =
+          if isNull importedDevshell
+          then { config = combineWithBase devshellConfig; }
+          else {
+            config = combineWithBase importedDevshell.config;
+            inherit (importedDevshell) _file imports;
+          };
+      in
+      c // {
+        config = c.config // (override common c.config);
       };
   };
 in
