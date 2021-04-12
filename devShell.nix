@@ -22,9 +22,9 @@ let
         (pkgCmd nixpkgs-fmt)
       ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
     env = with pkgs.lib; [
-      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
-      { name = "LIBRARY_PATH"; eval = "$LIBRARY_PATH:${makeLibraryPath common.buildInputs}"; }
-      { name = "LD_INCLUDE_PATH"; eval = "$LD_INCLUDE_PATH:${concatMapStrings (p: p + "/include:") common.buildInputs}"; }
+      { name = "LD_LIBRARY_PATH"; eval = "${makeLibraryPath common.runtimeLibs}"; }
+      { name = "LIBRARY_PATH"; eval = "${makeLibraryPath common.buildInputs}"; }
+      { name = "LD_INCLUDE_PATH"; eval = "${concatMapStringsSep ":" (p: p + "/include") common.buildInputs}"; }
     ] ++ (
       optional (!(isNull cachixName) && !(isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
