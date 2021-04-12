@@ -40,11 +40,11 @@ let
   resultConfig = {
     configuration =
       if isNull importedDevshell
-      then { config = combineWithBase devshellConfig; }
+      then { config = (combineWithBase devshellConfig) // (override common resultConfig); }
       else {
-        config = combineWithBase importedDevshell.config;
+        config = (combineWithBase importedDevshell.config) // (override common resultConfig);
         inherit (importedDevshell) _file imports;
       };
   };
 in
-(pkgs.devshell.eval (resultConfig // (override common resultConfig))).shell
+(pkgs.devshell.eval resultConfig).shell
