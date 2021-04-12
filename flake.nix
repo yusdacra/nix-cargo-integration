@@ -19,11 +19,13 @@
       lib = import ./lib.nix {
         sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk; };
       };
-      mkCheck = path: (lib.makeOutputs { root = path; }).checks;
+      testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
+      tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
+      shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
     in
     {
       inherit lib;
 
-      checks = libb.recursiveUpdate (mkCheck ./tests/basic-bin) (mkCheck ./tests/basic-lib);
+      checks = libb.foldAttrs libb.recursiveUpdate { } (shells ++ (libb.mapAttrsToList (_: v: v.checks) tests));
     };
 }

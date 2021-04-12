@@ -22,16 +22,16 @@ let
         (pkgCmd nixpkgs-fmt)
       ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
     env = with pkgs.lib; [
-      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${lib.makeLibraryPath runtimeLibs}"; }
-      { name = "LIBRARY_PATH"; eval = "$LIBRARY_PATH:${lib.makeLibraryPath buildInputs}"; }
-      { name = "LD_INCLUDE_PATH"; eval = "$LD_INCLUDE_PATH:${lib.makeIncludePath runtimeLibs}"; }
+      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
+      { name = "LIBRARY_PATH"; eval = "$LIBRARY_PATH:${makeLibraryPath common.buildInputs}"; }
+      { name = "LD_INCLUDE_PATH"; eval = "$LD_INCLUDE_PATH:${concatMapStrings (p: p + "/include:") common.buildInputs}"; }
     ] ++ (
       optional (!(isNull cachixName) && !(isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
           substituters = https://cache.nixos.org https://${cachixName}.cachix.org
           trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
         '')
-    ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) env);
+    ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) common.env);
   };
 
   combineWithBase = config: {
