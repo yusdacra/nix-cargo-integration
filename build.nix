@@ -5,8 +5,9 @@
 , common
 ,
 }:
-with common;
 let
+  inherit (common) pkgs nixMetadata cargoPkg;
+
   xdgMetadata = nixMetadata.xdg or null;
   makeDesktopFile = xdgMetadata.enable or false;
 
@@ -38,15 +39,11 @@ let
     let
       library = nixMetadata.library or false;
       baseConfig = {
-        inherit (common) root;
-        nativeBuildInputs = crateDeps.nativeBuildInputs;
-        buildInputs = crateDeps.buildInputs;
+        inherit (common) root nativeBuildInputs buildInputs;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
         cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
-        override = (prev: env);
-        overrideMain = (prev: {
-          inherit meta;
-        } // (
+        override = (prev: common.env);
+        overrideMain = (prev: common.env // { inherit meta; } // (
           lib.optionalAttrs makeDesktopFile
             { nativeBuildInputs = prev.nativeBuildInputs ++ [ copyDesktopItems ]; desktopItems = [ desktopFile ]; }
         ));

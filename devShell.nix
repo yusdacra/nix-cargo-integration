@@ -1,27 +1,30 @@
 { common, override ? (_: _: { }) }:
-with common;
 let
+  inherit (common) pkgs nixMetadata;
+
   cachixMetadata = nixMetadata.cachix or null;
   cachixName = cachixMetadata.name or null;
   cachixKey = cachixMetadata.key or null;
 
   devshellAttr = nixMetadata.devshell or null;
   devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
-  devshellFilePath = root + "/devshell.toml";
+  devshellFilePath = common.root + "/devshell.toml";
   importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
 
-  baseConfig = with pkgs; {
-    packages = [ rustc ] ++ crateDeps.nativeBuildInputs ++ crateDeps.buildInputs;
+  baseConfig = {
+    packages = [ pkgs.rustc ] ++ common.nativeBuildInputs ++ common.buildInputs;
     commands =
       let
         pkgCmd = pkg: { package = pkg; };
       in
-      [
+      with pkgs; [
         (pkgCmd git)
         (pkgCmd nixpkgs-fmt)
       ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
-    env = with lib; [
+    env = with pkgs.lib; [
       { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${lib.makeLibraryPath runtimeLibs}"; }
+      { name = "LIBRARY_PATH"; eval = "$LIBRARY_PATH:${lib.makeLibraryPath buildInputs}"; }
+      { name = "LD_INCLUDE_PATH"; eval = "$LD_INCLUDE_PATH:${lib.makeIncludePath runtimeLibs}"; }
     ] ++ (
       optional (!(isNull cachixName) && !(isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''

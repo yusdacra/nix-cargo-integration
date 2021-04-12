@@ -15,12 +15,11 @@ let
             if (isNull (nixMetadata.toolchain or null))
             then (prev.rust-bin.fromRustupToolchainFile (root + "/rust-toolchain"))
             else prev.rust-bin."${nixMetadata.toolchain}".latest.default;
-          rust = baseRustToolchain.override {
-            extensions = [ "rust-src" ];
-          };
         in
         {
-          rustc = rust;
+          rustc = baseRustToolchain.override {
+            extensions = [ "rust-src" ];
+          };
         }
       )
       (final: prev: {
@@ -32,35 +31,11 @@ let
   baseConfig = {
     inherit pkgs cargoPkg nixMetadata root sources system;
 
-    /* You might need this if your application utilizes a GUI. Note that the dependencies
-      might change from application to application. The example dependencies provided here
-      are for a typical iced application that uses Vulkan underneath.
-
-      For example, it might look like this:
-
-      runtimeLibs = with pkgs; (with xorg; [ libX11 libXcursor libXrandr libXi ])
-      ++ [ vulkan-loader wayland wayland-protocols libxkbcommon ];
-    */
-    runtimeLibs = with pkgs; ([ ] ++ (nixMetadata.runtimeLibs or [ ]));
-
-    # Dependencies listed here will be passed to Nix build and development shell
-    crateDeps =
-      with pkgs;
-      {
-        buildInputs = [ /* Add runtime dependencies here */ ] ++ (nixMetadata.buildInputs or [ ]);
-        nativeBuildInputs = [ /* Add compile time dependencies here */ ] ++ (nixMetadata.nativeBuildInputs or [ ]);
-      };
-
-    /* Put env variables here, like so:
-
-      env = {
-      PROTOC = "${pkgs.protobuf}/bin/protoc";
-      };
-
-      The variables are not (shell) escaped.
-      Variables put here will appear in both dev env and build env.
-    */
-    env = { } // (nixMetadata.env or { });
+    # Libraries that will be put in $LD_LIBRARY_PATH
+    runtimeLibs = nixMetadata.runtimeLibs or [ ];
+    buildInputs = nixMetadata.buildInputs or [ ];
+    nativeBuildInputs = nixMetadata.nativeBuildInputs or [ ];
+    env = nixMetadata.env or { };
   };
 in
 (baseConfig // (override baseConfig))
