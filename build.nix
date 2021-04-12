@@ -11,9 +11,18 @@ let
   xdgMetadata = nixMetadata.xdg or null;
   makeDesktopFile = xdgMetadata.enable or false;
 
+  cargoLicenseToNixpkgs = license:
+    let
+      l = pkgs.lib.toLower license;
+    in
+      {
+        "gplv3" = "gpl3";
+        "gplv2" = "gpl2";
+      }."${l}" or l;
+
   meta = with pkgs.lib; ({
     description = cargoPkg.description or "${cargoPkg.name} is a Rust project.";
-  } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${toLower cargoPkg.license}"; })
+  } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${cargoLicenseToNixpkgs cargoPkg.license}"; })
   // (optionalAttrs (builtins.hasAttr "homepage" cargoPkg) { inherit (cargoPkg) homepage; })
   // (optionalAttrs (builtins.hasAttr "longDescription" nixMetadata) { inherit (nixMetadata) longDescription; }));
 
