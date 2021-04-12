@@ -12,6 +12,13 @@ let
   importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
 
   baseConfig = {
+    language = {
+      c = {
+        compiler = pkgs.gcc;
+        libraries = common.buildInputs;
+        includes = common.buildInputs;
+      };
+    };
     packages = [ pkgs.rustc ] ++ common.nativeBuildInputs ++ common.buildInputs;
     commands =
       let
@@ -22,9 +29,8 @@ let
         (pkgCmd nixpkgs-fmt)
       ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
     env = with pkgs.lib; [
-      { name = "LD_LIBRARY_PATH"; eval = "${makeLibraryPath common.runtimeLibs}"; }
-      { name = "LIBRARY_PATH"; eval = "${makeLibraryPath common.buildInputs}"; }
-      { name = "LD_INCLUDE_PATH"; eval = "${concatMapStringsSep ":" (p: p + "/include") common.buildInputs}"; }
+      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
+      { name = "LIBRARY_PATH"; eval = "$DEVSHELL_DIR/lib"; }
     ] ++ (
       optional (!(isNull cachixName) && !(isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
@@ -35,17 +41,18 @@ let
   };
 
   combineWithBase = config: {
+    language = pkgs.lib.recursiveUpdate baseConfig.language (config.language or { });
     packages = baseConfig.packages ++ (config.packages or [ ]);
     commands = baseConfig.commands ++ (config.commands or [ ]);
     env = baseConfig.env ++ (config.env or [ ]);
-  } // (removeAttrs config [ "packages" "commands" "env" ]);
+  } // (removeAttrs config [ "packages" "commands" "env" "language" ]);
 
   resultConfig = {
     configuration =
       let
         c =
           if isNull importedDevshell
-          then { config = combineWithBase devshellConfig; }
+          then { config = combineWithBase devshellConfig; imports = [ ]; }
           else {
             config = combineWithBase importedDevshell.config;
             inherit (importedDevshell) _file imports;
@@ -53,6 +60,7 @@ let
       in
       c // {
         config = c.config // (override common c.config);
+        imports = c.imports ++ [ "${pkgs.devshell.extraModulesDir}/language/c.nix" ];
       };
   };
 in
