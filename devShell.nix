@@ -21,14 +21,14 @@ let
         (pkgCmd nixpkgs-fmt)
       ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
     env = with lib; [
-      (nameValuePair "LD_LIBRARY_PATH" "$LD_LIBRARY_PATH:${lib.makeLibraryPath runtimeLibs}")
+      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${lib.makeLibraryPath runtimeLibs}"; }
     ] ++ (
       optional (!(isNull cachixName) && !(isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
           substituters = https://cache.nixos.org https://${cachixName}.cachix.org
           trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
         '')
-    ) ++ (mapAttrsToList nameValuePair env);
+    ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) env);
   };
 
   combineWithBase = config: {
