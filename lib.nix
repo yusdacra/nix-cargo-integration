@@ -21,11 +21,11 @@ let
       nixMetadata = if isNull workspaceMetadata then (if isNull packageMetadata then { } else packageMetadata) else workspaceMetadata;
 
       systems = nixMetadata.systems or flakeUtils.defaultSystems;
-      mkCommon = cargoPkg: system: import ./common.nix { inherit cargoPkg nixMetadata system root overrides sources; };
+      mkCommon = isRootPkg: cargoPkg: system: import ./common.nix { inherit isRootPkg cargoPkg nixMetadata system root overrides sources; };
 
-      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon rootPkg) else { };
+      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon true rootPkg) else { };
       rootDevshell = libb.optionalAttrs (builtins.hasAttr "devShell" rootOutputs) { devShell = rootOutputs.devShell; };
-      memberOutputs' = map (member: makeOutputsFor systems (mkCommon member.package)) members;
+      memberOutputs' = map (member: makeOutputsFor systems (mkCommon false member.package)) members;
     in
     (libb.foldAttrs libb.recursiveUpdate { } (memberOutputs' ++ [ rootOutputs ])) // rootDevshell;
 

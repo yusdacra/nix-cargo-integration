@@ -49,7 +49,7 @@ let
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
-        src = if lib.hasSuffix cargoPkg.name common.root then common.root else common.root + "/${cargoPkg.name}";
+        src = if common.isRootPkg then common.root else common.root + "/${cargoPkg.name}";
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
         cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
         override = (prev: common.env);

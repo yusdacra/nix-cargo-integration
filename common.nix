@@ -1,4 +1,4 @@
-{ cargoPkg, nixMetadata, sources, system, root, overrides ? { } }:
+{ isRootPkg ? false, cargoPkg, nixMetadata, sources, system, root, overrides ? { } }:
 let
   rustOverlay = import sources.rustOverlay;
   devshellOverlay = import (sources.devshell + "/overlay.nix");
@@ -36,7 +36,7 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg nixMetadata root sources system;
+    inherit pkgs cargoPkg nixMetadata root sources system isRootPkg;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
     runtimeLibs = resolveToPkgs (nixMetadata.runtimeLibs or [ ]);
