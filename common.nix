@@ -1,5 +1,7 @@
-{ isRootPkg ? false, cargoPkg, nixMetadata, sources, system, root, overrides ? { } }:
+{ isRootPkg ? false, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
 let
+  packageMetadata = cargoPkg.metadata.nix or null;
+
   rustOverlay = import sources.rustOverlay;
   devshellOverlay = import (sources.devshell + "/overlay.nix");
 
@@ -10,10 +12,11 @@ let
       devshellOverlay
       (final: prev:
         let
+          rustToolchainFile = root + "/rust-toolchain";
           baseRustToolchain =
-            if (isNull (nixMetadata.toolchain or null))
-            then (prev.rust-bin.fromRustupToolchainFile (root + "/rust-toolchain"))
-            else prev.rust-bin."${nixMetadata.toolchain}".latest.default;
+            if builtins.pathExists rustToolchainFile
+            then prev.rust-bin.fromRustupToolchainFile rustToolchainFile
+            else prev.rust-bin."${workspaceMetadata.toolchain or "stable"}".latest.default;
         in
         {
           rustc = baseRustToolchain.override {
@@ -27,6 +30,7 @@ let
     ];
   };
 
+  # courtesy of devshell
   resolveToPkg = key:
     let
       attrs = builtins.filter builtins.isString (builtins.split "\\." key);
@@ -36,13 +40,13 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg nixMetadata root sources system isRootPkg;
+    inherit pkgs cargoPkg workspaceMetadata packageMetadata root sources system isRootPkg;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
-    runtimeLibs = resolveToPkgs (nixMetadata.runtimeLibs or [ ]);
-    buildInputs = resolveToPkgs (nixMetadata.buildInputs or [ ]);
-    nativeBuildInputs = resolveToPkgs (nixMetadata.nativeBuildInputs or [ ]);
-    env = nixMetadata.env or { };
+    runtimeLibs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+    buildInputs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.buildInputs or [ ]));
+    nativeBuildInputs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.nativeBuildInputs or [ ]));
+    env = (workspaceMetadata.env or { }) // (packageMetadata.env or { });
 
     overrides = {
       shell = overrides.shell or (_: _: { });

@@ -5,9 +5,9 @@
 ,
 }:
 let
-  inherit (common) pkgs nixMetadata cargoPkg;
+  inherit (common) pkgs packageMetadata cargoPkg;
 
-  xdgMetadata = nixMetadata.xdg or null;
+  xdgMetadata = packageMetadata.xdg or null;
   makeDesktopFile = xdgMetadata.enable or false;
 
   cargoLicenseToNixpkgs = license:
@@ -23,7 +23,7 @@ let
     description = cargoPkg.description or "${cargoPkg.name} is a Rust project.";
   } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${cargoLicenseToNixpkgs cargoPkg.license}"; })
   // (optionalAttrs (builtins.hasAttr "homepage" cargoPkg) { inherit (cargoPkg) homepage; })
-  // (optionalAttrs (builtins.hasAttr "longDescription" nixMetadata) { inherit (nixMetadata) longDescription; }));
+  // (optionalAttrs (builtins.hasAttr "longDescription" packageMetadata) { inherit (packageMetadata) longDescription; }));
 
   desktopFile =
     with pkgs.lib;
@@ -31,12 +31,12 @@ let
       name = cargoPkg.name;
       makeIcon = icon:
         if (hasPrefix "./" icon)
-        then (common.root + "/" + (removePrefix "./" icon))
+        then (common.root + "/${removePrefix "./" icon}")
         else icon;
     in
     ((pkgs.makeDesktopItem {
       inherit name;
-      exec = nixMetadata.executable or name;
+      exec = packageMetadata.executable or name;
       comment = xdgMetadata.comment or meta.description;
       desktopName = xdgMetadata.name or name;
     }) // (optionalAttrs (builtins.hasAttr "icon" xdgMetadata) { icon = makeIcon xdgMetadata.icon; })
@@ -45,7 +45,7 @@ let
 
   package = with pkgs;
     let
-      library = nixMetadata.library or false;
+      library = packageMetadata.library or false;
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;

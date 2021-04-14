@@ -6,6 +6,3 @@ edition = "2018"
 
 [package.metadata.nix]
 build = true
-library = false
-app = false
-toolchain = "stable"

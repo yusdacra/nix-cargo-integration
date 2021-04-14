@@ -1,5 +1,2 @@
 [workspace]
 members = ["basic-bin", "basic-lib"]
-
-[workspace.metadata.nix]
-toolchain = "stable"

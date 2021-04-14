@@ -18,10 +18,9 @@ let
 
       workspaceMetadata = workspaceToml.metadata.nix or null;
       packageMetadata = rootPkg.metadata.nix or null;
-      nixMetadata = if isNull workspaceMetadata then (if isNull packageMetadata then { } else packageMetadata) else workspaceMetadata;
 
-      systems = nixMetadata.systems or flakeUtils.defaultSystems;
-      mkCommon = isRootPkg: cargoPkg: system: import ./common.nix { inherit isRootPkg cargoPkg nixMetadata system root overrides sources; };
+      systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
+      mkCommon = isRootPkg: cargoPkg: system: import ./common.nix { inherit isRootPkg cargoPkg workspaceMetadata system root overrides sources; };
 
       rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon true rootPkg) else { };
       rootDevshell = libb.optionalAttrs (builtins.hasAttr "devShell" rootOutputs) { devShell = rootOutputs.devShell; };
@@ -35,7 +34,7 @@ let
   makeOutput = common:
     let
       cargoPkg = common.cargoPkg;
-      nixMetadata = common.nixMetadata;
+      packageMetadata = common.packageMetadata;
 
       mkBuild = r: c: import ./build.nix {
         inherit common;
@@ -45,7 +44,7 @@ let
       mkApp = n: v: flakeUtils.mkApp {
         name = n;
         drv = v;
-        exePath = "/bin/${nixMetadata.executable or cargoPkg.name}";
+        exePath = "/bin/${packageMetadata.executable or cargoPkg.name}";
       };
 
       packages = {
@@ -61,11 +60,11 @@ let
       apps = builtins.mapAttrs mkApp packages;
     in
     { devShell = import ./devShell.nix common; } //
-    (libb.optionalAttrs (cargoPkg.metadata.nix.build or false) ({
+    (libb.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
       # Release build is the default package
       defaultPackage = packages."${cargoPkg.name}";
-    } // (libb.optionalAttrs (cargoPkg.metadata.nix.app or false) {
+    } // (libb.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       # Release build is the default app
       defaultApp = apps."${cargoPkg.name}";
