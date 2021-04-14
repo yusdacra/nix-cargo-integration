@@ -21,11 +21,12 @@
       };
       testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
       tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
+      checks = libb.mapAttrsToList (n: v: if libb.hasInfix "workspace" n then libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + "-workspace"))) v.checks else v.checks) tests;
       shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
     in
     {
       inherit lib;
 
-      checks = libb.foldAttrs libb.recursiveUpdate { } (shells ++ (libb.mapAttrsToList (_: v: v.checks) tests));
+      checks = libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks);
     };
 }

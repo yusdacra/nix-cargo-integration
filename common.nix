@@ -1,6 +1,5 @@
-{ cargoPkg, sources, system, root, override ? (_: { }) }:
+{ cargoPkg, nixMetadata, sources, system, root, overrides ? { } }:
 let
-  nixMetadata = cargoPkg.metadata.nix;
   rustOverlay = import sources.rustOverlay;
   devshellOverlay = import (sources.devshell + "/overlay.nix");
 
@@ -44,6 +43,12 @@ let
     buildInputs = resolveToPkgs (nixMetadata.buildInputs or [ ]);
     nativeBuildInputs = resolveToPkgs (nixMetadata.nativeBuildInputs or [ ]);
     env = nixMetadata.env or { };
+
+    overrides = {
+      shell = overrides.shell or (_: _: { });
+      build = overrides.build or (_: _: { });
+      common = overrides.common or (_: { });
+    };
   };
 in
-(baseConfig // (override baseConfig))
+(baseConfig // (baseConfig.overrides.common baseConfig))

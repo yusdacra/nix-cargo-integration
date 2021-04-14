@@ -1,5 +1,7 @@
 { sources }:
 let
+  libb = import "${sources.nixpkgs}/lib/default.nix";
+
   importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
   flakeUtils = import sources.flakeUtils;
 
@@ -9,24 +11,37 @@ let
     ,
     }:
     let
-      cargoPkg = (importCargoTOML root).package;
+      cargoToml = importCargoTOML root;
+      rootPkg = cargoToml.package or null;
+      workspaceToml = cargoToml.workspace or null;
+      members = map (name: importCargoTOML (root + "/${name}")) (workspaceToml.members or [ ]);
+
+      workspaceMetadata = workspaceToml.metadata.nix or null;
+      packageMetadata = rootPkg.metadata.nix or null;
+      nixMetadata = if isNull workspaceMetadata then (if isNull packageMetadata then { } else packageMetadata) else workspaceMetadata;
+
+      systems = nixMetadata.systems or flakeUtils.defaultSystems;
+      mkCommon = cargoPkg: system: import ./common.nix { inherit cargoPkg nixMetadata system root overrides sources; };
+
+      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon rootPkg) else { };
+      rootDevshell = libb.optionalAttrs (builtins.hasAttr "devShell" rootOutputs) { devShell = rootOutputs.devShell; };
+      memberOutputs' = map (member: makeOutputsFor systems (mkCommon member.package)) members;
     in
-    with flakeUtils;
-    eachSystem (cargoPkg.metadata.nix.systems or defaultSystems) (system: makeOutput { inherit overrides root cargoPkg system; });
+    (libb.foldAttrs libb.recursiveUpdate { } (memberOutputs' ++ [ rootOutputs ])) // rootDevshell;
 
-  makeOutput = { root, cargoPkg, system, overrides ? { } }:
+  makeOutputsFor = systems: mkCommon:
+    flakeUtils.eachSystem systems (system: makeOutput (mkCommon system));
+
+  makeOutput = common:
     let
-      mkOverride = name: if (builtins.hasAttr name overrides) then { override = overrides."${name}"; } else { };
-
-      common = import ./common.nix ({ inherit system root sources cargoPkg; } // (mkOverride "common"));
+      cargoPkg = common.cargoPkg;
       nixMetadata = common.nixMetadata;
-      lib = common.pkgs.lib;
 
-      mkBuild = r: c: import ./build.nix ({
+      mkBuild = r: c: import ./build.nix {
         inherit common;
         doCheck = c;
         release = r;
-      } // (mkOverride "build"));
+      };
       mkApp = n: v: flakeUtils.mkApp {
         name = n;
         drv = v;
@@ -45,13 +60,12 @@ let
       };
       apps = builtins.mapAttrs mkApp packages;
     in
-    {
-      devShell = import ./devShell.nix ({ inherit common; } // (mkOverride "shell"));
-    } // (lib.optionalAttrs (nixMetadata.build or false) ({
+    { devShell = import ./devShell.nix common; } //
+    (libb.optionalAttrs (cargoPkg.metadata.nix.build or false) ({
       inherit packages checks;
       # Release build is the default package
       defaultPackage = packages."${cargoPkg.name}";
-    } // (lib.optionalAttrs (nixMetadata.app or false) {
+    } // (libb.optionalAttrs (cargoPkg.metadata.nix.app or false) {
       inherit apps;
       # Release build is the default app
       defaultApp = apps."${cargoPkg.name}";

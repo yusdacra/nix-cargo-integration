@@ -8,4 +8,3 @@ edition = "2018"
 build = true
 library = false
 app = false
-toolchain = "stable"

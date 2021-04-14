@@ -1,4 +1,4 @@
-{ common, override ? (_: _: { }) }:
+common:
 let
   inherit (common) pkgs nixMetadata;
 
@@ -59,7 +59,7 @@ let
           };
       in
       c // {
-        config = c.config // (override common c.config);
+        config = c.config // (common.overrides.shell common c.config);
         imports = c.imports ++ [ "${pkgs.devshell.extraModulesDir}/language/c.nix" ];
       };
   };
