@@ -44,8 +44,8 @@ let
 
     # Libraries that will be put in $LD_LIBRARY_PATH
     runtimeLibs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
-    buildInputs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.buildInputs or [ ]));
-    nativeBuildInputs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.nativeBuildInputs or [ ]));
+    buildInputs = resolveToPkgs ((workspaceMetadata.buildInputs or [ ]) ++ (packageMetadata.buildInputs or [ ]));
+    nativeBuildInputs = resolveToPkgs ((workspaceMetadata.nativeBuildInputs or [ ]) ++ (packageMetadata.nativeBuildInputs or [ ]));
     env = (workspaceMetadata.env or { }) // (packageMetadata.env or { });
 
     overrides = {
