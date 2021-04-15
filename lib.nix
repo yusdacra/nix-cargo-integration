@@ -14,17 +14,17 @@ let
       cargoToml = importCargoTOML root;
       rootPkg = cargoToml.package or null;
       workspaceToml = cargoToml.workspace or null;
-      members = map (name: importCargoTOML (root + "/${name}")) (workspaceToml.members or [ ]);
+      members = libb.genAttrs (workspaceToml.members or [ ]) (name: importCargoTOML (root + "/${name}"));
 
       workspaceMetadata = workspaceToml.metadata.nix or null;
       packageMetadata = rootPkg.metadata.nix or null;
 
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
-      mkCommon = isRootPkg: cargoPkg: system: import ./common.nix { inherit isRootPkg cargoPkg workspaceMetadata system root overrides sources; };
+      mkCommon = memberName: cargoPkg: system: import ./common.nix { inherit memberName cargoPkg workspaceMetadata system root overrides sources; };
 
-      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon true rootPkg) else { };
+      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon null rootPkg) else { };
       rootDevshell = libb.optionalAttrs (builtins.hasAttr "devShell" rootOutputs) { devShell = rootOutputs.devShell; };
-      memberOutputs' = map (member: makeOutputsFor systems (mkCommon false member.package)) members;
+      memberOutputs' = libb.mapAttrsToList (name: value: makeOutputsFor systems (mkCommon name value.package)) members;
     in
     (libb.foldAttrs libb.recursiveUpdate { } (memberOutputs' ++ [ rootOutputs ])) // rootDevshell;
 

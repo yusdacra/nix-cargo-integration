@@ -1,4 +1,4 @@
-{ isRootPkg ? false, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
+{ memberName ? null, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
 let
   packageMetadata = cargoPkg.metadata.nix or null;
 
@@ -40,7 +40,7 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg workspaceMetadata packageMetadata root sources system isRootPkg;
+    inherit pkgs cargoPkg workspaceMetadata packageMetadata root sources system memberName;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
     runtimeLibs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
