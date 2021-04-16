@@ -16,8 +16,8 @@ let
       workspaceToml = cargoToml.workspace or null;
       members = libb.genAttrs (workspaceToml.members or [ ]) (name: importCargoTOML (root + "/${name}"));
 
-      workspaceMetadata = workspaceToml.metadata.nix or null;
       packageMetadata = rootPkg.metadata.nix or null;
+      workspaceMetadata = if isNull workspaceToml then packageMetadata else workspaceToml.metadata.nix or null;
 
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
       mkCommon = memberName: cargoPkg: system: import ./common.nix { inherit memberName cargoPkg workspaceMetadata system root overrides sources; };
