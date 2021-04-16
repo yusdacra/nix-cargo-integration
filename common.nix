@@ -1,11 +1,13 @@
 { memberName ? null, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
 let
+  srcs = sources // ((overrides.sources or (_: { })) sources);
+
   packageMetadata = cargoPkg.metadata.nix or null;
 
-  rustOverlay = import sources.rustOverlay;
-  devshellOverlay = import (sources.devshell + "/overlay.nix");
+  rustOverlay = import srcs.rustOverlay;
+  devshellOverlay = import (srcs.devshell + "/overlay.nix");
 
-  pkgs = import sources.nixpkgs {
+  basePkgsConfig = {
     inherit system;
     overlays = [
       rustOverlay
@@ -25,10 +27,11 @@ let
         }
       )
       (final: prev: {
-        naersk = prev.callPackage sources.naersk { };
+        naersk = prev.callPackage srcs.naersk { };
       })
     ];
   };
+  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: { })) basePkgsConfig));
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -40,7 +43,8 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg workspaceMetadata packageMetadata root sources system memberName;
+    inherit pkgs cargoPkg workspaceMetadata packageMetadata root system memberName;
+    sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
     runtimeLibs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
@@ -51,8 +55,7 @@ let
     overrides = {
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
-      common = overrides.common or (_: { });
     };
   };
 in
-(baseConfig // (baseConfig.overrides.common baseConfig))
+(baseConfig // ((overrides.common or (_: { })) baseConfig))

@@ -55,12 +55,13 @@ let
   package = with pkgs;
     let
       library = packageMetadata.library or false;
+      package = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-        cargoBuildOptions = def: def ++ (lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ]);
-        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ (lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ]);
+        cargoBuildOptions = def: def ++ package;
+        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ package;
         override = (prev: common.env);
         overrideMain = (prev: common.env // { inherit meta; } // (
           lib.optionalAttrs (! isNull desktopFileMetadata)
