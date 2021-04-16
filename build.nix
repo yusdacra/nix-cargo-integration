@@ -59,7 +59,8 @@ let
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
+        cargoBuildOptions = def: def ++ (lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ]);
+        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ (lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ]);
         override = (prev: common.env);
         overrideMain = (prev: common.env // { inherit meta; } // (
           lib.optionalAttrs (! isNull desktopFileMetadata)
@@ -67,7 +68,7 @@ let
         ));
         copyLibs = library;
         inherit release doCheck doDoc;
-      } // (lib.optionalAttrs (! isNull common.memberName) { targets = [ common.memberName ]; });
+      };
     in
     naersk.buildPackage (baseConfig // (common.overrides.build common baseConfig));
 in
