@@ -1,6 +1,6 @@
 { memberName ? null, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
 let
-  srcs = sources // ((overrides.sources or (_: { })) sources);
+  srcs = sources // ((overrides.sources or (_: _: { })) { inherit system cargoPkg workspaceMetadata root memberName; } sources);
 
   packageMetadata = cargoPkg.metadata.nix or null;
 
@@ -31,7 +31,7 @@ let
       })
     ];
   };
-  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: { })) basePkgsConfig));
+  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: _: { })) { inherit system cargoPkg workspaceMetadata root memberName sources; } basePkgsConfig));
 
   # courtesy of devshell
   resolveToPkg = key:

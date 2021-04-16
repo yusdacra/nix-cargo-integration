@@ -55,8 +55,8 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
-    - `overrides.sources`: override for the sources used by common (type: `prev: { }`)
-    - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `prev: { }`)
+    - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
+    - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
 
 ### `makeOutput = { root, cargoPkg, system, overrides ? { }}: { ... }`
 
