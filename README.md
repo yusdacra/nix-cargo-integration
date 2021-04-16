@@ -123,7 +123,7 @@ The path must start with "./" and specify a path relative ro `root`.
 - `systems`: systems to enable for the flake (type: list)
     - defaults to `defaultSystems` of `nixpkgs`
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
-    - if not specified, `rust-toolchain` file will be used
+    - if `rust-toolchain` file exists, it will be used instead of this attribute
 
 ### `cachix` attributes
 
