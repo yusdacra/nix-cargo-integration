@@ -58,17 +58,16 @@ let
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
-        src = if isNull common.memberName then common.root else common.root + "/${common.memberName}";
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
         cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib");
         override = (prev: common.env);
         overrideMain = (prev: common.env // { inherit meta; } // (
-          lib.optionalAttrs (!(isNull desktopFileMetadata))
+          lib.optionalAttrs (! isNull desktopFileMetadata)
             { nativeBuildInputs = prev.nativeBuildInputs ++ [ copyDesktopItems ]; desktopItems = [ desktopFile ]; }
         ));
         copyLibs = library;
         inherit release doCheck doDoc;
-      };
+      } // (lib.optionalAttrs (! isNull common.memberName) { targets = [ common.memberName ]; });
     in
     naersk.buildPackage (baseConfig // (common.overrides.build common baseConfig));
 in
