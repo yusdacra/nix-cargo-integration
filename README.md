@@ -39,6 +39,12 @@ let
 in
 ```
 
+### Examples
+
+- [Basic flake.nix template with commented fields and overrides](./example_flake.nix)
+- [Overriding builds based on crate name](https://gitlab.com/veloren/veloren/-/blob/master/flake.nix)
+- [Modifying cargo build options to build a specific feature and changing outputs based on the feature used](https://github.com/yusdacra/bernbot/blob/master/flake.nix)
+
 ## Library documentation
 
 ### `makeOutputs = { root, overrides ? { }}: { ... }`
