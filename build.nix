@@ -54,25 +54,41 @@ let
       // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
       // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
 
-  package = with pkgs;
+  package =
     let
+      lib = common.pkgs.lib;
+      pkgs = common.pkgs;
+
       library = packageMetadata.library or false;
-      package = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+      app = packageMetadata.app or false;
+      packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-        cargoBuildOptions = def: def ++ package;
-        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ package;
-        override = (prev: common.env);
-        overrideMain = (prev: common.env // { inherit meta; } // (
-          lib.optionalAttrs (! isNull desktopFileMetadata)
-            { nativeBuildInputs = prev.nativeBuildInputs ++ [ copyDesktopItems ]; desktopItems = [ desktopFile ]; }
-        ));
+        cargoBuildOptions = def: def ++ packageOption;
+        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ packageOption;
+        override = _: common.env;
+        overrideMain =
+          let
+            runtimeWrapOverride = prev:
+              lib.optionalAttrs app {
+                nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
+                postInstall = ''
+                  ${prev.postInstall or ""}
+                  wrapProgram $out/bin/${packageMetadata.executable or cargoPkg.name}\
+                    --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
+                '';
+              };
+            desktopOverride = prev: lib.optionalAttrs (! isNull desktopFileMetadata)
+              { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; };
+          in
+          prev: runtimeWrapOverride (desktopOverride (prev // (common.env // { inherit meta; })));
         copyLibs = library;
         inherit release doCheck doDoc;
       };
     in
-    naersk.buildPackage (baseConfig // (common.overrides.build common baseConfig));
+    pkgs.naersk.buildPackage (baseConfig // (common.overrides.build common baseConfig));
 in
 package
