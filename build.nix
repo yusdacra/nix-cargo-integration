@@ -16,6 +16,8 @@ let
       {
         "gplv3" = "gpl3";
         "gplv2" = "gpl2";
+        "gpl-3.0" = "gpl3";
+        "gpl-2.0" = "gpl2";
       }."${l}" or l;
 
   # TODO convert cargo maintainers to nixpkgs maintainers
