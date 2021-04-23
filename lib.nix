@@ -22,19 +22,45 @@ let
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
       mkCommon = memberName: cargoPkg: system: import ./common.nix { inherit memberName cargoPkg workspaceMetadata system root overrides sources; };
 
-      rootOutputs = if !(isNull rootPkg) then makeOutputsFor systems (mkCommon null rootPkg) else { };
-      rootDevshell = libb.optionalAttrs (builtins.hasAttr "devShell" rootOutputs) { devShell = rootOutputs.devShell; };
-      memberOutputs' = libb.mapAttrsToList (name: value: makeOutputsFor systems (mkCommon name value.package)) members;
-    in
-    (libb.foldAttrs libb.recursiveUpdate { } (memberOutputs' ++ [ rootOutputs ])) // rootDevshell;
+      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg) else { };
+      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package)) members;
+      allCommons' = memberCommons' ++ [ rootCommons ];
 
-  makeOutputsFor = systems: mkCommon:
-    flakeUtils.eachSystem systems (system: makeOutput (mkCommon system));
+      updateCommon = prev: final: prev // final // {
+        runtimeLibs = (prev.runtimeLibs or [ ]) ++ final.runtimeLibs;
+        buildInputs = (prev.buildInputs or [ ]) ++ final.buildInputs;
+        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ final.nativeBuildInputs;
+        env = (prev.env or { }) // final.env;
+
+        overrides = {
+          shell = common: prevShell:
+            ((prev.overrides.shell or (_: _: { })) common prevShell) // (final.overrides.shell common prevShell);
+        };
+      };
+      devshellCombined = {
+        devShell =
+          libb.mapAttrs
+            (_: import ./devShell.nix)
+            (
+              libb.mapAttrs
+                (_: libb.foldl' updateCommon { })
+                (
+                  libb.foldl'
+                    (acc: ele: libb.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
+                    (libb.genAttrs systems (_: [ ]))
+                    allCommons'
+                )
+            );
+      };
+      allOutputs' = libb.flatten (map (libb.mapAttrsToList (_: makeOutput)) allCommons');
+
+      finalOutputs = (libb.foldAttrs libb.recursiveUpdate { } allOutputs') // devshellCombined;
+    in
+    finalOutputs;
 
   makeOutput = common:
     let
-      cargoPkg = common.cargoPkg;
-      packageMetadata = common.packageMetadata;
+      inherit (common) cargoPkg packageMetadata system;
 
       mkBuild = r: c: import ./build.nix {
         inherit common;
@@ -48,27 +74,27 @@ let
       };
 
       packages = {
-        # Compiles slower but has tests and faster executable
-        "${cargoPkg.name}" = mkBuild true true;
-        # Compiles faster but no tests and slower executable
-        "${cargoPkg.name}-debug" = mkBuild false false;
+        ${system} = {
+          "${cargoPkg.name}" = mkBuild true true;
+          "${cargoPkg.name}-debug" = mkBuild false false;
+        };
       };
       checks = {
-        # Compiles faster but has tests and slower executable
-        "${cargoPkg.name}-tests" = mkBuild false true;
+        ${system} = {
+          "${cargoPkg.name}-tests" = mkBuild false true;
+        };
       };
-      apps = builtins.mapAttrs mkApp packages;
+      apps = {
+        ${system} = builtins.mapAttrs mkApp packages.${system};
+      };
     in
-    { devShell = import ./devShell.nix common; } //
-    (libb.optionalAttrs (packageMetadata.build or false) ({
+    libb.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
-      # Release build is the default package
-      defaultPackage = packages."${cargoPkg.name}";
+      defaultPackage = packages.${system}.${cargoPkg.name};
     } // (libb.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
-      # Release build is the default app
-      defaultApp = apps."${cargoPkg.name}";
-    })));
+      defaultApp = apps.${system}.${cargoPkg.name};
+    }));
 in
 {
   inherit importCargoTOML makeOutput makeOutputs;

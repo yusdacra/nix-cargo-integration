@@ -27,12 +27,12 @@ let
       with pkgs; [
         (pkgCmd git)
         (pkgCmd nixpkgs-fmt)
-      ] ++ (lib.optional (!(isNull cachixName)) (pkgCmd cachix));
+      ] ++ (lib.optional (! isNull cachixName) (pkgCmd cachix));
     env = with pkgs.lib; [
       { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
       { name = "LIBRARY_PATH"; eval = "$DEVSHELL_DIR/lib"; }
     ] ++ (
-      optional (!(isNull cachixName) && !(isNull cachixKey))
+      optional ((! isNull cachixName) && (! isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
           substituters = https://cache.nixos.org https://${cachixName}.cachix.org
           trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
