@@ -73,18 +73,18 @@ let
         overrideMain =
           let
             runtimeWrapOverride = prev:
-              lib.optionalAttrs app {
+              prev // (lib.optionalAttrs app {
                 nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
                 postInstall = ''
                   ${prev.postInstall or ""}
                   wrapProgram $out/bin/${packageMetadata.executable or cargoPkg.name}\
                     --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
                 '';
-              };
-            desktopOverride = prev: lib.optionalAttrs (! isNull desktopFileMetadata)
-              { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; };
+              });
+            desktopOverride = prev: prev // (lib.optionalAttrs (! isNull desktopFileMetadata)
+              { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
           in
-          prev: runtimeWrapOverride (desktopOverride (prev // (common.env // { inherit meta; })));
+          prev: runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; }));
         copyLibs = library;
         inherit release doCheck doDoc;
       };
