@@ -1,6 +1,6 @@
 name: "Update Flake Deps"
 on:
-  push:
+  workflow_dispatch:
   schedule:
     - cron: '17 10-17 * * *'
 
@@ -20,6 +20,7 @@ jobs:
     - name: Update flake deps
       run: nix flake update
     - name: Commit
-      run: |
-        git commit -m "chore(deps): update flake deps"
-        git push
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "chore(deps): update flake deps"
+        branch: master
