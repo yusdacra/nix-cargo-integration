@@ -90,10 +90,14 @@ let
     in
     libb.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
-      defaultPackage = packages.${system}.${cargoPkg.name};
+      defaultPackage = {
+        ${system} = packages.${system}.${cargoPkg.name};
+      };
     } // (libb.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
-      defaultApp = apps.${system}.${cargoPkg.name};
+      defaultApp = {
+        ${system} = apps.${system}.${cargoPkg.name};
+      };
     }));
 in
 {
