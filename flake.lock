@@ -52,26 +52,27 @@
         ]
       },
       "locked": {
-        "lastModified": 1618844365,
-        "narHash": "sha256-Z9t0rr+5OG/ru3jdg3jivfYVU4ydV/nqt8UwIut7uHs=",
-        "owner": "nmattia",
+        "lastModified": 1619120804,
+        "narHash": "sha256-UTyju85cbzB7LPlyuKhqZmE+r7Vbv/E8rzFVTPVq0Oo=",
+        "owner": "yusdacra",
         "repo": "naersk",
-        "rev": "32e3ba39d9d83098b13720a4384bdda191dd0445",
+        "rev": "90ef1f9a8749705cd6d16c2e0fa9d318398faf48",
         "type": "github"
       },
       "original": {
-        "owner": "nmattia",
+        "owner": "yusdacra",
+        "ref": "feat/cargolock-git-deps",
         "repo": "naersk",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1619011481,
-        "narHash": "sha256-8HhpG9SxzTzAQxq56ld3BuAjNPJNmWS769wb1kn9jaA=",
+        "lastModified": 1619262199,
+        "narHash": "sha256-7ZEmJx9FCgrBsryyLNZ0MQ+PcoPqVaQH2bS13ylrWTA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "93184413f2180ce79d53df91df4d43c2e8f931aa",
+        "rev": "68e02d17576d420b10eb5a92c53b02054bc6712e",
         "type": "github"
       },
       "original": {
@@ -98,11 +99,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1618971856,
-        "narHash": "sha256-dcfx/CjL3hKfK5a+n9dsb3OjfKlxnCIGYKZHg5eyLEc=",
+        "lastModified": 1619281948,
+        "narHash": "sha256-c8/79kwDKswR0KGfhBYd02jq1FtSTeX4NAeFUAwturI=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "3f0fd902ab8881175da5f670c4fe1eec6ef65e2a",
+        "rev": "88262ab95b856ec55ec71a054cb0e2505244441f",
         "type": "github"
       },
       "original": {

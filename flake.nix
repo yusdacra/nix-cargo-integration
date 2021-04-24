@@ -4,7 +4,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flakeUtils.url = "github:numtide/flake-utils";
     naersk = {
-      url = "github:nmattia/naersk";
+      url = "github:yusdacra/naersk/feat/cargolock-git-deps";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     rustOverlay = {

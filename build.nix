@@ -66,6 +66,8 @@ let
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
         inherit (cargoPkg) name version;
+        allRefs = true;
+        gitSubmodules = true;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
         cargoBuildOptions = def: def ++ packageOption;
         cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ packageOption;
