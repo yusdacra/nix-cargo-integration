@@ -22,8 +22,8 @@ let
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
       mkCommon = memberName: cargoPkg: bins: system: import ./common.nix { inherit memberName cargoPkg bins workspaceMetadata system root overrides sources; };
 
-      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg cargoToml.bin) else null;
-      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package value.bin)) members;
+      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg (cargoToml.bin or [ ])) else null;
+      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package (value.bin or [ ]))) members;
       allCommons' = memberCommons' ++ (libb.optional (! isNull rootCommons) rootCommons);
 
       updateCommon = prev: final: prev // final // {
