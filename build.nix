@@ -1,6 +1,7 @@
 { release ? false
 , doCheck ? false
 , doDoc ? false
+, features ? [ ]
 , common
 ,
 }:
@@ -54,7 +55,7 @@ let
       // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
       // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
 
-  package =
+  config =
     let
       lib = common.pkgs.lib;
       pkgs = common.pkgs;
@@ -62,6 +63,7 @@ let
       library = packageMetadata.library or false;
       app = packageMetadata.app or false;
       packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+      featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
 
       baseConfig = {
         inherit (common) root nativeBuildInputs buildInputs;
@@ -69,8 +71,8 @@ let
         allRefs = true;
         gitSubmodules = true;
         # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-        cargoBuildOptions = def: def ++ packageOption;
-        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ packageOption;
+        cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
+        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ packageOption ++ featuresOption;
         override = _: common.env;
         overrideMain =
           let
@@ -91,6 +93,10 @@ let
         inherit release doCheck doDoc;
       };
     in
-    pkgs.naersk.buildPackage (baseConfig // (common.overrides.build common baseConfig));
+    baseConfig // (common.overrides.build common baseConfig);
+
+  package = pkgs.naersk.buildPackage config;
 in
-package
+{
+  inherit package config;
+}

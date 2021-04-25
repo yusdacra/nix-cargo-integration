@@ -67,44 +67,51 @@ let
       allBins =
         libb.unique (
           [ null ]
-          ++ (builtins.map (v: v.name) bins)
+          ++ bins
           ++ (
             libb.optionals
               (autobins && (builtins.pathExists "${pkgSrc}/bin"))
-              (builtins.attrNames (builtins.readDir "${pkgSrc}/bin"))
+              (libb.genAttrs (builtins.map (libb.removeSuffix ".rs") (builtins.attrNames (builtins.readDir "${pkgSrc}/bin"))) (name: { inherit name; }))
           )
         );
 
-      mkBuild = r: c: import ./build.nix {
+      mkBuild = f: r: c: import ./build.nix {
         inherit common;
+        features = f;
         doCheck = c;
         release = r;
       };
-      mkApp = exe: n: v:
+      mkApp = bin: n: v:
         let
           ex =
-            if isNull exe
+            if isNull bin
             then { exeName = n; name = n; }
-            else { exeName = exe; name = "${n}-${exe}"; };
+            else { exeName = bin.name; name = "${n}-${bin.name}"; };
         in
         {
           name = ex.name;
           value = flakeUtils.mkApp {
             name = ex.name;
-            drv = v;
+            drv =
+              if (builtins.length (bin.required-features or [ ])) == 0
+              then v.package
+              else (mkBuild (bin.required-features or [ ]) v.config.release v.config.doCheck).package;
             exePath = "/bin/${ex.exeName}";
           };
         };
 
-      packages = {
+      packagesRaw = {
         ${system} = {
-          "${cargoPkg.name}" = mkBuild true true;
-          "${cargoPkg.name}-debug" = mkBuild false false;
+          "${cargoPkg.name}" = mkBuild [ ] true true;
+          "${cargoPkg.name}-debug" = mkBuild [ ] false false;
         };
+      };
+      packages = {
+        ${system} = builtins.mapAttrs (_: v: v.package) packagesRaw.${system};
       };
       checks = {
         ${system} = {
-          "${cargoPkg.name}-tests" = mkBuild false true;
+          "${cargoPkg.name}-tests" = (mkBuild [ ] false true).package;
         };
       };
       apps = {
@@ -113,7 +120,7 @@ let
           libb.foldAttrs libb.recursiveUpdate { }
             (
               builtins.map
-                (exe: libb.mapAttrs' (mkApp exe) packages.${system})
+                (exe: libb.mapAttrs' (mkApp exe) packagesRaw.${system})
                 allBins
             );
       };
