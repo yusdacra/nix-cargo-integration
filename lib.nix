@@ -20,10 +20,10 @@ let
       workspaceMetadata = if isNull workspaceToml then packageMetadata else workspaceToml.metadata.nix or null;
 
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
-      mkCommon = memberName: cargoPkg: bins: system: import ./common.nix { inherit memberName cargoPkg bins workspaceMetadata system root overrides sources; };
+      mkCommon = memberName: cargoToml: system: import ./common.nix { inherit memberName cargoToml workspaceMetadata system root overrides sources; };
 
-      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg (cargoToml.bin or [ ])) else null;
-      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package (value.bin or [ ]))) members;
+      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null cargoToml) else null;
+      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value)) members;
       allCommons' = memberCommons' ++ (libb.optional (! isNull rootCommons) rootCommons);
 
       updateCommon = prev: final: prev // final // {
@@ -60,7 +60,20 @@ let
 
   makeOutput = common:
     let
-      inherit (common) cargoPkg packageMetadata system bins;
+      inherit (common) cargoPkg packageMetadata system bins autobins memberName root;
+
+      pkgSrc = if isNull memberName then "${root}/src" else "${root}/${memberName}/src";
+
+      allBins =
+        libb.unique (
+          [ null ]
+          ++ (builtins.map (v: v.name) bins)
+          ++ (
+            libb.optionals
+              (autobins && (builtins.pathExists "${pkgSrc}/bin"))
+              (builtins.attrNames (builtins.readDir "${pkgSrc}/bin"))
+          )
+        );
 
       mkBuild = r: c: import ./build.nix {
         inherit common;
@@ -96,12 +109,12 @@ let
       };
       apps = {
         ${system} =
-          let bins' = [ null ] ++ (builtins.map (v: v.name) bins); in
+          let in
           libb.foldAttrs libb.recursiveUpdate { }
             (
               builtins.map
                 (exe: libb.mapAttrs' (mkApp exe) packages.${system})
-                bins'
+                allBins
             );
       };
     in
