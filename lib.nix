@@ -7,7 +7,7 @@ let
 
   makeOutputs =
     { root
-    , overrides ? { } /* This can have overrides for the devshell env, build env or for both. */
+    , overrides ? { }
     ,
     }:
     let
@@ -20,10 +20,10 @@ let
       workspaceMetadata = if isNull workspaceToml then packageMetadata else workspaceToml.metadata.nix or null;
 
       systems = workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems;
-      mkCommon = memberName: cargoPkg: system: import ./common.nix { inherit memberName cargoPkg workspaceMetadata system root overrides sources; };
+      mkCommon = memberName: cargoPkg: bins: system: import ./common.nix { inherit memberName cargoPkg bins workspaceMetadata system root overrides sources; };
 
-      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg) else null;
-      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package)) members;
+      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null rootPkg cargoToml.bin) else null;
+      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value.package value.bin)) members;
       allCommons' = memberCommons' ++ (libb.optional (! isNull rootCommons) rootCommons);
 
       updateCommon = prev: final: prev // final // {
@@ -60,18 +60,28 @@ let
 
   makeOutput = common:
     let
-      inherit (common) cargoPkg packageMetadata system;
+      inherit (common) cargoPkg packageMetadata system bins;
 
       mkBuild = r: c: import ./build.nix {
         inherit common;
         doCheck = c;
         release = r;
       };
-      mkApp = n: v: flakeUtils.mkApp {
-        name = n;
-        drv = v;
-        exePath = "/bin/${packageMetadata.executable or cargoPkg.name}";
-      };
+      mkApp = exe: n: v:
+        let
+          ex =
+            if isNull exe
+            then { exeName = n; name = n; }
+            else { exeName = exe; name = "${n}-${exe}"; };
+        in
+        {
+          name = ex.name;
+          value = flakeUtils.mkApp {
+            name = ex.name;
+            drv = v;
+            exePath = "/bin/${ex.exeName}";
+          };
+        };
 
       packages = {
         ${system} = {
@@ -85,7 +95,14 @@ let
         };
       };
       apps = {
-        ${system} = builtins.mapAttrs mkApp packages.${system};
+        ${system} =
+          let bins' = [ null ] ++ (builtins.map (v: v.name) bins); in
+          libb.foldAttrs libb.recursiveUpdate { }
+            (
+              builtins.map
+                (exe: libb.mapAttrs' (mkApp exe) packages.${system})
+                bins'
+            );
       };
     in
     libb.optionalAttrs (packageMetadata.build or false) ({

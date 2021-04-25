@@ -1,6 +1,6 @@
-{ memberName ? null, cargoPkg, workspaceMetadata, sources, system, root, overrides ? { } }:
+{ memberName ? null, cargoPkg, bins, workspaceMetadata, sources, system, root, overrides ? { } }:
 let
-  srcs = sources // ((overrides.sources or (_: _: { })) { inherit system cargoPkg workspaceMetadata root memberName; } sources);
+  srcs = sources // ((overrides.sources or (_: _: { })) { inherit system cargoPkg bins workspaceMetadata root memberName; } sources);
 
   packageMetadata = cargoPkg.metadata.nix or null;
 
@@ -31,7 +31,7 @@ let
       })
     ];
   };
-  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: _: { })) { inherit system cargoPkg workspaceMetadata root memberName sources; } basePkgsConfig));
+  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: _: { })) { inherit system cargoPkg bins workspaceMetadata root memberName sources; } basePkgsConfig));
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -43,7 +43,7 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg workspaceMetadata packageMetadata root system memberName;
+    inherit pkgs cargoPkg bins workspaceMetadata packageMetadata root system memberName;
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
