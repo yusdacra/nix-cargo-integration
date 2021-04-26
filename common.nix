@@ -121,7 +121,7 @@ let
     env =
       (workspaceMetadata.env or { })
         // (packageMetadata.env or { })
-        // (pkgs.lib.foldAttrs pkgs.lib.recursiveUpdate { } (builtins.map (v: { inherit (v) propagatedEnv; }) ccOvEmpty)).propagatedEnv;
+        // ((pkgs.lib.foldAttrs pkgs.lib.recursiveUpdate { } (builtins.map (v: { inherit (v) propagatedEnv; }) ccOvEmpty)).propagatedEnv or { });
 
     overrides = {
       shell = overrides.shell or (_: _: { });

@@ -125,7 +125,7 @@ let
       }) // common.env;
     in
     {
-      inherit pkgs;
+      inherit pkgs release;
       rootFeatures = features;
       defaultCrateOverrides =
         pkgs.defaultCrateOverrides
@@ -174,7 +174,9 @@ then
       pkgs.symlinkJoin {
         inherit meta;
         name = "${cargoPkg.name}-${cargoPkg.version}";
-        paths = [ pkg ];
+        paths = [
+          (pkg.override { runTests = doCheck; })
+        ];
       };
   }
 else throw "invalid build platform: ${buildPlatform}"
