@@ -82,19 +82,12 @@ let
     crateOverrides =
       let
         base = (import ./extraCrateOverrides.nix { inherit pkgs; }) // (
-          pkgs.lib.foldAttrs
-            pkgs.lib.recursiveUpdate
-            { }
-            (
-              builtins.map
-                (crate: {
-                  ${crate.name} = prev: {
-                    nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs crate.nativeBuildInputs);
-                    buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs crate.buildInputs);
-                  } // (crate.env or { }) // { propagatedEnv = crate.env or { }; };
-                })
-                ((workspaceMetadata.crateOverride or [ ]) ++ (packageMetadata.crateOverride or [ ]))
-            )
+          builtins.mapAttrs
+            (_: crate: prev: {
+              nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]));
+              buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ]));
+            } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
+            (pkgs.lib.recursiveUpdate (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }))
         );
       in
       base // (
@@ -118,17 +111,17 @@ let
     buildInputs =
       resolveToPkgs
         ((workspaceMetadata.buildInputs or [ ])
-          ++ (packageMetadata.buildInputs or [ ])
-          ++ (getListAttrsFromCcOv "buildInputs"));
+          ++ (packageMetadata.buildInputs or [ ]))
+      ++ (getListAttrsFromCcOv "buildInputs");
     nativeBuildInputs =
       resolveToPkgs
         ((workspaceMetadata.nativeBuildInputs or [ ])
-          ++ (packageMetadata.nativeBuildInputs or [ ])
-          ++ (getListAttrsFromCcOv "nativeBuildInputs"));
+          ++ (packageMetadata.nativeBuildInputs or [ ]))
+      ++ (getListAttrsFromCcOv "nativeBuildInputs");
     env =
       (workspaceMetadata.env or { })
         // (packageMetadata.env or { })
-        // (pkgs.lib.foldAttrs pkgs.lib.recursiveUpdate { } (builtins.map (v: v.propagatedEnv) ccOvEmpty));
+        // (pkgs.lib.foldAttrs pkgs.lib.recursiveUpdate { } (builtins.map (v: { inherit (v) propagatedEnv; }) ccOvEmpty)).propagatedEnv;
 
     overrides = {
       shell = overrides.shell or (_: _: { });

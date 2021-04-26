@@ -1,0 +1,12 @@
+[package]
+name = "basic-override"
+version = "0.1.0"
+authors = ["Yusuf Bera Ertan <y.bera003.06@protonmail.com>"]
+edition = "2018"
+
+[package.metadata.nix]
+build = true
+
+[package.metadata.nix.crateOverride.test]
+buildInputs = ["hello"]
+env.PROTOC = "protoc"
