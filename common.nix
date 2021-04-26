@@ -103,8 +103,8 @@ let
           builtins.map
             (crate: {
               ${crate.name} = prev: {
-                nativeBuildInputs = prev.nativeBuildInputs ++ (resolveToPkgs crate.nativeBuildInputs);
-                buildInputs = prev.buildInputs ++ (resolveToPkgs crate.buildInputs);
+                nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs crate.nativeBuildInputs);
+                buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs crate.buildInputs);
               } // (
                 pkgs.lib.filterAttrs
                   (name: _: name != "nativeBuildInputs" || name != "buildInputs" || name != "name")
