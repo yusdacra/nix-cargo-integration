@@ -44,5 +44,6 @@
       inherit lib;
 
       checks = libb.recursiveUpdate naerskPlatform crate2nixPlatform;
+      devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
