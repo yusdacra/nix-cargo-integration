@@ -14,14 +14,36 @@ let
   features = cargoToml.features or { };
   bins = cargoToml.bin or [ ];
   autobins = cargoPkg.autobins or (edition == "2018");
+
   isCrate2Nix = buildPlatform == "crate2nix";
+  isNaersk = buildPlatform == "naersk";
+
+  packageMetadata = cargoPkg.metadata.nix or null;
+
+  commonAttrs =
+    {
+      inherit
+        system
+        cargoPkg
+        cargoToml
+        features
+        bins
+        autobins
+        packageMetadata
+        workspaceMetadata
+        root
+        memberName
+        buildPlatform
+        isCrate2Nix
+        isNaersk
+        dependencies;
+    };
 
   srcs = sources // (
     (overrides.sources or (_: _: { }))
-      { inherit system cargoPkg features bins autobins workspaceMetadata root memberName buildPlatform; }
-      sources);
-
-  packageMetadata = cargoPkg.metadata.nix or null;
+      commonAttrs
+      sources
+  );
 
   rustOverlay = import srcs.rustOverlay;
   devshellOverlay = import (srcs.devshell + "/overlay.nix");
@@ -51,7 +73,7 @@ let
         })
       )
     ] ++ (
-      if buildPlatform == "naersk"
+      if isNaersk
       then [
         (final: prev: {
           naersk = prev.callPackage srcs.naersk { };
@@ -68,8 +90,9 @@ let
   };
   pkgs = import srcs.nixpkgs (basePkgsConfig // (
     (overrides.pkgs or (_: _: { }))
-      { inherit system cargoPkg features bins autobins workspaceMetadata root memberName sources buildPlatform; }
-      basePkgsConfig));
+      (commonAttrs // { sources = srcs; })
+      basePkgsConfig
+  ));
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -113,7 +136,7 @@ let
       base // (
         (
           (overrides.crateOverrides or (_: _: { }))
-            { inherit pkgs system cargoPkg features bins autobins workspaceMetadata root memberName sources buildPlatform; }
+            (commonAttrs // { inherit pkgs; sources = srcs; })
             base
         )
       );
@@ -123,7 +146,6 @@ let
   getListAttrsFromCcOv = attrName: pkgs.lib.flatten (builtins.map (v: v.${attrName} or [ ]) ccOvEmpty);
 
   baseConfig = {
-    inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName buildPlatform features;
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
@@ -155,6 +177,7 @@ let
       build = overrides.build or (_: _: { });
       mainBuild = overrides.mainBuild or (_: _: { });
     };
-  } // ccOv;
+  } // ccOv // (commonAttrs // { inherit pkgs; sources = srcs; })
+  ;
 in
 (baseConfig // ((overrides.common or (_: { })) baseConfig))
