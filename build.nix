@@ -126,7 +126,11 @@ let
     in
     {
       inherit pkgs release;
-      rootFeatures = features;
+      rootFeatures =
+        let def = lib.optional (builtins.hasAttr "default" common.features) "default"; in
+        if (builtins.length features) > 0
+        then features ++ def
+        else def;
       defaultCrateOverrides =
         pkgs.defaultCrateOverrides
         // (builtins.mapAttrs (_: v: (prev: lib.filterAttrs (n: _: n != "propagatedEnv") (v prev))) common.crateOverrides) // {

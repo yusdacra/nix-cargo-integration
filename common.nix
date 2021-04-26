@@ -10,13 +10,14 @@
 let
   edition = cargoToml.edition or "2018";
   cargoPkg = cargoToml.package;
+  features = cargoToml.features or { };
   bins = cargoToml.bin or [ ];
   autobins = cargoPkg.autobins or (edition == "2018");
   isCrate2Nix = buildPlatform == "crate2nix";
 
   srcs = sources // (
     (overrides.sources or (_: _: { }))
-      { inherit system cargoPkg bins autobins workspaceMetadata root memberName buildPlatform; }
+      { inherit system cargoPkg features bins autobins workspaceMetadata root memberName buildPlatform; }
       sources);
 
   packageMetadata = cargoPkg.metadata.nix or null;
@@ -66,7 +67,7 @@ let
   };
   pkgs = import srcs.nixpkgs (basePkgsConfig // (
     (overrides.pkgs or (_: _: { }))
-      { inherit system cargoPkg bins autobins workspaceMetadata root memberName sources buildPlatform; }
+      { inherit system cargoPkg features bins autobins workspaceMetadata root memberName sources buildPlatform; }
       basePkgsConfig));
 
   # courtesy of devshell
@@ -93,7 +94,7 @@ let
       base // (
         (
           (overrides.crateOverrides or (_: _: { }))
-            { inherit pkgs system cargoPkg bins autobins workspaceMetadata root memberName sources buildPlatform; }
+            { inherit pkgs system cargoPkg features bins autobins workspaceMetadata root memberName sources buildPlatform; }
             base
         )
       );
@@ -103,7 +104,7 @@ let
   getListAttrsFromCcOv = attrName: pkgs.lib.flatten (builtins.map (v: v.${attrName} or [ ]) ccOvEmpty);
 
   baseConfig = {
-    inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName buildPlatform;
+    inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName buildPlatform features;
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
