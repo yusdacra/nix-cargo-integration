@@ -7,6 +7,10 @@
       url = "github:yusdacra/naersk/feat/cargolock-git-deps";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    crate2nix = {
+      url = "github:yusdacra/crate2nix/feat/builtinfetchgit";
+      flake = false;
+    };
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -17,18 +21,31 @@
     let
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./lib.nix {
-        sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk; };
+        sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk crate2nix; };
       };
-      testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
-      tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
-      flattenAttrs = attrs: libb.mapAttrsToList (n: v: if libb.hasInfix "workspace" n then libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + "-workspace"))) v.${attrs} else v.${attrs}) tests;
-      checks = flattenAttrs "checks";
-      packages = flattenAttrs "packages";
-      shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
+      mkPlatform = buildPlatform:
+        let
+          testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
+          tests = libb.genAttrs testNames (test: lib.makeOutputs {
+            inherit buildPlatform;
+            root = ./tests + "/${test}";
+            overrides = {
+              systems = _: [ "x86_64-linux" ];
+            };
+          });
+          flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-workspace" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
+          checks = flattenAttrs "checks";
+          packages = flattenAttrs "packages";
+          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell-${buildPlatform}" = drv; }) test.devShell) tests;
+        in
+        libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);
+
+      naerskPlatform = mkPlatform "naersk";
+      crate2nixPlatform = mkPlatform "crate2nix";
     in
     {
       inherit lib;
 
-      checks = libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);
+      checks = libb.recursiveUpdate naerskPlatform crate2nixPlatform;
     };
 }

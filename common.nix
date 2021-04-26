@@ -1,11 +1,23 @@
-{ memberName ? null, cargoToml, workspaceMetadata, sources, system, root, overrides ? { } }:
+{ memberName
+, buildPlatform
+, cargoToml
+, workspaceMetadata
+, sources
+, system
+, root
+, overrides
+}:
 let
   edition = cargoToml.edition or "2018";
   cargoPkg = cargoToml.package;
   bins = cargoToml.bin or [ ];
   autobins = cargoPkg.autobins or (edition == "2018");
+  isCrate2Nix = buildPlatform == "crate2nix";
 
-  srcs = sources // ((overrides.sources or (_: _: { })) { inherit system cargoPkg bins autobins workspaceMetadata root memberName; } sources);
+  srcs = sources // (
+    (overrides.sources or (_: _: { }))
+      { inherit system cargoPkg bins autobins workspaceMetadata root memberName buildPlatform; }
+      sources);
 
   packageMetadata = cargoPkg.metadata.nix or null;
 
@@ -24,19 +36,38 @@ let
             if builtins.pathExists rustToolchainFile
             then prev.rust-bin.fromRustupToolchainFile rustToolchainFile
             else prev.rust-bin."${workspaceMetadata.toolchain or "stable"}".latest.default;
+          toolchain = baseRustToolchain.override {
+            extensions = [ "rust-src" "rustfmt" "clippy" ];
+          };
         in
         {
-          rustc = baseRustToolchain.override {
-            extensions = [ "rust-src" ];
-          };
-        }
+          rustc = toolchain;
+          rustfmt = toolchain;
+        } // (prev.lib.optionalAttrs isCrate2Nix {
+          cargo = toolchain;
+          clippy = toolchain;
+        })
       )
-      (final: prev: {
-        naersk = prev.callPackage srcs.naersk { };
-      })
-    ];
+    ] ++ (
+      if buildPlatform == "naersk"
+      then [
+        (final: prev: {
+          naersk = prev.callPackage srcs.naersk { };
+        })
+      ]
+      else if isCrate2Nix
+      then [
+        (final: prev: {
+          crate2nixTools = import "${srcs.crate2nix}/tools.nix" { pkgs = prev; };
+        })
+      ]
+      else throw "invalid build platform: ${buildPlatform}"
+    );
   };
-  pkgs = import srcs.nixpkgs (basePkgsConfig // ((overrides.pkgs or (_: _: { })) { inherit system cargoPkg bins autobins workspaceMetadata root memberName sources; } basePkgsConfig));
+  pkgs = import srcs.nixpkgs (basePkgsConfig // (
+    (overrides.pkgs or (_: _: { }))
+      { inherit system cargoPkg bins autobins workspaceMetadata root memberName sources buildPlatform; }
+      basePkgsConfig));
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -48,7 +79,7 @@ let
   resolveToPkgs = map resolveToPkg;
 
   baseConfig = {
-    inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName;
+    inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName buildPlatform;
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
@@ -60,7 +91,29 @@ let
     overrides = {
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
+    } // pkgs.lib.optionalAttrs isCrate2Nix {
+      mainBuild = overrides.mainBuild or (_: _: { });
     };
+  } // pkgs.lib.optionalAttrs isCrate2Nix {
+    crateOverrides = (import ./extraCrateOverrides.nix { inherit pkgs; }) // (
+      pkgs.lib.foldAttrs
+        pkgs.lib.recursiveUpdate
+        { }
+        (
+          builtins.map
+            (crate: {
+              ${crate.name} = prev: {
+                nativeBuildInputs = prev.nativeBuildInputs ++ (resolveToPkgs crate.nativeBuildInputs);
+                buildInputs = prev.buildInputs ++ (resolveToPkgs crate.buildInputs);
+              } // (
+                pkgs.lib.filterAttrs
+                  (name: _: name != "nativeBuildInputs" || name != "buildInputs" || name != "name")
+                  crate
+              );
+            })
+            ((workspaceMetadata.crateOverride or [ ]) ++ (packageMetadata.crateOverride or [ ]))
+        )
+    );
   };
 in
 (baseConfig // ((overrides.common or (_: { })) baseConfig))

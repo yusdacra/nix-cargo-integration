@@ -6,4 +6,3 @@ edition = "2018"
 
 [package.metadata.nix]
 build = true
-toolchain = "nightly"

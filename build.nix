@@ -6,9 +6,10 @@
 ,
 }:
 let
-  inherit (common) pkgs packageMetadata cargoPkg;
+  inherit (common) pkgs packageMetadata cargoPkg buildPlatform;
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
+  mkDesktopFile = ! isNull desktopFileMetadata;
 
   cargoLicenseToNixpkgs = license:
     let
@@ -55,48 +56,123 @@ let
       // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
       // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
 
-  config =
+  runtimeLibsEnv =
+    if (builtins.length common.runtimeLibs) > 0
+    then pkgs.lib.makeLibraryPath common.runtimeLibs
+    else null;
+
+  baseNaerskConfig =
     let
       lib = common.pkgs.lib;
-      pkgs = common.pkgs;
-
       library = packageMetadata.library or false;
-      app = packageMetadata.app or false;
       packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
       featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
-
-      baseConfig = {
-        inherit (common) root nativeBuildInputs buildInputs;
-        inherit (cargoPkg) name version;
-        allRefs = true;
-        gitSubmodules = true;
-        # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-        cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
-        cargoTestOptions = def: def ++ [ "--tests" "--bins" "--examples" ] ++ (lib.optional library "--lib") ++ packageOption ++ featuresOption;
-        override = _: common.env;
-        overrideMain =
-          let
-            runtimeWrapOverride = prev:
-              prev // (lib.optionalAttrs app {
-                nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
-                postInstall = ''
-                  ${prev.postInstall or ""}
-                  wrapProgram $out/bin/${packageMetadata.executable or cargoPkg.name}\
-                    --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
-                '';
-              });
-            desktopOverride = prev: prev // (lib.optionalAttrs (! isNull desktopFileMetadata)
-              { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
-          in
-          prev: runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; }));
-        copyLibs = library;
-        inherit release doCheck doDoc;
-      };
     in
-    baseConfig // (common.overrides.build common baseConfig);
+    {
+      inherit (common) root nativeBuildInputs buildInputs;
+      inherit (cargoPkg) name version;
+      allRefs = true;
+      gitSubmodules = true;
+      # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
+      cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
+      cargoTestOptions = def:
+        def ++ [ "--tests" "--bins" "--examples" ]
+        ++ (lib.optional library "--lib")
+        ++ packageOption ++ featuresOption;
+      override = _: common.env;
+      overrideMain =
+        let
+          runtimeWrapOverride = prev:
+            prev // {
+              nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
+            } // lib.optionalAttrs (! isNull runtimeLibsEnv) {
+              postInstall = ''
+                ${prev.postInstall or ""}
+                for f in $out/bin/*; do
+                  wrapProgram "$f" \
+                    --set LD_LIBRARY_PATH ${runtimeLibsEnv}
+                done
+              '';
+            };
+          desktopOverride = prev: prev // (lib.optionalAttrs mkDesktopFile
+            { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
+        in
+        prev: runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; }));
+      copyLibs = library;
+      inherit release doCheck doDoc;
+    };
 
-  package = pkgs.naersk.buildPackage config;
+  baseCrate2NixConfig =
+    let
+      lib = common.pkgs.lib;
+      overrideMain = prev: {
+        nativeBuildInputs =
+          (prev.nativeBuildInputs or [ ])
+            ++ common.nativeBuildInputs
+            ++ [ pkgs.makeWrapper ]
+            ++ lib.optional mkDesktopFile pkgs.copyDesktopItems;
+        buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
+      } // (lib.optionalAttrs (! isNull runtimeLibsEnv) {
+        postInstall = ''
+          ${prev.postInstall or ""}
+          for f in $out/bin/*; do
+            wrapProgram "$f" \
+              --set LD_LIBRARY_PATH ${runtimeLibsEnv}
+          done
+        '';
+      }) // (lib.optionalAttrs mkDesktopFile {
+        desktopItems = [ desktopFile ];
+      }) // common.env;
+    in
+    {
+      inherit pkgs;
+      rootFeatures = features;
+      defaultCrateOverrides = pkgs.defaultCrateOverrides // common.crateOverrides // {
+        ${cargoPkg.name} = prev:
+          let overrode = overrideMain prev; in overrode // (common.overrides.mainBuild common overrode);
+      };
+    };
+
+  overrideConfig = config:
+    config // (common.overrides.build common config);
 in
-{
-  inherit package config;
-}
+if buildPlatform == "naersk"
+then
+  let config = overrideConfig baseNaerskConfig; in
+  {
+    inherit config;
+    package = pkgs.naersk.buildPackage config;
+  }
+else if buildPlatform == "crate2nix"
+then
+  let config = overrideConfig baseCrate2NixConfig; in
+  {
+    inherit config;
+    package =
+      let
+        cargoNix = import
+          (pkgs.crate2nixTools.generatedCargoNix {
+            name = builtins.baseNameOf common.root;
+            src = common.root;
+            additionalCargoNixArgs =
+              ([ "--no-default-features" ] ++ (
+                pkgs.lib.optionals
+                  ((builtins.length config.rootFeatures) > 0)
+                  [ "--features" (pkgs.lib.concatStringsSep " " config.rootFeatures) ])
+              );
+          })
+          config;
+        pkg =
+          if ! isNull common.memberName
+          then cargoNix.workspaceMembers.${cargoPkg.name}.build
+          else cargoNix.rootCrate.build;
+      in
+      # This is a workaround so that crate2nix doesnt get built until we actually build
+        # otherwise nix will try to build it even if you only run `nix flake show`
+      pkgs.symlinkJoin {
+        inherit meta;
+        name = "${cargoPkg.name}-${cargoPkg.version}";
+        paths = [ pkg ];
+      };
+  }
+else throw "invalid build platform: ${buildPlatform}"
