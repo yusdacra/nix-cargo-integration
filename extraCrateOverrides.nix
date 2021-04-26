@@ -15,7 +15,7 @@ with pkgs;
   freetype-sys = mkOv [ freetype ] [ cmake ];
   servo-fontconfig-sys = mkOv [ fontconfig ] [ pkg-config ];
   cairo-sys-rs = mkOv [ cairo ] [ pkg-config ];
-  pango-sys = mkOv [ pango ] [ pkg-config ];
+  pango-sys = mkOv [ pango harfbuzz ] [ pkg-config ];
   glib-sys = mkOv [ glib ] [ pkg-config ];
   gobject-sys = mkOv [ glib ] [ pkg-config ];
   gio-sys = mkOv [ glib ] [ pkg-config ];
@@ -31,7 +31,7 @@ with pkgs;
       };
     in
     {
-      buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf ];
+      buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf rustfmt ];
       propagatedEnv = env;
     } // env;
 }
