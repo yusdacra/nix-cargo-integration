@@ -1,14 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    rustOverlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     nixCargoIntegration = {
       url = "github:yusdacra/nix-cargo-integration";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rustOverlay.follows = "rustOverlay";
     };
   };
 
@@ -23,6 +18,8 @@
         lib = inputs.nixpkgs.lib;
       in
       {
+        # Mutate the systems to generate outputs for here.
+        systems = def: def;
         # Override sources used by nixCargoIntegration in common.
         # This can be used to provide sources that are only needed for
         # specific systems or crates.
@@ -33,6 +30,13 @@
         # to add overlays for specific systems or crates.
         pkgs = common: prev: {
           # overlays = prev.overlays ++ [ inputs.someInput.someOverlay ];
+        };
+        # Override crate overrides used by crate2nix build derivation.
+        crateOverrides = common: prev: {
+          # test = prev: {
+          #   buildInputs = (prev.buildInputs or []) ++ [ common.pkgs.hello ];
+          #   TEST_ENV = "test";
+          # }
         };
         # Common attribute overrides.
         common = prev: {
@@ -87,6 +91,26 @@
           cargoBuildOptions = def: ((prev.cargoBuildOptions or (d: d)) def) ++ [ ];
           # Arguments to be passed to cargo while testing.
           cargoTestOptions = def: ((prev.cargoTestOptions or (d: d)) def) ++ [ ];
+        };
+        # crate2nix build derivation overrides.
+        /*
+          build = common: prev: {
+          # Set features to enable.
+          rootFeatures =
+          prev.rootFeatures
+          # ++ [ "some-feature" ]
+          ;
+          # Whether to build with release profile or not.
+          release = prev.release;
+          # Whether to run (all) tests or not.
+          runTests = prev.runTests;
+          };
+        */
+        # Override main build derivation of naersk / crate2nix.
+        mainBuild = common: prev: {
+          buildInputs = (prev.buildInputs or [ ]) ++ [ ];
+          # You can add environment variables like so:
+          # TEST_ENV = "test";
         };
       };
   };

@@ -2,7 +2,7 @@
 
 Utility to integrate Cargo projects with Nix.
 
-- Uses [naersk] to build Cargo packages and [devshell] to provide development shell.
+- Uses [naersk] or [crate2nix] to build Cargo packages and [devshell] to provide development shell.
 - Allows configuration from `Cargo.toml` via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 
 ## Usage
@@ -14,14 +14,9 @@ Add:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    rustOverlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     nixCargoIntegration = {
-      url = "github:yusdacra/nix-cargo-integration";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rustOverlay.follows = "rustOverlay";
+        url = "github:yusdacra/nix-cargo-integration";
+        inputs.nixpkgs.follows = "nixpkgs";
     };
   };
   outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs { root = ./.; };
@@ -38,7 +33,7 @@ If you aren't using flakes, you can do:
 let
   nixCargoIntegrationSrc = builtins.fetchGit { url = "https://github.com/yusdacra/nix-cargo-integration.git"; rev = <something>; sha256 = <something>; };
   nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
-      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs; };
+      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs crate2nix; };
   };
   outputs = nixCargoIntegration.makeOutputs { root = ./.; };
 in
@@ -52,41 +47,27 @@ in
 
 ## Library documentation
 
-### `makeOutputs = { root, overrides ? { }}: { ... }`
+### `makeOutputs = { root, overrides ? { }, buildPlatform ? "naersk" }: { ... }`
 
 Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
 
 #### Arguments
 
+- `buildPlatform`: platform to build crates with (type: `"naersk" or "crate2nix"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset)
-    - `overrides.build`: override for build (type: `common: prev: { }`)
-        - this will override *all* [naersk] build derivation(s), refer to [naersk] for more information
-    - `overrides.shell`: override for devshell (type: `common: prev: { }`)
-        - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
-    - `overrides.common`: override for common (type: `prev: { }`)
-        - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
+    - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
     - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
-
-### `makeOutput = { root, cargoPkg, system, overrides ? { }}: { ... }`
-
-Makes `packages`, `apps`, `checks` and `devShell` output for one system.
-
-#### Arguments
-
-- `root`: see `makeOutputs`' `root` argument
-- `overrides`: see `makeOutputs`' `overrides` argument
-- `cargoPkg`: `package` attribute set of the `Cargo.toml` that reside in `root`. (type: attrset)
-- `system`: machine system to build for (type: string)
-
-### `importCargoTOML = root: { ... }`
-
-Imports a `Cargo.toml` file from the specified root as an attribute set.
-
-#### Arguments
-
-- `root`: see `makeOutput`'s `root` argument
+    - `override.crateOverrides`: override for crate2nix crate overrides (type: `common: prev: { }`)
+    - `overrides.common`: override for common (type: `prev: { }`)
+        - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
+    - `overrides.shell`: override for devshell (type: `common: prev: { }`)
+        - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
+    - `overrides.build`: override for build (type: `common: prev: { }`)
+        - this will override *all* [naersk]/[crate2nix] build derivation(s), refer to [naersk]/[crate2nix] for more information
+    - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
+        - this will override *all* [naersk]/[crate2nix] main crate build derivation(s), refer to [naersk]/[crate2nix] for more information
 
 ## `package.metadata.nix` and `workspace.metadata.nix` common attributes
 
@@ -103,9 +84,19 @@ For example:
 PROTOC = "protoc"
 ```
 
+### `crateOverride` attributes (only used for `crate2nix` build platform)
+
+Key-value pairings that are put here will be used to override crates in build derivation.
+Dependencies put here will also be exported to the development environment.
+For example:
+```toml
+[package.metadata.nix.crateOverride.xcb]
+buildInputs = ["xorg.libxcb"]
+env.TEST_ENV = "test"
+```
+
 ## `package.metadata.nix` attributes
 
-- `executable`: executable name of the build binary (type: string)
 - `build`: whether to enable outputs which build the package (type: boolean)
     - defaults to `false` if not specified
 - `library`: whether to copy built library to package output (type: boolean)
@@ -149,4 +140,5 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 
 [devshell]: https://github.com/numtide/devshell "devshell"
 [naersk]: https://github.com/nmattia/naersk "naersk"
+[crate2nix]: https://github.com/kolloch/crate2nix "crate2nix"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"

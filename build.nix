@@ -97,7 +97,9 @@ let
           desktopOverride = prev: prev // (lib.optionalAttrs mkDesktopFile
             { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
         in
-        prev: runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; }));
+        prev:
+        let overrode = runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; })); in
+        overrode // (common.overrides.mainBuild common overrode);
       copyLibs = library;
       inherit release doCheck doDoc;
     };

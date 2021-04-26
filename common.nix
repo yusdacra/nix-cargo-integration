@@ -127,7 +127,6 @@ let
     overrides = {
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
-    } // pkgs.lib.optionalAttrs isCrate2Nix {
       mainBuild = overrides.mainBuild or (_: _: { });
     };
   } // ccOv;
