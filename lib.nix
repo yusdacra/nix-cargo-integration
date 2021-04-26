@@ -20,8 +20,9 @@ let
       packageMetadata = rootPkg.metadata.nix or null;
       workspaceMetadata = if isNull workspaceToml then packageMetadata else workspaceToml.metadata.nix or null;
 
+      dependencies = (builtins.fromTOML (builtins.readFile (root + "/Cargo.lock"))).package;
       systems = (overrides.systems or (x: x)) (workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems);
-      mkCommon = memberName: cargoToml: system: import ./common.nix { inherit buildPlatform memberName cargoToml workspaceMetadata system root overrides sources; };
+      mkCommon = memberName: cargoToml: system: import ./common.nix { inherit dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources; };
 
       rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null cargoToml) else null;
       memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value)) members;

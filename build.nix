@@ -136,10 +136,14 @@ let
         then features ++ def
         else def;
       defaultCrateOverrides =
-        pkgs.defaultCrateOverrides
-        // (builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ])) common.crateOverrides) // {
+        let crateOverrides = builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ])) common.crateOverrides; in
+        crateOverrides // {
           ${cargoPkg.name} = prev:
-            let overrode = overrideMain prev; in overrode // (common.overrides.mainBuild common overrode);
+            let
+              overrode = overrideMain prev;
+              overroded = overrode // ((crateOverrides.${cargoPkg.name} or (_: { })) overrode);
+            in
+            overroded // (common.overrides.mainBuild common overrode);
         };
     };
 
