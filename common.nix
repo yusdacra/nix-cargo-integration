@@ -103,7 +103,7 @@ let
     builtins.foldl' op pkgs attrs;
   resolveToPkgs = map resolveToPkg;
 
-  ccOv = pkgs.lib.optionalAttrs isCrate2Nix {
+  ccOv = {
     crateOverrides =
       let
         commonOverride = {
@@ -171,11 +171,11 @@ let
         // (packageMetadata.env or { })
         // (
         (
-          pkgs.lib.foldAttrs
+          builtins.foldl'
             pkgs.lib.recursiveUpdate
             { }
-            (builtins.map (v: { propagatedEnv = v.propagatedEnv or { }; }) ccOvEmpty)
-        ).propagatedEnv or { }
+            (builtins.map (v: v.propagatedEnv or { }) ccOvEmpty)
+        )
       );
 
     overrides = {
