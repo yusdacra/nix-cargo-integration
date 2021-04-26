@@ -48,6 +48,35 @@ let
   rustOverlay = import srcs.rustOverlay;
   devshellOverlay = import (srcs.devshell + "/overlay.nix");
 
+  mkRustPkgsOverlay = toolc: final: prev:
+    let
+      toolchain = toolc.override {
+        extensions = [ "rust-src" "rustfmt" "clippy" ];
+      };
+    in
+    {
+      rustc = toolchain;
+      rustfmt = toolchain;
+    } // (prev.lib.optionalAttrs isCrate2Nix {
+      cargo = toolchain;
+      clippy = toolchain;
+    });
+
+  buildPlatformOverlay =
+    if isNaersk
+    then [
+      (final: prev: {
+        naersk = prev.callPackage srcs.naersk { };
+      })
+    ]
+    else if isCrate2Nix
+    then [
+      (final: prev: {
+        crate2nixTools = import "${srcs.crate2nix}/tools.nix" { pkgs = prev; };
+      })
+    ]
+    else throw "invalid build platform: ${buildPlatform}";
+
   basePkgsConfig = {
     inherit system;
     overlays = [
@@ -60,33 +89,10 @@ let
             if builtins.pathExists rustToolchainFile
             then prev.rust-bin.fromRustupToolchainFile rustToolchainFile
             else prev.rust-bin."${workspaceMetadata.toolchain or "stable"}".latest.default;
-          toolchain = baseRustToolchain.override {
-            extensions = [ "rust-src" "rustfmt" "clippy" ];
-          };
         in
-        {
-          rustc = toolchain;
-          rustfmt = toolchain;
-        } // (prev.lib.optionalAttrs isCrate2Nix {
-          cargo = toolchain;
-          clippy = toolchain;
-        })
+        (mkRustPkgsOverlay baseRustToolchain final prev)
       )
-    ] ++ (
-      if isNaersk
-      then [
-        (final: prev: {
-          naersk = prev.callPackage srcs.naersk { };
-        })
-      ]
-      else if isCrate2Nix
-      then [
-        (final: prev: {
-          crate2nixTools = import "${srcs.crate2nix}/tools.nix" { pkgs = prev; };
-        })
-      ]
-      else throw "invalid build platform: ${buildPlatform}"
-    );
+    ] ++ buildPlatformOverlay;
   };
   pkgs = import srcs.nixpkgs (basePkgsConfig // (
     (overrides.pkgs or (_: _: { }))
@@ -152,6 +158,10 @@ let
   getListAttrsFromCcOv = attrName: pkgs.lib.flatten (builtins.map (v: v.${attrName} or [ ]) ccOvEmpty);
 
   baseConfig = {
+    lib = {
+      inherit buildPlatformOverlay mkRustPkgsOverlay rustOverlay devshellOverlay;
+    } // pkgs.lib;
+
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
