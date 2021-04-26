@@ -78,15 +78,57 @@ let
     builtins.foldl' op pkgs attrs;
   resolveToPkgs = map resolveToPkg;
 
+  ccOv = pkgs.lib.optionalAttrs isCrate2Nix {
+    crateOverrides =
+      let
+        base = (import ./extraCrateOverrides.nix { inherit pkgs; }) // (
+          pkgs.lib.foldAttrs
+            pkgs.lib.recursiveUpdate
+            { }
+            (
+              builtins.map
+                (crate: {
+                  ${crate.name} = prev: {
+                    nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs crate.nativeBuildInputs);
+                    buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs crate.buildInputs);
+                  } // (crate.env or { }) // { propagatedEnv = crate.env or { }; };
+                })
+                ((workspaceMetadata.crateOverride or [ ]) ++ (packageMetadata.crateOverride or [ ]))
+            )
+        );
+      in
+      base // (
+        (
+          (overrides.crateOverrides or (_: _: { }))
+            { inherit pkgs system cargoPkg bins autobins workspaceMetadata root memberName sources buildPlatform; }
+            base
+        )
+      );
+  };
+
+  ccOvEmpty = pkgs.lib.mapAttrsToList (_: v: let empty = v { }; in v) (ccOv.crateOverrides or { });
+  getListAttrsFromCcOv = attrName: pkgs.lib.flatten (builtins.map (v: v.${attrName} or [ ]) ccOvEmpty);
+
   baseConfig = {
     inherit pkgs cargoPkg bins autobins workspaceMetadata packageMetadata root system memberName buildPlatform;
     sources = srcs;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
     runtimeLibs = resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
-    buildInputs = resolveToPkgs ((workspaceMetadata.buildInputs or [ ]) ++ (packageMetadata.buildInputs or [ ]));
-    nativeBuildInputs = resolveToPkgs ((workspaceMetadata.nativeBuildInputs or [ ]) ++ (packageMetadata.nativeBuildInputs or [ ]));
-    env = (workspaceMetadata.env or { }) // (packageMetadata.env or { });
+    buildInputs =
+      resolveToPkgs
+        ((workspaceMetadata.buildInputs or [ ])
+          ++ (packageMetadata.buildInputs or [ ])
+          ++ (getListAttrsFromCcOv "buildInputs"));
+    nativeBuildInputs =
+      resolveToPkgs
+        ((workspaceMetadata.nativeBuildInputs or [ ])
+          ++ (packageMetadata.nativeBuildInputs or [ ])
+          ++ (getListAttrsFromCcOv "nativeBuildInputs"));
+    env =
+      (workspaceMetadata.env or { })
+        // (packageMetadata.env or { })
+        // (pkgs.lib.foldAttrs pkgs.lib.recursiveUpdate { } (builtins.map (v: v.propagatedEnv) ccOvEmpty));
 
     overrides = {
       shell = overrides.shell or (_: _: { });
@@ -94,26 +136,6 @@ let
     } // pkgs.lib.optionalAttrs isCrate2Nix {
       mainBuild = overrides.mainBuild or (_: _: { });
     };
-  } // pkgs.lib.optionalAttrs isCrate2Nix {
-    crateOverrides = (import ./extraCrateOverrides.nix { inherit pkgs; }) // (
-      pkgs.lib.foldAttrs
-        pkgs.lib.recursiveUpdate
-        { }
-        (
-          builtins.map
-            (crate: {
-              ${crate.name} = prev: {
-                nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs crate.nativeBuildInputs);
-                buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs crate.buildInputs);
-              } // (
-                pkgs.lib.filterAttrs
-                  (name: _: name != "nativeBuildInputs" || name != "buildInputs" || name != "name")
-                  crate
-              );
-            })
-            ((workspaceMetadata.crateOverride or [ ]) ++ (packageMetadata.crateOverride or [ ]))
-        )
-    );
-  };
+  } // ccOv;
 in
 (baseConfig // ((overrides.common or (_: { })) baseConfig))
