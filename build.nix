@@ -127,10 +127,12 @@ let
     {
       inherit pkgs;
       rootFeatures = features;
-      defaultCrateOverrides = pkgs.defaultCrateOverrides // common.crateOverrides // {
-        ${cargoPkg.name} = prev:
-          let overrode = overrideMain prev; in overrode // (common.overrides.mainBuild common overrode);
-      };
+      defaultCrateOverrides =
+        pkgs.defaultCrateOverrides
+        // (builtins.mapAttrs (_: v: (prev: lib.filterAttrs (n: _: n != "propagatedEnv") (v prev))) common.crateOverrides) // {
+          ${cargoPkg.name} = prev:
+            let overrode = overrideMain prev; in overrode // (common.overrides.mainBuild common overrode);
+        };
     };
 
   overrideConfig = config:
