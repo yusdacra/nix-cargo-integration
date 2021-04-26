@@ -126,6 +126,7 @@ let
     in
     {
       inherit pkgs release;
+      runTests = doCheck;
       rootFeatures =
         let def = lib.optional (builtins.hasAttr "default" common.features) "default"; in
         if (builtins.length features) > 0
@@ -133,7 +134,7 @@ let
         else def;
       defaultCrateOverrides =
         pkgs.defaultCrateOverrides
-        // (builtins.mapAttrs (_: v: (prev: lib.filterAttrs (n: _: n != "propagatedEnv") (v prev))) common.crateOverrides) // {
+        // (builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ])) common.crateOverrides) // {
           ${cargoPkg.name} = prev:
             let overrode = overrideMain prev; in overrode // (common.overrides.mainBuild common overrode);
         };
@@ -167,7 +168,7 @@ then
                   [ "--features" (pkgs.lib.concatStringsSep " " config.rootFeatures) ])
               );
           })
-          config;
+          (builtins.removeAttrs config [ "runTests" ]);
         pkg =
           if ! isNull common.memberName
           then cargoNix.workspaceMembers.${cargoPkg.name}.build
@@ -179,7 +180,7 @@ then
         inherit meta;
         name = "${cargoPkg.name}-${cargoPkg.version}";
         paths = [
-          (pkg.override { runTests = doCheck; })
+          (pkg.override { inherit (config) runTests; })
         ];
       };
   }
