@@ -1,2 +1,4 @@
 tests/**/target
 /result
+.direnv
+.envrc

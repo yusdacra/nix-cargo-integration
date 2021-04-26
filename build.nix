@@ -98,7 +98,7 @@ let
             { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
         in
         prev:
-        let overrode = runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; })); in
+        let overrode = runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; dontFixup = !release; })); in
         overrode // (common.overrides.mainBuild common overrode);
       copyLibs = library;
       inherit release doCheck doDoc;
@@ -108,6 +108,7 @@ let
     let
       lib = common.pkgs.lib;
       overrideMain = prev: {
+        dontFixup = !release;
         nativeBuildInputs =
           (prev.nativeBuildInputs or [ ])
             ++ common.nativeBuildInputs
