@@ -106,7 +106,7 @@ let
       );
   };
 
-  ccOvEmpty = pkgs.lib.mapAttrsToList (_: v: let empty = v { }; in v) (ccOv.crateOverrides or { });
+  ccOvEmpty = pkgs.lib.mapAttrsToList (_: v: v { }) (ccOv.crateOverrides or { });
   getListAttrsFromCcOv = attrName: pkgs.lib.flatten (builtins.map (v: v.${attrName} or [ ]) ccOvEmpty);
 
   baseConfig = {
