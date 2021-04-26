@@ -86,7 +86,7 @@ let
           ex =
             if isNull bin
             then { exeName = n; name = n; }
-            else { exeName = bin.name; name = "${n}-${bin.name}"; };
+            else { exeName = bin.name; name = "${bin.name}${if v.config.release then "" else "-debug"}"; };
         in
         {
           name = ex.name;
