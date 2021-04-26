@@ -5,6 +5,36 @@ let
   importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
   flakeUtils = import sources.flakeUtils;
 
+  makeDummy =
+    { root
+    , overrides ? { }
+    , buildPlatform ? "naersk"
+    }:
+    let
+      # Craft a dummy cargo toml
+      dummyToml = {
+        package = {
+          name = "dummy";
+          version = "0.1.0";
+          edition = "2018";
+        };
+      };
+      cargoToml = dummyToml // ((overrides.cargoToml or (_: { })) dummyToml);
+      dependencies = (overrides.dependencies or (x: x)) [{
+        name = "dummy";
+        version = "0.1.0";
+      }];
+      systems = (overrides.systems or (x: x)) flakeUtils.defaultSystems;
+      mkCommon = system: import ./common.nix { inherit dependencies root system sources cargoToml buildPlatform overrides; };
+      devshellCombined = {
+        devShell =
+          libb.mapAttrs
+            (_: import ./devShell.nix)
+            (libb.genAttrs systems mkCommon);
+      };
+    in
+    devshellCombined;
+
   makeOutputs =
     { root
     , overrides ? { }
@@ -140,5 +170,5 @@ let
     }));
 in
 {
-  inherit importCargoTOML makeOutput makeOutputs;
+  inherit makeOutputs makeDummy;
 }

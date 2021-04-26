@@ -1,12 +1,12 @@
-{ memberName
-, buildPlatform
-, cargoToml
-, workspaceMetadata
+{ memberName ? null
+, buildPlatform ? "naersk"
+, cargoToml ? null
+, workspaceMetadata ? null
+, root ? null
+, overrides ? { }
+, dependencies ? [ ]
 , sources
 , system
-, root
-, overrides
-, dependencies
 }:
 let
   edition = cargoToml.edition or "2018";
