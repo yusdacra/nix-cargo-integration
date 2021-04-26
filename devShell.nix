@@ -27,6 +27,13 @@ let
       with pkgs; [
         (pkgCmd git)
         (pkgCmd nixpkgs-fmt)
+        {
+          name = "check";
+          help = "Check flake outputs";
+          command = "nix build -L --show-trace --no-link --impure --expr '
+            builtins.mapAttrs (n: v: builtins.seq v v) (builtins.getFlake (toString ./.)).checks.\${builtins.currentSystem}
+          '";
+        }
       ] ++ (lib.optional (! isNull cachixName) (pkgCmd cachix));
     env = with pkgs.lib; [
       { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }

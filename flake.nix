@@ -29,9 +29,6 @@
           tests = libb.genAttrs testNames (test: lib.makeOutputs {
             inherit buildPlatform;
             root = ./tests + "/${test}";
-            overrides = {
-              systems = _: [ "x86_64-linux" ];
-            };
           });
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-workspace" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
           checks = flattenAttrs "checks";
