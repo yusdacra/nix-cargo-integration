@@ -106,6 +106,12 @@ let
   ccOv = pkgs.lib.optionalAttrs isCrate2Nix {
     crateOverrides =
       let
+        commonOverride = {
+          ${cargoPkg.name} = prev: {
+            buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
+            nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.binutils ];
+          };
+        };
         tomlOverrides = builtins.mapAttrs
           (_: crate: prev: {
             nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]));
@@ -129,7 +135,7 @@ let
               else _: { }
             ))
             pkgs.defaultCrateOverrides
-            [ tomlOverrides extraOverrides ];
+            [ tomlOverrides extraOverrides commonOverride ];
         depNames = builtins.map (dep: dep.name) dependencies;
         base = pkgs.lib.filterAttrs (n: _: pkgs.lib.any (depName: n == depName) depNames) baseRaw;
       in
