@@ -109,39 +109,45 @@ let
     builtins.foldl' op pkgs attrs;
   resolveToPkgs = map resolveToPkg;
 
+  makeCrateOverrides = crateName:
+    let
+      commonOverride = {
+        ${crateName} = prev: {
+          buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
+          nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.binutils ];
+        };
+      };
+      tomlOverrides = builtins.mapAttrs
+        (_: crate: prev: {
+          nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]));
+          buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ]));
+        } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
+        (pkgs.lib.recursiveUpdate (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }));
+      extraOverrides = import ./extraCrateOverrides.nix { inherit pkgs; };
+      base =
+        builtins.foldl'
+          (acc: el: pkgs.lib.genAttrs (pkgs.lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (name:
+            let
+              isEl = builtins.hasAttr name el;
+              isAcc = builtins.hasAttr name acc;
+            in
+            if isAcc && isEl
+            then pp: let accPp = acc.${name} pp; in accPp // (el.${name} accPp)
+            else if isAcc
+            then acc.${name}
+            else if isEl
+            then el.${name}
+            else _: { }
+          ))
+          pkgs.defaultCrateOverrides
+          [ tomlOverrides extraOverrides commonOverride ];
+    in
+    base;
+
   ccOv = {
     crateOverrides =
       let
-        commonOverride = {
-          ${cargoPkg.name} = prev: {
-            buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
-            nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.binutils ];
-          };
-        };
-        tomlOverrides = builtins.mapAttrs
-          (_: crate: prev: {
-            nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]));
-            buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ]));
-          } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
-          (pkgs.lib.recursiveUpdate (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }));
-        extraOverrides = import ./extraCrateOverrides.nix { inherit pkgs; };
-        baseRaw =
-          builtins.foldl'
-            (acc: el: pkgs.lib.genAttrs (pkgs.lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (name:
-              let
-                isEl = builtins.hasAttr name el;
-                isAcc = builtins.hasAttr name acc;
-              in
-              if isAcc && isEl
-              then pp: let accPp = acc.${name} pp; in accPp // (el.${name} accPp)
-              else if isAcc
-              then acc.${name}
-              else if isEl
-              then el.${name}
-              else _: { }
-            ))
-            pkgs.defaultCrateOverrides
-            [ tomlOverrides extraOverrides commonOverride ];
+        baseRaw = makeCrateOverrides cargoPkg.name;
         depNames = builtins.map (dep: dep.name) dependencies;
         base = pkgs.lib.filterAttrs (n: _: pkgs.lib.any (depName: n == depName) depNames) baseRaw;
       in
@@ -159,7 +165,12 @@ let
 
   baseConfig = {
     lib = {
-      inherit buildPlatformOverlay mkRustPkgsOverlay rustOverlay devshellOverlay;
+      inherit
+        buildPlatformOverlay
+        mkRustPkgsOverlay
+        rustOverlay
+        devshellOverlay
+        makeCrateOverrides;
     } // pkgs.lib;
 
     sources = srcs;
