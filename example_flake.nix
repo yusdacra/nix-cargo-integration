@@ -9,6 +9,9 @@
 
   outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs {
     root = ./.;
+    # The build platform that will be used for anything build related.
+    # Available platforms are "naersk" and "crate2nix".
+    buildPlatform = "naersk";
     # Overrides provided here will apply to *every crate*,
     # for *every system*. To selectively override per crate,
     # one can use `common.cargoPkg.name` attribute. To selectively
@@ -32,7 +35,7 @@
           # overlays = prev.overlays ++ [ inputs.someInput.someOverlay ];
         };
         # Override crate overrides used by crate2nix build derivation.
-        crateOverrides = common: prev: {
+        crateOverrides = common: prevv: {
           # test = prev: {
           #   buildInputs = (prev.buildInputs or []) ++ [ common.pkgs.hello ];
           #   TEST_ENV = "test";
@@ -77,21 +80,23 @@
           ];
         };
         # naersk build derivation overrides.
-        build = common: prev: {
+        /*
+          build = common: prev: {
           buildInputs = prev.buildInputs ++ [ ];
           nativeBuildInputs = prev.nativeBuildInputs ++ [ ];
           # Overrides for dependency build step.
           override = prevv: (prev.override prevv) // { };
           # Overrides for main crate build step.
           overrideMain = prevv: (prev.overrideMain prevv) // {
-            # Build specific env variables can be specified here like so.
-            # GIT_LFS_CHECK = false;
+          # Build specific env variables can be specified here like so.
+          # GIT_LFS_CHECK = false;
           };
           # Arguments to be passed to cargo while building.
           cargoBuildOptions = def: ((prev.cargoBuildOptions or (d: d)) def) ++ [ ];
           # Arguments to be passed to cargo while testing.
           cargoTestOptions = def: ((prev.cargoTestOptions or (d: d)) def) ++ [ ];
-        };
+          };
+        */
         # crate2nix build derivation overrides.
         /*
           build = common: prev: {
