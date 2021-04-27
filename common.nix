@@ -5,18 +5,25 @@
 , root ? null
 , overrides ? { }
 , dependencies ? [ ]
+, lib
 , sources
 , system
 }:
 let
-  isCrate2Nix = buildPlatform == "crate2nix";
-  isNaersk = buildPlatform == "naersk";
-
   cargoPkg = cargoToml.package;
   packageMetadata = cargoPkg.metadata.nix or null;
 
-  pkgs = import ./nixpkgs.nix {
-    inherit system sources buildPlatform isCrate2Nix isNaersk;
+  makePkgs =
+    { platform ? buildPlatform
+    , toolchainChannel ? "stable"
+    , override ? (_: _: { })
+    }:
+    import ./nixpkgs.nix {
+      inherit system sources lib override toolchainChannel;
+      buildPlatform = platform;
+    };
+
+  pkgs = makePkgs {
     override = overrides.pkgs or (_: _: { });
     toolchainChannel =
       let rustToolchain = root + "/rust-toolchain"; in
@@ -24,39 +31,39 @@ let
       then rustToolchain
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
-  lib = pkgs.lib // (import ./utils.nix pkgs);
-
+  libb = lib // (import ./utils.nix pkgs);
+in
+let
   crateOverrides =
     let
-      baseRaw = lib.makeCrateOverrides {
+      baseRaw = libb.makeCrateOverrides {
         crateName = cargoPkg.name;
         rawTomlOverrides =
-          lib.recursiveUpdate
+          libb.recursiveUpdate
             (workspaceMetadata.crateOverride or { })
             (packageMetadata.crateOverride or { });
       };
       depNames = builtins.map (dep: dep.name) dependencies;
-      base = lib.filterAttrs (n: _: lib.any (depName: n == depName) depNames) baseRaw;
+      base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
     in
-    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs lib; } base);
+    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs; lib = libb; } base);
 
-  crateOverridesEmpty = lib.mapAttrsToList (_: v: v { }) crateOverrides;
-  crateOverridesGetFlattenLists = attrName: lib.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty);
+  crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
+  crateOverridesGetFlattenLists = attrName: libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty);
 
   baseConfig = {
     lib = {
       inherit
         crateOverridesGetFlattenLists
-        crateOverridesEmpty;
-    } // lib;
+        crateOverridesEmpty
+        makePkgs;
+    } // libb;
 
     inherit
       pkgs
       crateOverrides
       cargoPkg
       cargoToml
-      isCrate2Nix
-      isNaersk
       buildPlatform
       sources
       system
@@ -66,16 +73,16 @@ let
       packageMetadata;
 
     # Libraries that will be put in $LD_LIBRARY_PATH
-    runtimeLibs = lib.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+    runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
 
     buildInputs =
-      lib.resolveToPkgs
+      libb.resolveToPkgs
         ((workspaceMetadata.buildInputs or [ ])
         ++ (packageMetadata.buildInputs or [ ]))
       ++ (crateOverridesGetFlattenLists "buildInputs");
 
     nativeBuildInputs =
-      lib.resolveToPkgs
+      libb.resolveToPkgs
         ((workspaceMetadata.nativeBuildInputs or [ ])
         ++ (packageMetadata.nativeBuildInputs or [ ]))
       ++ (crateOverridesGetFlattenLists "nativeBuildInputs");
@@ -84,7 +91,7 @@ let
       (workspaceMetadata.env or { })
       // (packageMetadata.env or { })
       // (builtins.foldl'
-        pkgs.lib.recursiveUpdate
+        libb.recursiveUpdate
         { }
         (builtins.map (v: v.propagatedEnv or { }) crateOverridesEmpty)
       );

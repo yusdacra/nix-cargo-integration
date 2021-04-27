@@ -1,9 +1,8 @@
 { sources
 , system
+, lib
 , toolchainChannel ? "stable"
 , buildPlatform ? "naersk"
-, isNaersk ? buildPlatform == "naersk"
-, isCrate2Nix ? buildPlatform == "crate2nix"
 , override ? (_: _: { })
 }:
 let
@@ -24,7 +23,7 @@ let
         {
           rustc = toolchain;
           rustfmt = toolchain;
-        } // prev.lib.optionalAttrs isCrate2Nix {
+        } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform) {
           cargo = toolchain;
           clippy = toolchain;
         }
@@ -32,13 +31,13 @@ let
       (import (sources.devshell + "/overlay.nix"))
     ] ++
     (
-      if isNaersk
+      if lib.isNaersk buildPlatform
       then [
         (final: prev: {
           naersk = prev.callPackage sources.naersk { };
         })
       ]
-      else if isCrate2Nix
+      else if lib.isCrate2Nix buildPlatform
       then [
         (final: prev: {
           crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = prev; };
@@ -49,5 +48,5 @@ let
   };
 in
 import sources.nixpkgs (config // (override
-  { inherit sources system toolchainChannel buildPlatform isNaersk isCrate2Nix; }
+  { inherit sources system toolchainChannel buildPlatform lib; }
   config))

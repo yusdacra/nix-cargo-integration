@@ -2,7 +2,11 @@
 let
   libb = import "${sources.nixpkgs}/lib/default.nix";
 
-  flakeUtils = import sources.flakeUtils;
+  lib = libb // {
+    isNaersk = platform: platform == "naersk";
+    isCrate2Nix = platform: platform == "crate2nix";
+    flakeUtils = import sources.flakeUtils;
+  };
 
   makeOutput = common:
     let
@@ -15,7 +19,7 @@ let
       pkgSrc = if isNull memberName then "${root}/src" else "${root}/${memberName}/src";
 
       allBins =
-        libb.unique (
+        lib.unique (
           [ null ]
           ++ bins
           ++ (lib.optionals
@@ -47,7 +51,7 @@ let
         in
         {
           name = ex.name;
-          value = flakeUtils.mkApp {
+          value = lib.flakeUtils.mkApp {
             name = ex.name;
             drv =
               if (builtins.length (bin.required-features or [ ])) < 1
@@ -94,40 +98,31 @@ let
     });
 in
 {
-  # Creates an "empty" platform which has no outputs except a development shell.
-  # It uses a placeholder "crate", so this can be used even if no crate exists in `root`.
-  makeDummy =
-    { root
+  # Create an "empty" common with a dummy crate.
+  makeEmptyCommon =
+    { system
     , overrides ? { }
     , buildPlatform ? "naersk"
+    ,
     }:
     let
       # Craft a dummy cargo toml
-      dummyToml = {
+      cargoToml = {
         package = {
           name = "dummy";
           version = "0.1.0";
           edition = "2018";
         };
       };
-      # We make the cargoToml overridable; people might put their own cargoToml
-      cargoToml = dummyToml // ((overrides.cargoToml or (_: { })) dummyToml);
       # Craft dummy dependencies.
       dependencies = [{
         name = "dummy";
         version = "0.1.0";
       }];
-      # Mutate the systems if a systems function exists.
-      systems = (overrides.systems or (x: x)) flakeUtils.defaultSystems;
-      mkCommon = system: import ./common.nix { inherit dependencies root system sources cargoToml buildPlatform overrides; };
-      devshellCombined = {
-        devShell =
-          libb.mapAttrs
-            (_: import ./devShell.nix)
-            (libb.genAttrs systems mkCommon);
-      };
     in
-    devshellCombined;
+    import ./common.nix {
+      inherit lib dependencies system sources cargoToml buildPlatform overrides;
+    };
 
   # Creates flake outputs by searching the supplied root for a workspace / package and using
   # Cargo.toml's for configuration.
@@ -145,22 +140,22 @@ in
 
       rootPkg = cargoToml.package or null;
       workspaceToml = cargoToml.workspace or null;
-      members = libb.genAttrs (workspaceToml.members or [ ]) (name: importCargoTOML (root + "/${name}"));
+      members = lib.genAttrs (workspaceToml.members or [ ]) (name: importCargoTOML (root + "/${name}"));
 
       packageMetadata = rootPkg.metadata.nix or null;
       workspaceMetadata = if isNull workspaceToml then packageMetadata else workspaceToml.metadata.nix or null;
 
       dependencies = cargoLock.package;
       systems = (overrides.systems or (x: x))
-        (workspaceMetadata.systems or packageMetadata.systems or flakeUtils.defaultSystems);
+        (workspaceMetadata.systems or packageMetadata.systems or lib.flakeUtils.defaultSystems);
 
       mkCommon = memberName: cargoToml: system: import ./common.nix {
-        inherit dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources;
+        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources;
       };
 
-      rootCommons = if ! isNull rootPkg then libb.genAttrs systems (mkCommon null cargoToml) else null;
-      memberCommons' = libb.mapAttrsToList (name: value: libb.genAttrs systems (mkCommon name value)) members;
-      allCommons' = memberCommons' ++ (libb.optional (! isNull rootCommons) rootCommons);
+      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon null cargoToml) else null;
+      memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value)) members;
+      allCommons' = memberCommons' ++ (lib.optional (! isNull rootCommons) rootCommons);
 
       updateCommon = prev: final: prev // final // {
         runtimeLibs = (prev.runtimeLibs or [ ]) ++ final.runtimeLibs;
@@ -176,21 +171,21 @@ in
 
       devshellCombined = {
         devShell =
-          libb.mapAttrs
+          lib.mapAttrs
             (_: import ./devShell.nix)
             (
-              libb.mapAttrs
-                (_: libb.foldl' updateCommon { })
+              lib.mapAttrs
+                (_: lib.foldl' updateCommon { })
                 (
-                  libb.foldl'
-                    (acc: ele: libb.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
-                    (libb.genAttrs systems (_: [ ]))
+                  lib.foldl'
+                    (acc: ele: lib.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
+                    (lib.genAttrs systems (_: [ ]))
                     allCommons'
                 )
             );
       };
 
-      allOutputs' = libb.flatten (builtins.map (libb.mapAttrsToList (_: makeOutput)) allCommons');
+      allOutputs' = lib.flatten (builtins.map (lib.mapAttrsToList (_: makeOutput)) allCommons');
     in
-    (libb.foldAttrs libb.recursiveUpdate { } allOutputs') // devshellCombined;
+    (lib.foldAttrs lib.recursiveUpdate { } allOutputs') // devshellCombined;
 }

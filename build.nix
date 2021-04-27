@@ -6,7 +6,7 @@
 ,
 }:
 let
-  inherit (common) pkgs lib packageMetadata cargoPkg isNaersk isCrate2Nix buildPlatform;
+  inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
@@ -139,14 +139,14 @@ let
   overrideConfig = config:
     config // (common.overrides.build common config);
 in
-if isNaersk
+if lib.isNaersk buildPlatform
 then
   let config = overrideConfig baseNaerskConfig; in
   {
     inherit config;
     package = pkgs.naersk.buildPackage config;
   }
-else if isCrate2Nix
+else if lib.isCrate2Nix buildPlatform
 then
   let config = overrideConfig baseCrate2NixConfig; in
   {
