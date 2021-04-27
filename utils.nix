@@ -43,7 +43,7 @@ in
           buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ]));
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         rawTomlOverrides;
-      extraOverrides = import ./extraCrateOverrides.nix { inherit pkgs; };
+      extraOverrides = import ./extraCrateOverrides.nix pkgs;
     in
     builtins.foldl'
       (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (name:

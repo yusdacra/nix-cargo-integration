@@ -34,4 +34,12 @@ with pkgs;
       buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf rustfmt ];
       propagatedEnv = env;
     } // env;
+  rust-nix-templater = prev:
+    let
+      env = {
+        TEMPLATER_FMT_BIN = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
+        TEMPLATER_CARGO_BIN = "${pkgs.rustc}/bin/cargo";
+      };
+    in
+    { propagatedEnv = env; } // env;
 }
