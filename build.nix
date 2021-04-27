@@ -6,39 +6,27 @@
 ,
 }:
 let
-  inherit (common) pkgs packageMetadata cargoPkg buildPlatform;
+  inherit (common) pkgs lib packageMetadata cargoPkg isNaersk isCrate2Nix buildPlatform;
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
 
-  cargoLicenseToNixpkgs = license:
-    let
-      l = pkgs.lib.toLower license;
-    in
-      {
-        "gplv3" = "gpl3";
-        "gplv2" = "gpl2";
-        "gpl-3.0" = "gpl3";
-        "gpl-2.0" = "gpl2";
-      }."${l}" or l;
-
   # TODO convert cargo maintainers to nixpkgs maintainers
-  meta = with pkgs.lib; ({
+  meta = with lib; ({
     description = cargoPkg.description or "${cargoPkg.name} is a Rust project.";
     platforms = [ common.system ];
-  } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${cargoLicenseToNixpkgs cargoPkg.license}"; })
+  } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
   // (optionalAttrs (builtins.hasAttr "homepage" cargoPkg) { inherit (cargoPkg) homepage; })
   // (optionalAttrs (builtins.hasAttr "longDescription" packageMetadata) { inherit (packageMetadata) longDescription; }));
 
   desktopFile =
-    with pkgs.lib;
     let
       name = cargoPkg.name;
       makeIcon = icon:
-        if (hasPrefix "./" icon)
-        then (common.root + "/${removePrefix "./" icon}")
+        if (lib.hasPrefix "./" icon)
+        then (common.root + "/${lib.removePrefix "./" icon}")
         else icon;
-      desktopFilePath = common.root + "/${removePrefix "./" desktopFileMetadata}";
+      desktopFilePath = common.root + "/${lib.removePrefix "./" desktopFileMetadata}";
     in
     if builtins.isString desktopFileMetadata
     then
@@ -46,24 +34,29 @@ let
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else
-      ((pkgs.makeDesktopItem {
-        inherit name;
-        exec = packageMetadata.executable or name;
-        comment = desktopFileMetadata.comment or meta.description;
-        desktopName = desktopFileMetadata.name or name;
-      }) // (optionalAttrs (builtins.hasAttr "icon" desktopFileMetadata) { icon = makeIcon desktopFileMetadata.icon; })
-      // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
-      // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
+    else with lib;
+    ((pkgs.makeDesktopItem {
+      inherit name;
+      exec = packageMetadata.executable or name;
+      comment = desktopFileMetadata.comment or meta.description;
+      desktopName = desktopFileMetadata.name or name;
+    }) // (optionalAttrs (builtins.hasAttr "icon" desktopFileMetadata) { icon = makeIcon desktopFileMetadata.icon; })
+    // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
+    // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
 
-  runtimeLibsEnv =
-    if (builtins.length common.runtimeLibs) > 0
-    then pkgs.lib.makeLibraryPath common.runtimeLibs
-    else null;
+  runtimeLibsEnv = prev:
+    lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
+      postInstall = ''
+        ${prev.postInstall or ""}
+        for f in $out/bin/*; do
+          wrapProgram "$f" \
+            --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
+        done
+      '';
+    };
 
   baseNaerskConfig =
     let
-      lib = common.pkgs.lib;
       library = packageMetadata.library or false;
       packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
       featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
@@ -77,7 +70,7 @@ let
       cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
       cargoTestOptions = def:
         def ++ [ "--tests" "--bins" "--examples" ]
-        ++ (lib.optional library "--lib")
+        ++ lib.optional library "--lib"
         ++ packageOption ++ featuresOption;
       override = _: common.env;
       overrideMain =
@@ -85,20 +78,18 @@ let
           runtimeWrapOverride = prev:
             prev // {
               nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
-            } // lib.optionalAttrs (! isNull runtimeLibsEnv) {
-              postInstall = ''
-                ${prev.postInstall or ""}
-                for f in $out/bin/*; do
-                  wrapProgram "$f" \
-                    --set LD_LIBRARY_PATH ${runtimeLibsEnv}
-                done
-              '';
-            };
-          desktopOverride = prev: prev // (lib.optionalAttrs mkDesktopFile
-            { nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ]; desktopItems = [ desktopFile ]; });
+            } // runtimeLibsEnv prev;
+          desktopOverride = prev: prev // lib.optionalAttrs mkDesktopFile {
+            nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ];
+            desktopItems = [ desktopFile ];
+          };
         in
         prev:
-        let overrode = runtimeWrapOverride (desktopOverride (prev // common.env // { inherit meta; dontFixup = !release; })); in
+        let
+          overrode =
+            runtimeWrapOverride
+              (desktopOverride (prev // common.env // { inherit meta; dontFixup = !release; }));
+        in
         overrode // (common.overrides.mainBuild common overrode);
       copyLibs = library;
       inherit release doCheck doDoc;
@@ -106,7 +97,6 @@ let
 
   baseCrate2NixConfig =
     let
-      lib = common.pkgs.lib;
       overrideMain = prev: {
         dontFixup = !release;
         nativeBuildInputs =
@@ -115,33 +105,32 @@ let
             ++ [ pkgs.makeWrapper ]
             ++ lib.optional mkDesktopFile pkgs.copyDesktopItems;
         buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
-      } // (lib.optionalAttrs (! isNull runtimeLibsEnv) {
-        postInstall = ''
-          ${prev.postInstall or ""}
-          for f in $out/bin/*; do
-            wrapProgram "$f" \
-              --set LD_LIBRARY_PATH ${runtimeLibsEnv}
-          done
-        '';
-      }) // (lib.optionalAttrs mkDesktopFile {
+      } // runtimeLibsEnv prev
+      // lib.optionalAttrs mkDesktopFile {
         desktopItems = [ desktopFile ];
-      }) // common.env;
+      }
+      // common.env;
     in
     {
       inherit pkgs release;
       runTests = doCheck;
       rootFeatures =
-        let def = lib.optional (builtins.hasAttr "default" common.features) "default"; in
+        let def = lib.optional (builtins.hasAttr "default" (common.cargoToml.features or { })) "default"; in
         if (builtins.length features) > 0
         then features ++ def
         else def;
       defaultCrateOverrides =
-        let crateOverrides = builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ])) common.crateOverrides; in
+        let
+          crateOverrides =
+            builtins.mapAttrs
+              (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ]))
+              common.crateOverrides;
+        in
         crateOverrides // {
           ${cargoPkg.name} = prev:
             let
               overrode = overrideMain prev;
-              overroded = overrode // ((crateOverrides.${cargoPkg.name} or (_: { })) overrode);
+              overroded = overrode // (crateOverrides.${cargoPkg.name} or (_: { })) overrode;
             in
             overroded // (common.overrides.mainBuild common overrode);
         };
@@ -150,14 +139,14 @@ let
   overrideConfig = config:
     config // (common.overrides.build common config);
 in
-if buildPlatform == "naersk"
+if isNaersk
 then
   let config = overrideConfig baseNaerskConfig; in
   {
     inherit config;
     package = pkgs.naersk.buildPackage config;
   }
-else if buildPlatform == "crate2nix"
+else if isCrate2Nix
 then
   let config = overrideConfig baseCrate2NixConfig; in
   {
@@ -170,9 +159,9 @@ then
             src = common.root;
             additionalCargoNixArgs =
               ([ "--no-default-features" ] ++ (
-                pkgs.lib.optionals
+                lib.optionals
                   ((builtins.length config.rootFeatures) > 0)
-                  [ "--features" (pkgs.lib.concatStringsSep " " config.rootFeatures) ])
+                  [ "--features" (lib.concatStringsSep " " config.rootFeatures) ])
               );
           })
           (builtins.removeAttrs config [ "runTests" ]);

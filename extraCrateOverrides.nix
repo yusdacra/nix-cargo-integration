@@ -1,4 +1,4 @@
-{ pkgs }:
+pkgs:
 let
   mkOv = bi: ni: prev: {
     buildInputs = (prev.buildInputs or [ ]) ++ bi;
