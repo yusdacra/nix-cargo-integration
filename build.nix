@@ -144,7 +144,7 @@ then
   let config = overrideConfig baseNaerskConfig; in
   {
     inherit config;
-    package = pkgs.naersk.buildPackage config;
+    package = lib.buildCrate config;
   }
 else if lib.isCrate2Nix buildPlatform
 then
@@ -153,22 +153,19 @@ then
     inherit config;
     package =
       let
-        cargoNix = import
-          (pkgs.crate2nixTools.generatedCargoNix {
-            name = builtins.baseNameOf common.root;
-            src = common.root;
-            additionalCargoNixArgs =
-              ([ "--no-default-features" ] ++ (
-                lib.optionals
-                  ((builtins.length config.rootFeatures) > 0)
-                  [ "--features" (lib.concatStringsSep " " config.rootFeatures) ])
-              );
-          })
-          (builtins.removeAttrs config [ "runTests" ]);
-        pkg =
-          if ! isNull common.memberName
-          then cargoNix.workspaceMembers.${cargoPkg.name}.build
-          else cargoNix.rootCrate.build;
+        pkg = lib.buildCrate
+          (
+            {
+              inherit (common) root;
+              memberName = if isNull common.memberName then null else cargoPkg.name;
+              additionalCargoNixArgs =
+                ([ "--no-default-features" ] ++ (
+                  lib.optionals
+                    ((builtins.length config.rootFeatures) > 0)
+                    [ "--features" (lib.concatStringsSep " " config.rootFeatures) ])
+                );
+            } // (builtins.removeAttrs config [ "runTests" ])
+          );
       in
       # This is a workaround so that crate2nix doesnt get built until we actually build
         # otherwise nix will try to build it even if you only run `nix flake show`

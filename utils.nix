@@ -1,5 +1,7 @@
 pkgs:
 let
+  lib = pkgs.lib;
+
   # courtesy of devshell
   resolveToPkg = key:
     let
@@ -14,7 +16,7 @@ in
 
   cargoLicenseToNixpkgs = license:
     let
-      l = pkgs.lib.toLower license;
+      l = lib.toLower license;
     in
       {
         "gplv3" = "gpl3";
@@ -29,8 +31,6 @@ in
     ,
     }:
     let
-      lib = pkgs.lib;
-
       commonOverride = {
         ${crateName} = prev: {
           buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
@@ -61,4 +61,27 @@ in
       ))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides commonOverride ];
+} // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
+  buildCrate =
+    { root
+    , memberName ? null
+    , additionalCargoNixArgs ? [ ]
+    , ...
+    }@args:
+    let
+      generatedCargoNix = pkgs.crate2nixTools.generatedCargoNix {
+        name = lib.strings.sanitizeDerivationName (builtins.baseNameOf root);
+        src = root;
+        inherit additionalCargoNixArgs;
+      };
+      cargoNix = import generatedCargoNix (
+        (builtins.removeAttrs args [ "root" "additionalCargoNixArgs" "memberName" ])
+        // { inherit pkgs; }
+      );
+    in
+    if isNull memberName
+    then cargoNix.rootCrate.build
+    else cargoNix.workspaceMembers.${memberName}.build;
+} // lib.optionalAttrs (builtins.hasAttr "naersk" pkgs) {
+  buildCrate = pkgs.naersk.buildPackage;
 }
