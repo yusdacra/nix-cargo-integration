@@ -2,7 +2,7 @@ name: "Update Flake Deps"
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 10-17 * * *'
+    - cron: '0 * * * *'
 
 jobs:
   update-flake-deps:
