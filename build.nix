@@ -159,11 +159,9 @@ then
               inherit (common) root;
               memberName = if isNull common.memberName then null else cargoPkg.name;
               additionalCargoNixArgs =
-                ([ "--no-default-features" ] ++ (
-                  lib.optionals
-                    ((builtins.length config.rootFeatures) > 0)
-                    [ "--features" (lib.concatStringsSep " " config.rootFeatures) ])
-                );
+                lib.optionals
+                  ((builtins.length config.rootFeatures) > 0)
+                  [ "--no-default-features" "--features" (lib.concatStringsSep " " config.rootFeatures) ];
             } // (builtins.removeAttrs config [ "runTests" ])
           );
       in
