@@ -53,16 +53,11 @@ in
     builtins.foldl'
       (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (name:
       let
-        isEl = builtins.hasAttr name el;
-        isAcc = builtins.hasAttr name acc;
+        eld = el.${name} or (_: { });
+        accd = acc.${name} or (_: { });
       in
-      if isAcc && isEl
-      then pp: let accPp = acc.${name} pp; in baseConf // accPp // (el.${name} accPp)
-      else if isAcc
-      then pp: baseConf // (acc.${name} pp)
-      else if isEl
-      then pp: baseConf // (el.${name} pp)
-      else _: baseConf
+      pp:
+      let accPp = accd pp; in baseConf // accPp // (eld accPp)
       ))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides commonOverride ];

@@ -46,15 +46,16 @@ in
 let
   crateOverrides =
     let
+      depNames = builtins.map (dep: dep.name) dependencies;
       baseRaw = libb.makeCrateOverrides {
         inherit buildStdenv cCompiler;
         crateName = cargoPkg.name;
         rawTomlOverrides =
-          libb.recursiveUpdate
-            (workspaceMetadata.crateOverride or { })
-            (packageMetadata.crateOverride or { });
+          libb.foldl'
+            libb.recursiveUpdate
+            (libb.genAttrs depNames (name: (_: { })))
+            [ (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }) ];
       };
-      depNames = builtins.map (dep: dep.name) dependencies;
       base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
     in
     base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs; lib = libb; } base);

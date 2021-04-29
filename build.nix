@@ -72,7 +72,9 @@ let
         def ++ [ "--tests" "--bins" "--examples" ]
         ++ lib.optional library "--lib"
         ++ packageOption ++ featuresOption;
-      override = _: common.env;
+      override = _: {
+        stdenv = common.buildStdenv;
+      } // common.env;
       overrideMain =
         let
           runtimeWrapOverride = prev:
@@ -88,7 +90,11 @@ let
         let
           overrode =
             runtimeWrapOverride
-              (desktopOverride (prev // common.env // { inherit meta; dontFixup = !release; }));
+              (desktopOverride (prev // common.env // {
+                inherit meta;
+                dontFixup = !release;
+                stdenv = common.buildStdenv;
+              }));
         in
         overrode // (common.overrides.mainBuild common overrode);
       copyLibs = library;
