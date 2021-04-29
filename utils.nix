@@ -32,9 +32,14 @@ in
     ,
     }:
     let
+      mainOverride = {
+        ${crateName} = prev: {
+          buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
+        };
+      };
       baseConf = prev: {
         stdenv = pkgs.stdenvNoCC;
-        buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib cCompiler.libc ];
+        buildInputs = (prev.buildInputs or [ ]) ++ [ cCompiler.libc ];
         nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ];
         CC = "cc";
       };
@@ -56,7 +61,7 @@ in
       let accPp = baseConf (accd pp); in accPp // (eld accPp)
       ))
       pkgs.defaultCrateOverrides
-      [ tomlOverrides extraOverrides ];
+      [ tomlOverrides extraOverrides mainOverride ];
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
   buildCrate =
     { root
