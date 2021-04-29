@@ -7,6 +7,15 @@ let
 in
 with pkgs;
 {
+  ffmpeg-sys-next = prev:
+    let
+      env = {
+        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang}/lib";
+      };
+    in
+    (mkOv [ ffmpeg llvmPackages.libclang ] [ pkg-config ] prev) // {
+      propagatedEnv = env;
+    } // env;
   libudev-sys = mkOv [ libudev ] [ pkg-config ];
   alsa-sys = mkOv [ alsaLib ] [ pkg-config ];
   xcb = mkOv [ xorg.libxcb ] [ python3 ];
