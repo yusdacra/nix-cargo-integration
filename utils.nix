@@ -39,7 +39,6 @@ in
       };
       baseConf = prev: {
         stdenv = pkgs.stdenvNoCC;
-        buildInputs = (prev.buildInputs or [ ]) ++ [ cCompiler.libc ];
         nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ];
         CC = "cc";
       };
@@ -58,7 +57,11 @@ in
         accd = acc.${name} or (_: { });
       in
       pp:
-      let accPp = baseConf (accd pp); in accPp // (eld accPp)
+      let
+        accdPp = accd pp;
+        accPp = accdPp // (baseConf accdPp);
+      in
+      accPp // (eld accPp)
       ))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides mainOverride ];
