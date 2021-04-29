@@ -27,20 +27,16 @@ in
 
   makeCrateOverrides =
     { rawTomlOverrides ? { }
-    , buildStdenv ? pkgs.stdenv
     , cCompiler ? pkgs.gcc
     , crateName
     ,
     }:
     let
-      baseConf = {
-        stdenv = buildStdenv;
-      };
-      commonOverride = {
-        ${crateName} = prev: {
-          buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
-          nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.binutils ];
-        };
+      baseConf = prev: {
+        stdenv = pkgs.stdenvNoCC;
+        buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib cCompiler.libc ];
+        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ];
+        CC = "cc";
       };
       tomlOverrides = builtins.mapAttrs
         (_: crate: prev: {
@@ -57,10 +53,10 @@ in
         accd = acc.${name} or (_: { });
       in
       pp:
-      let accPp = accd pp; in baseConf // accPp // (eld accPp)
+      let accPp = baseConf (accd pp); in accPp // (eld accPp)
       ))
       pkgs.defaultCrateOverrides
-      [ tomlOverrides extraOverrides commonOverride ];
+      [ tomlOverrides extraOverrides ];
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
   buildCrate =
     { root

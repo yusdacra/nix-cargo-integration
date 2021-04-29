@@ -73,7 +73,7 @@ let
         ++ lib.optional library "--lib"
         ++ packageOption ++ featuresOption;
       override = _: {
-        stdenv = common.buildStdenv;
+        stdenv = pkgs.stdenvNoCC;
       } // common.env;
       overrideMain =
         let
@@ -93,7 +93,7 @@ let
               (desktopOverride (prev // common.env // {
                 inherit meta;
                 dontFixup = !release;
-                stdenv = common.buildStdenv;
+                stdenv = pkgs.stdenvNoCC;
               }));
         in
         overrode // (common.overrides.mainBuild common overrode);
