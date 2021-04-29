@@ -27,10 +27,15 @@ in
 
   makeCrateOverrides =
     { rawTomlOverrides ? { }
+    , buildStdenv ? pkgs.stdenv
+    , cCompiler ? pkgs.gcc
     , crateName
     ,
     }:
     let
+      baseConf = {
+        stdenv = buildStdenv;
+      };
       commonOverride = {
         ${crateName} = prev: {
           buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
@@ -52,12 +57,12 @@ in
         isAcc = builtins.hasAttr name acc;
       in
       if isAcc && isEl
-      then pp: let accPp = acc.${name} pp; in accPp // (el.${name} accPp)
+      then pp: let accPp = acc.${name} pp; in baseConf // accPp // (el.${name} accPp)
       else if isAcc
-      then acc.${name}
+      then pp: baseConf // (acc.${name} pp)
       else if isEl
-      then el.${name}
-      else _: { }
+      then pp: baseConf // (el.${name} pp)
+      else _: baseConf
       ))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides commonOverride ];

@@ -14,7 +14,7 @@ let
   baseConfig = {
     language = {
       c = {
-        compiler = pkgs.gcc;
+        compiler = common.cCompiler;
         libraries = common.buildInputs;
         includes = common.buildInputs;
       };

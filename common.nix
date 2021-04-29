@@ -32,11 +32,22 @@ let
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
   libb = lib // (import ./utils.nix pkgs);
+
+  cCompilerString = workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc";
+  cCompiler = libb.resolveToPkg cCompilerString;
+  buildStdenv = libb.resolveToPkg (
+    workspaceMetadata.buildStdenv
+      or packageMetadata.buildStdenv
+      or (if cCompilerString == "clang"
+    then "clangStdenv"
+    else "stdenv")
+  );
 in
 let
   crateOverrides =
     let
       baseRaw = libb.makeCrateOverrides {
+        inherit buildStdenv cCompiler;
         crateName = cargoPkg.name;
         rawTomlOverrides =
           libb.recursiveUpdate
@@ -60,6 +71,8 @@ let
     } // libb;
 
     inherit
+      cCompiler
+      buildStdenv
       pkgs
       crateOverrides
       cargoPkg
