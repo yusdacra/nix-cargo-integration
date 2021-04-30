@@ -15,13 +15,17 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    preCommitHooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: with inputs;
     let
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./lib.nix {
-        sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk crate2nix; };
+        sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
       };
       mkPlatform = buildPlatform:
         let
@@ -31,8 +35,8 @@
             root = ./tests + "/${test}";
           });
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-workspace" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
-          checks = flattenAttrs "checks";
-          packages = flattenAttrs "packages";
+          checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
+          packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "packages");
           shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell-${buildPlatform}" = drv; }) test.devShell) tests;
         in
         libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);

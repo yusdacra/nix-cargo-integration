@@ -130,6 +130,7 @@ in
     { root
     , overrides ? { }
     , buildPlatform ? "naersk"
+    , enablePreCommitHooks ? false
     ,
     }:
     let
@@ -150,12 +151,21 @@ in
         (workspaceMetadata.systems or packageMetadata.systems or lib.flakeUtils.defaultSystems);
 
       mkCommon = memberName: cargoToml: system: import ./common.nix {
-        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources;
+        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks;
       };
 
       rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon null cargoToml) else null;
       memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value)) members;
       allCommons' = memberCommons' ++ (lib.optional (! isNull rootCommons) rootCommons);
+      commonsCombined =
+        lib.mapAttrs
+          (_: lib.foldl' updateCommon { })
+          (
+            lib.foldl'
+              (acc: ele: lib.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
+              (lib.genAttrs systems (_: [ ]))
+              allCommons'
+          );
 
       updateCommon = prev: final: prev // final // {
         runtimeLibs = (prev.runtimeLibs or [ ]) ++ final.runtimeLibs;
@@ -169,23 +179,17 @@ in
         };
       };
 
-      devshellCombined = {
-        devShell =
-          lib.mapAttrs
-            (_: import ./devShell.nix)
-            (
-              lib.mapAttrs
-                (_: lib.foldl' updateCommon { })
-                (
-                  lib.foldl'
-                    (acc: ele: lib.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
-                    (lib.genAttrs systems (_: [ ]))
-                    allCommons'
-                )
-            );
-      };
-
       allOutputs' = lib.flatten (builtins.map (lib.mapAttrsToList (_: makeOutput)) allCommons');
+      final = lib.foldAttrs lib.recursiveUpdate { } allOutputs';
     in
-    (lib.foldAttrs lib.recursiveUpdate { } allOutputs') // devshellCombined;
+    final // {
+      devShell = lib.mapAttrs (_: import ./devShell.nix) commonsCombined;
+      checks = lib.recursiveUpdate final.checks (
+        lib.mapAttrs
+          (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
+            "preCommitChecks" = common.preCommitChecks;
+          })
+          commonsCombined
+      );
+    };
 }

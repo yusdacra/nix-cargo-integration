@@ -33,7 +33,7 @@ If you aren't using flakes, you can do:
 let
   nixCargoIntegrationSrc = builtins.fetchGit { url = "https://github.com/yusdacra/nix-cargo-integration.git"; rev = <something>; sha256 = <something>; };
   nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
-      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs crate2nix; };
+      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs crate2nix preCommitHooks; };
   };
   outputs = nixCargoIntegration.makeOutputs { root = ./.; };
 in
@@ -47,12 +47,13 @@ in
 
 ## Library documentation
 
-### `makeOutputs = { root, overrides ? { }, buildPlatform ? "naersk" }: { ... }`
+### `makeOutputs = { root, overrides ? { }, buildPlatform ? "naersk", enablePreCommitHooks ? false }: { ... }`
 
 Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
 
 #### Arguments
 
+- `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean)
 - `buildPlatform`: platform to build crates with (type: `"naersk" or "crate2nix"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset)

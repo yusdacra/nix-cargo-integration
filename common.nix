@@ -1,5 +1,6 @@
 { memberName ? null
 , buildPlatform ? "naersk"
+, enablePreCommitHooks ? false
 , cargoToml ? null
 , workspaceMetadata ? null
 , root ? null
@@ -83,19 +84,19 @@ let
     buildInputs =
       libb.resolveToPkgs
         ((workspaceMetadata.buildInputs or [ ])
-        ++ (packageMetadata.buildInputs or [ ]))
+          ++ (packageMetadata.buildInputs or [ ]))
       ++ (crateOverridesGetFlattenLists "buildInputs");
 
     nativeBuildInputs =
       libb.resolveToPkgs
         ((workspaceMetadata.nativeBuildInputs or [ ])
-        ++ (packageMetadata.nativeBuildInputs or [ ]))
+          ++ (packageMetadata.nativeBuildInputs or [ ]))
       ++ (crateOverridesGetFlattenLists "nativeBuildInputs");
 
     env =
       (workspaceMetadata.env or { })
-      // (packageMetadata.env or { })
-      // (builtins.foldl'
+        // (packageMetadata.env or { })
+        // (builtins.foldl'
         libb.recursiveUpdate
         { }
         (builtins.map (v: v.propagatedEnv or { }) crateOverridesEmpty)
@@ -106,6 +107,21 @@ let
       build = overrides.build or (_: _: { });
       mainBuild = overrides.mainBuild or (_: _: { });
     };
-  };
+  } // libb.optionalAttrs
+    (
+      workspaceMetadata.preCommitHooks.enable
+        or packageMetadata.preCommitHooks.enable
+        or enablePreCommitHooks
+    )
+    {
+      preCommitChecks = pkgs.makePreCommitHooks {
+        src = ./.;
+        hooks = {
+          rustfmt.enable = true;
+          nix-linter.enable = true;
+          nixpkgs-fmt.enable = true;
+        };
+      };
+    };
 in
 (baseConfig // ((overrides.common or (_: { })) baseConfig))

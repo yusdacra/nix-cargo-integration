@@ -23,12 +23,29 @@ let
         {
           rustc = toolchain;
           rustfmt = toolchain;
+          clippy = toolchain;
         } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform) {
           cargo = toolchain;
-          clippy = toolchain;
         }
       )
       (import (sources.devshell + "/overlay.nix"))
+      (final: prev: {
+        makePreCommitHooks =
+          let
+            tools =
+              lib.filterAttrs (k: v: !(lib.any (a: k == a) [ "override" "overrideDerivation" ]))
+                (prev.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+                  hindent = null;
+                  cabal-fmt = null;
+                });
+          in
+          (prev.callPackage "${sources.preCommitHooks}/nix/run.nix" {
+            inherit tools;
+            pkgs = prev;
+            gitignore-nix-src = null;
+            isFlakes = true;
+          });
+      })
     ] ++
     (
       if lib.isNaersk buildPlatform
