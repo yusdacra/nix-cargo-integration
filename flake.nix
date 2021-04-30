@@ -5,7 +5,7 @@
     flakeUtils.url = "github:numtide/flake-utils";
     naersk = {
       url = "github:yusdacra/naersk/feat/cargolock-git-deps";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
     crate2nix = {
       url = "github:yusdacra/crate2nix/feat/builtinfetchgit";
@@ -13,11 +13,11 @@
     };
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
     preCommitHooks = {
       url = "github:cachix/pre-commit-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
   };
 

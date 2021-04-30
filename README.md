@@ -13,11 +13,7 @@ Add:
 ```nix
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixCargoIntegration = {
-        url = "github:yusdacra/nix-cargo-integration";
-        inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixCargoIntegration.url = "github:yusdacra/nix-cargo-integration";
   };
   outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs { root = ./.; };
 }
