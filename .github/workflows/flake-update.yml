@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.PAT }}
     - name: Install nix
       uses: cachix/install-nix-action@v13
       with:
