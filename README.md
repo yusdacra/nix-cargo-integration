@@ -119,10 +119,17 @@ The path must start with "./" and specify a path relative ro `root`.
 
 ## `workspace.metadata.nix` attributes
 
+NOTE: If `root` does not point to a workspace, all of the attributes listed here
+will be available in `package.metadata.nix`.
+
 - `systems`: systems to enable for the flake (type: list)
     - defaults to `defaultSystems` of `nixpkgs`
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
     - if `rust-toolchain` file exists, it will be used instead of this attribute
+
+### `preCommitHooks` attributes
+
+- `enable`: whether to enable pre commit hooks (type: boolean)
 
 ### `cachix` attributes
 
