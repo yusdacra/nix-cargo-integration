@@ -66,13 +66,13 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
     - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
         - this will override *all* [naersk]/[crate2nix] main crate build derivation(s), refer to [naersk]/[crate2nix] for more information
 
-## `package.metadata.nix` and `workspace.metadata.nix` common attributes
+### `package.metadata.nix` and `workspace.metadata.nix` common attributes
 
 - `runtimeLibs`: libraries that will be put in `LD_LIBRARY_PRELOAD` for both dev and build env (type: list)
 - `buildInputs`: common build inputs (type: list)
 - `nativeBuildInputs`: common native build inputs (type: list)
 
-### `env` attributes
+#### `env` attributes
 
 Key-value pairings that are put here will be exported into the development and build environment.
 For example:
@@ -81,7 +81,7 @@ For example:
 PROTOC = "protoc"
 ```
 
-### `crateOverride` attributes (only used for `crate2nix` build platform)
+#### `crateOverride` attributes (only used for `crate2nix` build platform)
 
 Key-value pairings that are put here will be used to override crates in build derivation.
 Dependencies put here will also be exported to the development environment.
@@ -92,7 +92,7 @@ buildInputs = ["xorg.libxcb"]
 env.TEST_ENV = "test"
 ```
 
-## `package.metadata.nix` attributes
+### `package.metadata.nix` attributes
 
 - `build`: whether to enable outputs which build the package (type: boolean)
     - defaults to `false` if not specified
@@ -102,7 +102,7 @@ env.TEST_ENV = "test"
     - defaults to `false` if not specified
 - `longDescription`: a longer description (type: string)
 
-### `desktopFile` attributes
+#### `desktopFile` attributes
 
 If this is set to a string specifying a path, the path will be treated as a desktop file and will be used.
 The path must start with "./" and specify a path relative ro `root`. 
@@ -117,7 +117,7 @@ The path must start with "./" and specify a path relative ro `root`.
 - `genericName`: generic name for the desktop file (type: string)
 - `categories`: categories for the desktop file according to XDG specification (type: string)
 
-## `workspace.metadata.nix` attributes
+### `workspace.metadata.nix` attributes
 
 NOTE: If `root` does not point to a workspace, all of the attributes listed here
 will be available in `package.metadata.nix`.
@@ -127,16 +127,16 @@ will be available in `package.metadata.nix`.
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
     - if `rust-toolchain` file exists, it will be used instead of this attribute
 
-### `preCommitHooks` attributes
+#### `preCommitHooks` attributes
 
 - `enable`: whether to enable pre commit hooks (type: boolean)
 
-### `cachix` attributes
+#### `cachix` attributes
 
 - `name`: name of the cachix cache (type: string)
 - `key`: public key of the cachix cache (type: string)
 
-### `devshell` attributes
+#### `devshell` attributes
 
 Refer to [devshell] documentation.
 
