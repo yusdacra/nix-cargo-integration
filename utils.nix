@@ -39,13 +39,13 @@ in
       };
       baseConf = prev: {
         stdenv = pkgs.stdenvNoCC;
-        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ];
+        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ]);
         CC = "cc";
       };
       tomlOverrides = builtins.mapAttrs
         (_: crate: prev: {
-          nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]));
-          buildInputs = (prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ]));
+          nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ])));
+          buildInputs = lib.unique ((prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ])));
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         rawTomlOverrides;
       extraOverrides = import ./extraCrateOverrides.nix pkgs;

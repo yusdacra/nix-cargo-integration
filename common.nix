@@ -57,7 +57,7 @@ let
     base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs runtimeLibs; lib = libb; } base);
 
   crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
-  crateOverridesGetFlattenLists = attrName: libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty);
+  crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
 
   baseConfig = {
     lib = {
