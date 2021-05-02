@@ -37,6 +37,9 @@ let
   cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
 in
 let
+  # Libraries that will be put in $LD_LIBRARY_PATH
+  runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+
   crateOverrides =
     let
       depNames = builtins.map (dep: dep.name) dependencies;
@@ -51,7 +54,7 @@ let
       };
       base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
     in
-    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs; lib = libb; } base);
+    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs runtimeLibs; lib = libb; } base);
 
   crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
   crateOverridesGetFlattenLists = attrName: libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty);
@@ -76,10 +79,8 @@ let
       root
       memberName
       workspaceMetadata
-      packageMetadata;
-
-    # Libraries that will be put in $LD_LIBRARY_PATH
-    runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+      packageMetadata
+      runtimeLibs;
 
     buildInputs =
       libb.resolveToPkgs
