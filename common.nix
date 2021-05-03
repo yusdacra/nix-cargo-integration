@@ -119,7 +119,6 @@ let
         src = ./.;
         hooks = {
           rustfmt.enable = true;
-          nix-linter.enable = true;
           nixpkgs-fmt.enable = true;
         };
       };
