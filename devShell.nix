@@ -20,33 +20,48 @@ let
       };
     };
     packages = [ pkgs.rustc ] ++ common.nativeBuildInputs ++ common.buildInputs;
-    commands =
-      let
-        pkgCmd = pkg: { package = pkg; };
-      in
-      with pkgs; [
-        (pkgCmd git)
-        (pkgCmd nixpkgs-fmt)
-        {
-          name = "check";
-          help = "Check flake outputs";
-          command = "nix build -L --show-trace --no-link --impure --expr '
-            builtins.mapAttrs (n: v: builtins.seq v v) (builtins.getFlake (toString ./.)).checks.\${builtins.currentSystem}
+    commands = with pkgs; [
+      {
+        package = git;
+        category = "vcs";
+      }
+      {
+        package = nixpkgs-fmt;
+        category = "tools";
+      }
+      {
+        name = "check";
+        category = "flake tools";
+        help = "Check flake outputs";
+        command = "nix build -L --show-trace --no-link --impure --expr '
+            builtins.mapAttrs
+              (n: v: if n != \"preCommitChecks\" then builtins.seq v v else builtins.trace \"skipping pre commit checks\" \"\")
+              (builtins.getFlake (toString ./.)).checks.\${builtins.currentSystem}
           '";
-        }
-        {
-          name = "fmt";
-          help = "Format the Rust project and top-level Nix files.";
-          command = "cargo fmt && nixpkgs-fmt *.nix";
-        }
-      ] ++ lib.optionals (! isNull cachixName) [
-        (pkgCmd cachix)
-        {
-          name = "build";
-          help = "Build the specified derivation and push results to cachix.";
-          command = "cachix watch-exec ${cachixName} nix -- build .#$1";
-        }
-      ];
+      }
+      {
+        name = "fmt";
+        category = "flake tools";
+        help = "Format the Rust project and top-level Nix files.";
+        command = "cargo fmt && nixpkgs-fmt *.nix";
+      }
+    ] ++ lib.optionals (! isNull cachixName) [
+      {
+        package = cachix;
+        category = "tools";
+      }
+      {
+        name = "build";
+        category = "flake tools";
+        help = "Build the specified derivation and push results to cachix.";
+        command = "cachix watch-exec ${cachixName} nix -- build .#$1";
+      }
+    ] ++ lib.optional (builtins.hasAttr "preCommitChecks" common) {
+      name = "check-pre-commit";
+      category = "tools";
+      help = "Runs the pre commit checks";
+      command = "nix build --no-link .#preCommitChecks";
+    };
     env = with lib; [
       { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
       { name = "LIBRARY_PATH"; eval = "$DEVSHELL_DIR/lib"; }
