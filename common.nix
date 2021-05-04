@@ -116,7 +116,7 @@ let
     )
     {
       preCommitChecks = pkgs.makePreCommitHooks {
-        src = ./.;
+        src = root;
         hooks = {
           rustfmt.enable = true;
           nixpkgs-fmt.enable = true;
