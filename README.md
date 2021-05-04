@@ -38,21 +38,21 @@ in
 ### Examples
 
 - [Basic flake.nix template with commented fields and overrides](./example_flake.nix)
-- [Overriding builds based on crate name](https://gitlab.com/veloren/veloren/-/blob/master/flake.nix)
+- [crate2nix build platform crate overrides usage](https://gitlab.com/veloren/veloren/-/blob/master/flake.nix)
 - [Modifying cargo build options to build a specific feature and changing outputs based on the feature used](https://github.com/yusdacra/bernbot/blob/master/flake.nix)
 
 ## Library documentation
 
-### `makeOutputs = { root, overrides ? { }, buildPlatform ? "naersk", enablePreCommitHooks ? false }: { ... }`
+### `makeOutputs`
 
 Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
 
 #### Arguments
 
-- `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean)
-- `buildPlatform`: platform to build crates with (type: `"naersk" or "crate2nix"`)
+- `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
+- `buildPlatform`: platform to build crates with (type: `"naersk" or "crate2nix"`) (default: `"naersk"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
-- `overrides`: overrides for devshell, build and common (type: attrset)
+- `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
     - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
