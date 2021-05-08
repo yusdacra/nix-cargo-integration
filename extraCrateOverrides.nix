@@ -4,40 +4,43 @@ let
     buildInputs = (prev.buildInputs or [ ]) ++ bi;
     nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ ni;
   };
-in
-with pkgs;
-{
   ffmpeg-sys-next = prev:
     let
       env = {
         LIBCLANG_PATH = "${pkgs.llvmPackages.libclang}/lib";
       };
+      inherit (pkgs) ffmpeg llvmPackages pkg-config;
     in
     (mkOv [ ffmpeg llvmPackages.libclang ] [ pkg-config ] prev) // {
       propagatedEnv = env;
     } // env;
-  libudev-sys = mkOv [ libudev ] [ pkg-config ];
-  alsa-sys = mkOv [ alsaLib ] [ pkg-config ];
-  xcb = mkOv [ xorg.libxcb ] [ python3 ];
-  xkbcommon-sys = mkOv [ libxkbcommon ] [ pkg-config ];
-  expat-sys = mkOv [ expat ] [ cmake ];
-  freetype-sys = mkOv [ freetype ] [ cmake ];
-  servo-fontconfig-sys = mkOv [ fontconfig ] [ pkg-config ];
-  cairo-sys-rs = mkOv [ cairo ] [ pkg-config ];
-  pango-sys = mkOv [ pango harfbuzz ] [ pkg-config ];
-  glib-sys = mkOv [ glib ] [ pkg-config ];
-  gobject-sys = mkOv [ glib ] [ pkg-config ];
-  gio-sys = mkOv [ glib ] [ pkg-config ];
-  atk-sys = mkOv [ atk ] [ pkg-config ];
-  gdk-pixbuf-sys = mkOv [ gdk_pixbuf ] [ pkg-config ];
-  gdk-sys = mkOv [ gtk3 ] [ pkg-config ];
-  gtk-sys = mkOv [ gtk3 ] [ pkg-config ];
+in
+{
+  inherit ffmpeg-sys-next;
+  ffmpeg-sys = ffmpeg-sys-next;
+  libudev-sys = with pkgs; mkOv [ libudev ] [ pkg-config ];
+  alsa-sys = with pkgs; mkOv [ alsaLib ] [ pkg-config ];
+  xcb = with pkgs; mkOv [ xorg.libxcb ] [ python3 ];
+  xkbcommon-sys = with pkgs; mkOv [ libxkbcommon ] [ pkg-config ];
+  expat-sys = with pkgs; mkOv [ expat ] [ cmake ];
+  freetype-sys = with pkgs; mkOv [ freetype ] [ cmake ];
+  servo-fontconfig-sys = with pkgs; mkOv [ fontconfig ] [ pkg-config ];
+  cairo-sys-rs = with pkgs; mkOv [ cairo ] [ pkg-config ];
+  pango-sys = with pkgs; mkOv [ pango harfbuzz ] [ pkg-config ];
+  glib-sys = with pkgs; mkOv [ glib ] [ pkg-config ];
+  gobject-sys = with pkgs; mkOv [ glib ] [ pkg-config ];
+  gio-sys = with pkgs; mkOv [ glib ] [ pkg-config ];
+  atk-sys = with pkgs; mkOv [ atk ] [ pkg-config ];
+  gdk-pixbuf-sys = with pkgs; mkOv [ gdk_pixbuf ] [ pkg-config ];
+  gdk-sys = with pkgs; mkOv [ gtk3 ] [ pkg-config ];
+  gtk-sys = with pkgs; mkOv [ gtk3 ] [ pkg-config ];
   harmony_rust_sdk = prev:
     let
       env = {
         PROTOC = "${protobuf}/bin/protoc";
         PROTOC_INCLUDE = "${protobuf}/include";
       };
+      inherit (pkgs) protobuf rustfmt;
     in
     {
       buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf rustfmt ];
