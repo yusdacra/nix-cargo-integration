@@ -53,7 +53,7 @@ let
         name = "fmt";
         category = "flake tools";
         help = "Format all Rust and Nix files.";
-        command = "rustfmt $(find . -name '*.rs') && nixpkgs-fmt $(find . -name '*.nix')";
+        command = "rustfmt --edition 2018 $(find . -name '*.rs') && nixpkgs-fmt $(find . -name '*.nix')";
       }
     ] ++ lib.optionals (! isNull cachixName) [
       {
