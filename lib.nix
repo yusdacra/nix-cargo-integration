@@ -184,7 +184,7 @@ in
     in
     final // {
       devShell = lib.mapAttrs (_: import ./devShell.nix) commonsCombined;
-      checks = lib.recursiveUpdate final.checks (
+      checks = lib.recursiveUpdate (final.checks or { }) (
         lib.mapAttrs
           (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
             "preCommitChecks" = common.preCommitChecks;
