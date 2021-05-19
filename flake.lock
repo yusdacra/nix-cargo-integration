@@ -83,11 +83,11 @@
     "preCommitHooks": {
       "flake": false,
       "locked": {
-        "lastModified": 1620897287,
-        "narHash": "sha256-UU0SysjA5h1NMCQhA0lKaeqy9gCBqpq/5dW1BWLbIXo=",
+        "lastModified": 1621411868,
+        "narHash": "sha256-R+7OQ2JYFCb3E7Jl7LhRifzMVCR6Gl8R98zYsNhZtJ8=",
         "owner": "cachix",
         "repo": "pre-commit-hooks.nix",
-        "rev": "40a51af82c1181b9dea3526c4124eee077e30213",
+        "rev": "2e7fac06108b4fc81f5ff9ed9a02bc4f6ede7001",
         "type": "github"
       },
       "original": {
