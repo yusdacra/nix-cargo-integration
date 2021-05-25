@@ -6,12 +6,13 @@ let
   };
   ffmpeg-sys-next = prev:
     let
-      env = {
-        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang}/lib";
-      };
       inherit (pkgs) ffmpeg llvmPackages pkg-config;
+      inherit (llvmPackages) libclang;
+      env = {
+        LIBCLANG_PATH = "${libclang.lib}/lib";
+      };
     in
-    (mkOv [ ffmpeg llvmPackages.libclang ] [ pkg-config ] prev) // {
+    (mkOv [ ffmpeg.dev libclang.lib ] [ pkg-config ] prev) // {
       propagatedEnv = env;
     } // env;
 in
