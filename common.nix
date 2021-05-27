@@ -32,7 +32,7 @@ let
       then rustToolchain
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
-  libb = lib // (import ./utils.nix pkgs);
+  libb = lib // pkgs.nciUtils;
 
   cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
 in

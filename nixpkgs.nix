@@ -61,7 +61,11 @@ let
         })
       ]
       else throw "invalid build platform: ${buildPlatform}"
-    );
+    ) ++ [
+      (final: prev: {
+        nciUtils = import ./utils.nix prev;
+      })
+    ];
   };
 in
 import sources.nixpkgs (config // (override
