@@ -1,7 +1,7 @@
 {
   inputs = {
     devshell.url = "github:numtide/devshell";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flakeUtils.url = "github:numtide/flake-utils";
     naersk = {
       url = "github:yusdacra/naersk/feat/cargolock-git-deps";
