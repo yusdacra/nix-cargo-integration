@@ -41,7 +41,8 @@ in
         PROTOC = "${protobuf}/bin/protoc";
         PROTOC_INCLUDE = "${protobuf}/include";
       };
-      inherit (pkgs) protobuf rustfmt;
+      inherit (pkgs) protobuf nciRust;
+      inherit (nciRust) rustfmt;
     in
     {
       buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf rustfmt ];
@@ -49,9 +50,12 @@ in
     } // env;
   rust-nix-templater = prev:
     let
+      inherit (pkgs) nixpkgs-fmt nciRust;
+      inherit (nciRust) rustc;
+
       env = {
-        TEMPLATER_FMT_BIN = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
-        TEMPLATER_CARGO_BIN = "${pkgs.rustc}/bin/cargo";
+        TEMPLATER_FMT_BIN = "${nixpkgs-fmt}/bin/nixpkgs-fmt";
+        TEMPLATER_CARGO_BIN = "${rustc}/bin/cargo";
       };
     in
     { propagatedEnv = env; } // env;

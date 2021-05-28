@@ -46,17 +46,17 @@ let
           let
             tools =
               lib.filterAttrs (k: v: !(lib.any (a: k == a) [ "override" "overrideDerivation" ]))
-                (prev.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+                (rustPkgs.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
                   hindent = null;
                   cabal-fmt = null;
                 });
           in
-          (prev.callPackage "${sources.preCommitHooks}/nix/run.nix" {
+          rustPkgs.callPackage "${sources.preCommitHooks}/nix/run.nix" {
             inherit tools;
-            pkgs = prev;
+            pkgs = rustPkgs;
             gitignore-nix-src = null;
             isFlakes = true;
-          });
+          };
       })
     ] ++
     (
