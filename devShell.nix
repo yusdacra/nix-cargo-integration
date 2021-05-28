@@ -19,7 +19,7 @@ let
         includes = common.buildInputs;
       };
     };
-    packages = [ pkgs.rustc pkgs.findutils ] ++ common.nativeBuildInputs ++ common.buildInputs;
+    packages = [ pkgs.nciRust.rustc pkgs.findutils ] ++ common.nativeBuildInputs ++ common.buildInputs;
     commands = with pkgs; [
       {
         package = git;

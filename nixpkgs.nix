@@ -6,28 +6,40 @@
 , override ? (_: _: { })
 }:
 let
+  rustOverlay = import sources.rustOverlay;
+  rustToolchainOverlay =
+    final: prev:
+    let
+      baseRustToolchain =
+        if (builtins.isPath toolchainChannel) && (builtins.pathExists toolchainChannel)
+        then prev.rust-bin.fromRustupToolchainFile toolchainChannel
+        else prev.rust-bin.${toolchainChannel}.latest.default;
+      toolchain = baseRustToolchain.override {
+        extensions = [ "rust-src" "rustfmt" "clippy" ];
+      };
+    in
+    {
+      rustc = toolchain;
+      rustfmt = toolchain;
+      clippy = toolchain;
+    } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform) {
+      cargo = toolchain;
+    };
+  rustPkgs = import sources.nixpkgs {
+    inherit system;
+    overlays = [
+      rustOverlay
+      rustToolchainOverlay
+    ];
+  };
+
   config = {
     inherit system;
     overlays = [
-      (import sources.rustOverlay)
-      (final: prev:
-        let
-          baseRustToolchain =
-            if (builtins.isPath toolchainChannel) && (builtins.pathExists toolchainChannel)
-            then prev.rust-bin.fromRustupToolchainFile toolchainChannel
-            else prev.rust-bin.${toolchainChannel}.latest.default;
-          toolchain = baseRustToolchain.override {
-            extensions = [ "rust-src" "rustfmt" "clippy" ];
-          };
-        in
-        {
-          rustc = toolchain;
-          rustfmt = toolchain;
-          clippy = toolchain;
-        } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform) {
-          cargo = toolchain;
-        }
-      )
+      rustOverlay
+      (final: prev: {
+        nciRust = rustToolchainOverlay final prev;
+      })
       (import (sources.devshell + "/overlay.nix"))
       (final: prev: {
         makePreCommitHooks =
@@ -51,13 +63,13 @@ let
       if lib.isNaersk buildPlatform
       then [
         (final: prev: {
-          naersk = prev.callPackage sources.naersk { };
+          naersk = rustPkgs.callPackage sources.naersk { };
         })
       ]
       else if lib.isCrate2Nix buildPlatform
       then [
         (final: prev: {
-          crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = prev; };
+          crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = rustPkgs; };
         })
       ]
       else throw "invalid build platform: ${buildPlatform}"
