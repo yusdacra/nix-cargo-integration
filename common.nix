@@ -35,6 +35,7 @@ let
   libb = lib // pkgs.nciUtils;
 
   cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
+  useCCompilerBintools = workspaceMetadata.useCCompilerBintools or packageMetadata.useCCompilerBintools or true;
 in
 let
   # Libraries that will be put in $LD_LIBRARY_PATH
@@ -44,7 +45,7 @@ let
     let
       depNames = builtins.map (dep: dep.name) dependencies;
       baseRaw = libb.makeCrateOverrides {
-        inherit cCompiler;
+        inherit cCompiler useCCompilerBintools;
         crateName = cargoPkg.name;
         rawTomlOverrides =
           libb.foldl'
@@ -69,6 +70,7 @@ let
 
     inherit
       cCompiler
+      useCCompilerBintools
       pkgs
       crateOverrides
       cargoPkg

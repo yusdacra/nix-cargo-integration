@@ -28,6 +28,7 @@ in
   makeCrateOverrides =
     { rawTomlOverrides ? { }
     , cCompiler ? pkgs.gcc
+    , useCCompilerBintools ? true
     , crateName
     ,
     }:
@@ -39,7 +40,7 @@ in
       };
       baseConf = prev: {
         stdenv = pkgs.stdenvNoCC;
-        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ [ cCompiler cCompiler.bintools ]);
+        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ [ cCompiler ] ++ (lib.optional useCCompilerBintools cCompiler.bintools));
         CC = "cc";
       };
       tomlOverrides = builtins.mapAttrs
