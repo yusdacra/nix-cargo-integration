@@ -30,6 +30,29 @@ let
     overlays = [
       rustOverlay
       rustToolchainOverlay
+      (final: prev: {
+        nciRust = {
+          inherit (prev) rustc rustfmt clippy cargo;
+        };
+      })
+    ] ++ (
+      if lib.isNaersk buildPlatform
+      then [
+        (final: prev: {
+          naersk = rustPkgs.callPackage sources.naersk { };
+        })
+      ]
+      else if lib.isCrate2Nix buildPlatform
+      then [
+        (final: prev: {
+          crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = rustPkgs; };
+        })
+      ]
+      else throw "invalid build platform: ${buildPlatform}"
+    ) ++ [
+      (final: prev: {
+        nciUtils = import ./utils.nix prev;
+      })
     ];
   };
 
@@ -58,24 +81,8 @@ let
             isFlakes = true;
           };
       })
-    ] ++
-    (
-      if lib.isNaersk buildPlatform
-      then [
-        (final: prev: {
-          naersk = rustPkgs.callPackage sources.naersk { };
-        })
-      ]
-      else if lib.isCrate2Nix buildPlatform
-      then [
-        (final: prev: {
-          crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = rustPkgs; };
-        })
-      ]
-      else throw "invalid build platform: ${buildPlatform}"
-    ) ++ [
       (final: prev: {
-        nciUtils = import ./utils.nix prev;
+        nciUtils = import ./utils.nix rustPkgs;
       })
     ];
   };
