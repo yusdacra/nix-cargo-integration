@@ -19,11 +19,11 @@
     },
     "devshell": {
       "locked": {
-        "lastModified": 1622467111,
-        "narHash": "sha256-BXTVetQtw4EMI49Yb0elWivup5DA3yoNhHFlVaDQD7U=",
+        "lastModified": 1622711433,
+        "narHash": "sha256-rGjXz7FA7HImAT3TtoqwecByLO5yhVPSwPdaYPBFRQw=",
         "owner": "numtide",
         "repo": "devshell",
-        "rev": "84f1493776f44960e329f21843ffad1686b6c7a3",
+        "rev": "1f4fb67b662b65fa7cfe696fc003fcc1e8f7cc36",
         "type": "github"
       },
       "original": {
