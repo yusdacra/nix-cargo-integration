@@ -55,7 +55,7 @@ let
       };
       base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
     in
-    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs runtimeLibs; lib = libb; } base);
+    base // ((overrides.crateOverrides or (_: _: { })) { inherit pkgs runtimeLibs cCompiler useCCompilerBintools cargoPkg packageMetadata; lib = libb; } base);
 
   crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
   crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
