@@ -23,6 +23,8 @@ in
         "gplv2" = "gpl2";
         "gpl-3.0" = "gpl3";
         "gpl-2.0" = "gpl2";
+        "mpl-2.0" = "mpl20";
+        "mpl-1.0" = "mpl10";
       }."${l}" or l;
 
   makeCrateOverrides =
