@@ -54,7 +54,7 @@ in
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         rawTomlOverrides;
       extraOverrides = import ./extraCrateOverrides.nix pkgs;
-      collectOverride = acc: el: name: (name:
+      collectOverride = acc: el: name:
         let
           getOverride = x: x.${name} or (_: { });
           accOverride = getOverride acc;
@@ -65,8 +65,7 @@ in
           overrodedAccBase = accOverride attrs;
           overrodedAcc = overrodedAccBase // (baseConf overrodedAccBase);
         in
-        overrodedAcc // (elOverride overrodedAcc)
-      );
+        overrodedAcc // (elOverride overrodedAcc);
     in
     builtins.foldl'
       (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (collectOverride acc el))
