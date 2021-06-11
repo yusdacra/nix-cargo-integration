@@ -2,14 +2,16 @@
 , doCheck ? false
 , doDoc ? false
 , features ? [ ]
+, renamePkgTo ? null
 , common
-,
 }:
 let
   inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
+
+  pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = with lib; ({
@@ -63,7 +65,8 @@ let
     in
     {
       inherit (common) root nativeBuildInputs buildInputs;
-      inherit (cargoPkg) name version;
+      inherit (cargoPkg) version;
+      name = pkgName;
       allRefs = true;
       gitSubmodules = true;
       # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
@@ -176,7 +179,7 @@ then
         # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
         inherit meta;
-        name = "${cargoPkg.name}-${cargoPkg.version}";
+        name = "${pkgName}-${cargoPkg.version}";
         paths = [
           (pkg.override { inherit (config) runTests; })
         ];

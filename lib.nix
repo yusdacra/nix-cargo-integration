@@ -8,10 +8,11 @@ let
     flakeUtils = import sources.flakeUtils;
   };
 
-  makeOutput = common:
+  makeOutput = { common, renameOutputs ? { } }:
     let
       inherit (common) cargoToml cargoPkg packageMetadata system memberName root lib;
 
+      name = renameOutputs.${cargoPkg.name} or cargoPkg.name;
       edition = cargoPkg.edition or "2018";
       bins = cargoToml.bin or [ ];
       autobins = cargoPkg.autobins or (edition == "2018");
@@ -38,6 +39,7 @@ let
         features = f;
         doCheck = c;
         release = r;
+        renamePkgTo = name;
       };
       mkApp = bin: n: v:
         let
@@ -63,8 +65,8 @@ let
 
       packagesRaw = {
         ${system} = {
-          "${cargoPkg.name}" = mkBuild [ ] true true;
-          "${cargoPkg.name}-debug" = mkBuild [ ] false false;
+          "${name}" = mkBuild [ ] true true;
+          "${name}-debug" = mkBuild [ ] false false;
         };
       };
       packages = {
@@ -72,7 +74,7 @@ let
       };
       checks = {
         ${system} = {
-          "${cargoPkg.name}-tests" = (mkBuild [ ] false true).package;
+          "${name}-tests" = (mkBuild [ ] false true).package;
         };
       };
       apps = {
@@ -88,22 +90,23 @@ let
     lib.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
       defaultPackage = {
-        ${system} = packages.${system}.${cargoPkg.name};
+        ${system} = packages.${system}.${name};
       };
     } // lib.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       defaultApp = {
-        ${system} = apps.${system}.${cargoPkg.name};
+        ${system} = apps.${system}.${name};
       };
     });
 in
 {
+  inherit makeOutput;
+
   # Create an "empty" common with a dummy crate.
   makeEmptyCommon =
     { system
     , overrides ? { }
     , buildPlatform ? "naersk"
-    ,
     }:
     let
       # Craft a dummy cargo toml.
@@ -131,6 +134,8 @@ in
     , overrides ? { }
     , buildPlatform ? "naersk"
     , enablePreCommitHooks ? false
+    , renameOutputs ? { }
+    , defaultOutputs ? { }
     }:
     let
       importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
@@ -178,17 +183,22 @@ in
         };
       };
 
-      allOutputs' = lib.flatten (builtins.map (lib.mapAttrsToList (_: makeOutput)) allCommons');
-      final = lib.foldAttrs lib.recursiveUpdate { } allOutputs';
+      allOutputs' = lib.flatten (builtins.map (lib.mapAttrsToList (_: common: makeOutput { inherit common renameOutputs; })) allCommons');
+      combinedOutputs = lib.foldAttrs lib.recursiveUpdate { } allOutputs';
+      finalOutputs = combinedOutputs // {
+        devShell = lib.mapAttrs (_: import ./devShell.nix) commonsCombined;
+        checks = lib.recursiveUpdate (combinedOutputs.checks or { }) (
+          lib.mapAttrs
+            (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
+              "preCommitChecks" = common.preCommitChecks;
+            })
+            commonsCombined
+        );
+      } // lib.optionalAttrs (builtins.hasAttr "package" defaultOutputs) {
+        defaultPackage = lib.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
+      } // lib.optionalAttrs (builtins.hasAttr "app" defaultOutputs) {
+        defaultApp = lib.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
+      };
     in
-    final // {
-      devShell = lib.mapAttrs (_: import ./devShell.nix) commonsCombined;
-      checks = lib.recursiveUpdate (final.checks or { }) (
-        lib.mapAttrs
-          (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
-            "preCommitChecks" = common.preCommitChecks;
-          })
-          commonsCombined
-      );
-    };
+    finalOutputs;
 }
