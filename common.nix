@@ -15,7 +15,10 @@ let
   cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
   packageMetadata = cargoPkg.metadata.nix or null;
 
-  overrideData = { inherit cargoPkg packageMetadata sources system memberName buildPlatform cargoToml lib; };
+  # This is named "prevRoot" since we will override it later on.
+  prevRoot = attrs.root or null;
+
+  overrideData = { inherit cargoPkg packageMetadata sources system memberName buildPlatform cargoToml lib; root = prevRoot; };
 
   # Helper function to create a package set; might be useful for users
   makePkgs =
@@ -43,7 +46,6 @@ let
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
-  prevRoot = attrs.root or null;
   root = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
@@ -53,7 +55,7 @@ let
   # Libraries that will be put in $LD_LIBRARY_PATH
   runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
 
-  overrideDataCrates = overrideDataPkgs // { inherit cCompiler useCCompilerBintools runtimeLibs; };
+  overrideDataCrates = overrideDataPkgs // { inherit cCompiler useCCompilerBintools runtimeLibs root; };
 
   # Collect crate overrides
   crateOverrides =
