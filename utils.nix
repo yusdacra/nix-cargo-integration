@@ -78,7 +78,7 @@ in
     { root
     , memberName ? null
     , additionalCargoNixArgs ? [ ]
-    , ...
+    , ... # pass everything else to crate2nix
     }@args:
     let
       generatedCargoNix = pkgs.crate2nixTools.generatedCargoNix {

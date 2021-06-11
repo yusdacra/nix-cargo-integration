@@ -8,7 +8,7 @@ let
 
   devshellAttr = workspaceMetadata.devshell or null;
   devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
-  devshellFilePath = common.root + "/devshell.toml";
+  devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
 
   baseConfig = {

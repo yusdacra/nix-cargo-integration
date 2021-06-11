@@ -42,7 +42,9 @@ let
   overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
-  root = (overrides.root or (_: root: root)) overrideDataPkgs (attrs.root or null);
+  # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
+  prevRoot = attrs.root or null;
+  root = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
   cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
@@ -99,6 +101,7 @@ let
       sources
       system
       root
+      prevRoot
       memberName
       workspaceMetadata
       packageMetadata
