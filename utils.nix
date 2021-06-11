@@ -54,20 +54,22 @@ in
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         rawTomlOverrides;
       extraOverrides = import ./extraCrateOverrides.nix pkgs;
+      collectOverride = acc: el: name: (name:
+        let
+          getOverride = x: x.${name} or (_: { });
+          accOverride = getOverride acc;
+          elOverride = getOverride el;
+        in
+        attrs:
+        let
+          overrodedAccBase = accOverride attrs;
+          overrodedAcc = overrodedAccBase // (baseConf overrodedAccBase);
+        in
+        overrodedAcc // (elOverride overrodedAcc)
+      );
     in
     builtins.foldl'
-      (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (name:
-      let
-        eld = el.${name} or (_: { });
-        accd = acc.${name} or (_: { });
-      in
-      pp:
-      let
-        accdPp = accd pp;
-        accPp = accdPp // (baseConf accdPp);
-      in
-      accPp // (eld accPp)
-      ))
+      (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (collectOverride acc el))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides mainOverride ];
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
