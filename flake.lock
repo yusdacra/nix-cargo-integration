@@ -1,22 +1,5 @@
 {
   "nodes": {
-    "crate2nix": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1619462726,
-        "narHash": "sha256-bQuUBOGzPnL3S+aweK/P9WRfNGk/tuoLDPfzIiX7XXY=",
-        "owner": "yusdacra",
-        "repo": "crate2nix",
-        "rev": "e10f71834d1464cd4b07d1bf7965c65abbff3fab",
-        "type": "github"
-      },
-      "original": {
-        "owner": "yusdacra",
-        "ref": "feat/builtinfetchgit",
-        "repo": "crate2nix",
-        "type": "github"
-      }
-    },
     "devshell": {
       "locked": {
         "lastModified": 1622711433,
@@ -47,23 +30,6 @@
         "type": "github"
       }
     },
-    "naersk": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1619312121,
-        "narHash": "sha256-Zx1rTlonsp54lVlnIg38HV3bYx6GdIoKS1SgDnV+YBY=",
-        "owner": "yusdacra",
-        "repo": "naersk",
-        "rev": "07d0b56bdbd353a705f26b799e3a125c7be0f8c3",
-        "type": "github"
-      },
-      "original": {
-        "owner": "yusdacra",
-        "ref": "feat/cargolock-git-deps",
-        "repo": "naersk",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1622966049,
@@ -80,30 +46,11 @@
         "type": "github"
       }
     },
-    "preCommitHooks": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1622650193,
-        "narHash": "sha256-qSzUpJDv04ajS9FXoCq6NjVF3qOt9IiGIiGh0P8amyw=",
-        "owner": "cachix",
-        "repo": "pre-commit-hooks.nix",
-        "rev": "0398f0649e0a741660ac5e8216760bae5cc78579",
-        "type": "github"
-      },
-      "original": {
-        "owner": "cachix",
-        "repo": "pre-commit-hooks.nix",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
-        "crate2nix": "crate2nix",
         "devshell": "devshell",
         "flakeUtils": "flakeUtils",
-        "naersk": "naersk",
         "nixpkgs": "nixpkgs",
-        "preCommitHooks": "preCommitHooks",
         "rustOverlay": "rustOverlay"
       }
     },

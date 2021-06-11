@@ -3,26 +3,33 @@
     devshell.url = "github:numtide/devshell";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flakeUtils.url = "github:numtide/flake-utils";
-    naersk = {
-      url = "github:yusdacra/naersk/feat/cargolock-git-deps";
-      flake = false;
-    };
-    crate2nix = {
-      url = "github:yusdacra/crate2nix/feat/builtinfetchgit";
-      flake = false;
-    };
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
-      flake = false;
-    };
-    preCommitHooks = {
-      url = "github:cachix/pre-commit-hooks.nix";
       flake = false;
     };
   };
 
   outputs = inputs: with inputs;
     let
+      # these are meant to be updated and checked manually; so they are not specified in flake inputs.
+      # specifying them here also makes flake.lock shorter, and allow for lazy eval, so if you dont use preCommitHooks
+      # or a buildPlatform, it won't be fetched.
+      naersk = builtins.fetchGit {
+        url = "https://github.com/yusdacra/naersk.git";
+        ref = "feat/cargolock-git-deps";
+        rev = "07d0b56bdbd353a705f26b799e3a125c7be0f8c3";
+      };
+      crate2nix = builtins.fetchGit {
+        url = "https://github.com/yusdacra/crate2nix.git";
+        ref = "feat/builtinfetchgit";
+        rev = "e10f71834d1464cd4b07d1bf7965c65abbff3fab";
+      };
+      preCommitHooks = builtins.fetchGit {
+        url = "https://github.com/cachix/pre-commit-hooks.nix.git";
+        ref = "master";
+        rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
+      };
+
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./lib.nix {
         sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
