@@ -11,7 +11,7 @@ let
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
 
-  # TODO convert cargo maintainers to nixpkgs maintainers
+  # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = with lib; ({
     description = cargoPkg.description or "${cargoPkg.name} is a Rust project.";
     platforms = [ common.system ];
@@ -66,7 +66,7 @@ let
       inherit (cargoPkg) name version;
       allRefs = true;
       gitSubmodules = true;
-      # WORKAROUND doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
+      # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
       cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
       cargoTestOptions = def:
         def ++ [ "--tests" "--bins" "--examples" ]
@@ -173,6 +173,7 @@ then
       in
       # This is a workaround so that crate2nix doesnt get built until we actually build
         # otherwise nix will try to build it even if you only run `nix flake show`
+        # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
         inherit meta;
         name = "${cargoPkg.name}-${cargoPkg.version}";

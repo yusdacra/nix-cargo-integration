@@ -106,7 +106,7 @@ in
     ,
     }:
     let
-      # Craft a dummy cargo toml
+      # Craft a dummy cargo toml.
       cargoToml = {
         package = {
           name = "dummy";
@@ -131,7 +131,6 @@ in
     , overrides ? { }
     , buildPlatform ? "naersk"
     , enablePreCommitHooks ? false
-    ,
     }:
     let
       importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));

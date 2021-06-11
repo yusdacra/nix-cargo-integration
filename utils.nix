@@ -14,6 +14,7 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
+  # Tries to convert a cargo license to nixpkgs license.
   cargoLicenseToNixpkgs = license:
     let
       l = lib.toLower license;
@@ -27,12 +28,13 @@ in
         "mpl-1.0" = "mpl10";
       }."${l}" or l;
 
+  # Creates crate overrides for crate2nix to use.
+  # The crate overrides will be "collected" in common.nix for naersk and devshell to use them.
   makeCrateOverrides =
     { rawTomlOverrides ? { }
     , cCompiler ? pkgs.gcc
     , useCCompilerBintools ? true
     , crateName
-    ,
     }:
     let
       mainOverride = {
@@ -69,6 +71,7 @@ in
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides mainOverride ];
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
+  # crate2nix build crate.
   buildCrate =
     { root
     , memberName ? null
@@ -90,5 +93,6 @@ in
     then cargoNix.rootCrate.build
     else cargoNix.workspaceMembers.${memberName}.build;
 } // lib.optionalAttrs (builtins.hasAttr "naersk" pkgs) {
+  # naersk build crate.
   buildCrate = pkgs.naersk.buildPackage;
 }

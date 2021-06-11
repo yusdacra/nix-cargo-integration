@@ -1,3 +1,4 @@
+# A set of crate overrides, in the spirit of nixpkgs's `defaultCrateOverrides`.
 pkgs:
 let
   mkOv = bi: ni: prev: {
