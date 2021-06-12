@@ -41,7 +41,7 @@ let
       ''
     else
       (pkgs.makeDesktopItem {
-        inherit pkgName;
+        name = pkgName;
         exec = packageMetadata.executable or pkgName;
         comment = desktopFileMetadata.comment or meta.description;
         desktopName = desktopFileMetadata.name or pkgName;
