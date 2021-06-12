@@ -25,5 +25,7 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Nix optimize
       run: df -h && nix-store --optimise && df -h
+    - name: Cleanup disk
+      uses: curoky/cleanup-disk-action@v2.0
     - name: Tests
       run: nix develop -c check
