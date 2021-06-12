@@ -8,22 +8,25 @@
 let
   inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
 
+  putIfHasAttr = attr: set: lib.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
+
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
 
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
-  meta = with lib; ({
-    description = cargoPkg.description or "${cargoPkg.name} is a Rust project.";
+  meta = {
+    description = cargoPkg.description or "${pkgName} is a Rust project.";
     platforms = [ common.system ];
-  } // (optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
-  // (optionalAttrs (builtins.hasAttr "homepage" cargoPkg) { inherit (cargoPkg) homepage; })
-  // (optionalAttrs (builtins.hasAttr "longDescription" packageMetadata) { inherit (packageMetadata) longDescription; }));
+  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
+  // (putIfHasAttr "homepage" cargoPkg)
+  // (putIfHasAttr "longDescription" packageMetadata);
 
   desktopFile =
     let
-      name = cargoPkg.name;
+      # If icon path starts with relative path prefix, make it absolute using root as base
+      # Otherwise treat it as an absolute path
       makeIcon = icon:
         if (lib.hasPrefix "./" icon)
         then (common.root + "/${lib.removePrefix "./" icon}")
@@ -32,19 +35,19 @@ let
     in
     if builtins.isString desktopFileMetadata
     then
-      pkgs.runCommand "${cargoPkg.name}-desktopFileLink" { } ''
+      pkgs.runCommand "${pkgName}-desktopFileLink" { } ''
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else with lib;
-    ((pkgs.makeDesktopItem {
-      inherit name;
-      exec = packageMetadata.executable or name;
-      comment = desktopFileMetadata.comment or meta.description;
-      desktopName = desktopFileMetadata.name or name;
-    }) // (optionalAttrs (builtins.hasAttr "icon" desktopFileMetadata) { icon = makeIcon desktopFileMetadata.icon; })
-    // (optionalAttrs (builtins.hasAttr "genericName" desktopFileMetadata) { inherit (desktopFileMetadata) genericName; })
-    // (optionalAttrs (builtins.hasAttr "categories" desktopFileMetadata) { inherit (desktopFileMetadata) categories; }));
+    else
+      (pkgs.makeDesktopItem {
+        inherit pkgName;
+        exec = packageMetadata.executable or pkgName;
+        comment = desktopFileMetadata.comment or meta.description;
+        desktopName = desktopFileMetadata.name or pkgName;
+      }) // (putIfHasAttr "icon" desktopFileMetadata)
+      // (putIfHasAttr "genericName" desktopFileMetadata)
+      // (putIfHasAttr "categories" desktopFileMetadata);
 
   runtimeLibsEnv = prev:
     lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
@@ -60,7 +63,9 @@ let
   baseNaerskConfig =
     let
       library = packageMetadata.library or false;
+      # Specify --package if we are building in a workspace
       packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+      # Specify --features if we have enabled features other than the default ones
       featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
     in
     {
@@ -69,21 +74,24 @@ let
       name = pkgName;
       allRefs = true;
       gitSubmodules = true;
-      # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
       cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
+      # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
       cargoTestOptions = def:
         def ++ [ "--tests" "--bins" "--examples" ]
         ++ lib.optional library "--lib"
         ++ packageOption ++ featuresOption;
       override = _: {
+        # Use no cc stdenv, since we supply our own cc
         stdenv = pkgs.stdenvNoCC;
       } // common.env;
       overrideMain =
         let
+          # Runtime libs wrapper that adds LD_LIBRARY_PATH wrapping
           runtimeWrapOverride = prev:
             prev // {
               nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
             } // runtimeLibsEnv prev;
+          # Desktop file wrapper that adds the desktop file we generated
           desktopOverride = prev: prev // lib.optionalAttrs mkDesktopFile {
             nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ];
             desktopItems = [ desktopFile ];
@@ -96,6 +104,7 @@ let
               (desktopOverride (prev // common.env // {
                 inherit meta;
                 dontFixup = !release;
+                # Use no cc stdenv, since we supply our own cc
                 stdenv = pkgs.stdenvNoCC;
               }));
         in
@@ -106,6 +115,7 @@ let
 
   baseCrate2NixConfig =
     let
+      # Override that adds stuff like make wrapper, desktop file, common envs and so on.
       overrideMain = prev: {
         dontFixup = !release;
         nativeBuildInputs =
@@ -115,21 +125,21 @@ let
             ++ lib.optional mkDesktopFile pkgs.copyDesktopItems;
         buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
       } // runtimeLibsEnv prev
-      // lib.optionalAttrs mkDesktopFile {
-        desktopItems = [ desktopFile ];
-      }
+      // lib.optionalAttrs mkDesktopFile { desktopItems = [ desktopFile ]; }
       // common.env;
     in
     {
       inherit pkgs release;
       runTests = doCheck;
       rootFeatures =
+        # If we specified features, disable default feature, since it means this is an autobin
         let def = lib.optional (builtins.hasAttr "default" (common.cargoToml.features or { })) "default"; in
         if (builtins.length features) > 0
         then features ++ def
         else def;
       defaultCrateOverrides =
         let
+          # Remove propagated envs from overrides, no longer needed
           crateOverrides =
             builtins.mapAttrs
               (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ]))
@@ -138,9 +148,12 @@ let
         crateOverrides // {
           ${cargoPkg.name} = prev:
             let
+              # First override
               overrode = overrideMain prev;
+              # Second override (might contain user provided values)
               overroded = overrode // (crateOverrides.${cargoPkg.name} or (_: { })) overrode;
             in
+            # Third override (is entirely user provided)
             overroded // (common.overrides.mainBuild common overrode);
         };
     };
@@ -166,7 +179,10 @@ then
           (
             {
               inherit (common) root;
+              # Use member name if it exists, which means we are building a crate in a workspace
               memberName = if isNull common.memberName then null else cargoPkg.name;
+              # If no features are specified, default to default features to generate Cargo.nix.
+              # If there are features specified, turn off default features and use the provided features to generate Cargo.nix.
               additionalCargoNixArgs =
                 lib.optionals
                   ((builtins.length config.rootFeatures) > 0)

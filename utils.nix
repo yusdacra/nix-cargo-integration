@@ -43,8 +43,10 @@ in
         };
       };
       baseConf = prev: {
+        # No CC since we provide our own compiler
         stdenv = pkgs.stdenvNoCC;
         nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ [ cCompiler ] ++ (lib.optional useCCompilerBintools cCompiler.bintools));
+        # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
         CC = "cc";
       };
       tomlOverrides = builtins.mapAttrs

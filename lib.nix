@@ -8,6 +8,7 @@ let
     flakeUtils = import sources.flakeUtils;
   };
 
+  # Create an output (packages, apps, etc.) from a common.
   makeOutput = { common, renameOutputs ? { } }:
     let
       inherit (common) cargoToml cargoPkg packageMetadata system memberName root lib;

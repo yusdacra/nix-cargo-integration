@@ -2,15 +2,20 @@ common:
 let
   inherit (common) pkgs workspaceMetadata lib;
 
+  # Extract cachix metadata
   cachixMetadata = workspaceMetadata.cachix or null;
   cachixName = cachixMetadata.name or null;
   cachixKey = cachixMetadata.key or null;
 
+  # Make devshell configs
   devshellAttr = workspaceMetadata.devshell or null;
   devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
   devshellFilePath = common.prevRoot + "/devshell.toml";
+
+  # Import the devshell specified in devshell.toml if it exists
   importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
 
+  # Create a base devshell config
   baseConfig = {
     language = {
       c = {
@@ -93,6 +98,7 @@ let
     '';
   };
 
+  # Helper function to combine devshell configs without loss
   combineWithBase = config: {
     devshell.startup = lib.recursiveUpdate baseConfig.devshell.startup (config.devshell.startup or { });
     language = lib.recursiveUpdate baseConfig.language (config.language or { });
@@ -101,10 +107,12 @@ let
     env = baseConfig.env ++ (config.env or [ ]);
   } // (removeAttrs config [ "packages" "commands" "env" "language" "startup" ]);
 
+  # Collect final config
   resultConfig = {
     configuration =
       let
         c =
+          # Add values from the imported devshell if it exists
           if isNull importedDevshell
           then { config = combineWithBase devshellConfig; imports = [ ]; }
           else {
@@ -112,6 +120,7 @@ let
             inherit (importedDevshell) _file imports;
           };
       in
+      # Override the config with user provided override
       c // {
         config = c.config // (common.overrides.shell common c.config);
         imports = c.imports ++ [ "${pkgs.devshell.extraModulesDir}/language/c.nix" ];
