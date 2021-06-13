@@ -16,12 +16,12 @@
       naersk = builtins.fetchGit {
         url = "https://github.com/yusdacra/naersk.git";
         ref = "feat/cargolock-git-deps";
-        rev = "07d0b56bdbd353a705f26b799e3a125c7be0f8c3";
+        rev = "f411315a2954bd60bdcba2bc0cff7f4b0012a12a";
       };
       crate2nix = builtins.fetchGit {
         url = "https://github.com/yusdacra/crate2nix.git";
         ref = "feat/builtinfetchgit";
-        rev = "e10f71834d1464cd4b07d1bf7965c65abbff3fab";
+        rev = "f7f96a6a84e66d54213a9f09036810620bb1b049";
       };
       preCommitHooks = builtins.fetchGit {
         url = "https://github.com/cachix/pre-commit-hooks.nix.git";
