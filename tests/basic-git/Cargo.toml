@@ -9,3 +9,6 @@ build = true
 
 [dependencies]
 rust-nix-templater = { git = "https://github.com/yusdacra/rust-nix-templater.git" }
+wgpu-profiler = { git = "https://github.com/Imberflur/wgpu-profiler", tag = "wgpu-0.8" }
+conrod_core = { git = "https://gitlab.com/veloren/conrod.git", branch = "copypasta_0.7" }
+keyboard-keynames = { git = "https://gitlab.com/Frinksy/keyboard-keynames.git", rev = "a97ae509cdb9dc70cf1bf0af762d2d1d3a0d6e0c" }
