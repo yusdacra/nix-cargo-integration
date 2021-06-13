@@ -73,7 +73,7 @@ let
       name = "check-pre-commit";
       category = "tools";
       help = "Runs the pre commit checks";
-      command = "nix build -L --show-trace --no-link --impure --expr '(builtins.getFlake (toString ./.)).checks.\${builtins.currentSystem}.preCommitChecks'";
+      command = "nix build -L --show-trace --no-link --impure --expr '(builtins.getFlake (toString ./.)).checks.${common.system}.preCommitChecks'";
     };
     env = with lib; [
       { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
