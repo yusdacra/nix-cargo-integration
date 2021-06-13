@@ -8,6 +8,17 @@
     # The build platform that will be used for anything build related.
     # Available platforms are "naersk" and "crate2nix".
     buildPlatform = "naersk";
+    # Which package outputs to rename to what.
+    # This renames both their package names and the generated output names.
+    # Applies to generated apps too.
+    renameOutputs = { };
+    # Default outputs to set.
+    defaultOutputs = {
+      # Set the `defaultPackage` output to the "example` package from `packages`.
+      # package = "example";
+      # Set the `defaultApp` output to the "example` app from `apps`.
+      # app = "example";
+    };
     # Overrides provided here will apply to *every crate*,
     # for *every system*. To selectively override per crate,
     # one can use `common.cargoPkg.name` attribute. To selectively
@@ -30,6 +41,10 @@
         pkgs = common: prev: {
           # overlays = prev.overlays ++ [ inputs.someInput.someOverlay ];
         };
+        # Override for the root that will be used.
+        # Note that it may cause inconsistency if the changed root includes different
+        # dependencies in it's Cargo.lock.
+        root = common: prev: prev;
         # Override crate overrides used by crate2nix build derivation.
         crateOverrides = common: prevv: {
           # test = prev: {
