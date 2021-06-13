@@ -4,6 +4,8 @@ Utility to integrate Cargo projects with Nix.
 
 - Uses [naersk] or [crate2nix] to build Cargo packages and [devshell] to provide development shell.
 - Allows configuration from `Cargo.toml` via `package.metadata.nix` and `workspace.metadata.nix` attributes.
+- Has sensible defaults, and tries to be as compatible as with Cargo itself (autobins, etc.).
+- Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
 
 ## Usage
 
@@ -65,6 +67,10 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
         - this will override *all* [naersk]/[crate2nix] build derivation(s), refer to [naersk]/[crate2nix] for more information
     - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
         - this will override *all* [naersk]/[crate2nix] main crate build derivation(s), refer to [naersk]/[crate2nix] for more information
+- `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
+- `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
+    - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)
+    - `defaultOutputs.package`: package output name to set as default package (`defaultPackage`) output (type: string)
 
 ### `package.metadata.nix` and `workspace.metadata.nix` common attributes
 
