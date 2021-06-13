@@ -44,17 +44,13 @@ let
         name = "check";
         category = "flake tools";
         help = "Check flake outputs";
-        command = ''
+        command = "
           nix build -L --show-trace --no-link --impure --expr '
-            builtins.mapAttrs
-              (n: v: builtins.seq v v)
-              (
-                builtins.removeAttrs
-                  (builtins.getFlake (toString ./.)).checks.${common.system}
-                  [ "preCommitChecks" ]
-              )
+            builtins.removeAttrs
+              (builtins.getFlake (toString ./.)).checks.${common.system}
+              [ \"preCommitChecks\" ]
           '
-        '';
+        ";
       }
       {
         name = "fmt";
