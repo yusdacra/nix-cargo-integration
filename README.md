@@ -139,7 +139,7 @@ NOTE: If `root` does not point to a workspace, all of the attributes listed here
 will be available in `package.metadata.nix`.
 
 - `systems`: systems to enable for the flake (type: list)
-    - equal to `nixpkgs` `supportedSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
+    - equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly")
     - if `rust-toolchain` file exists, it will be used instead of this attribute
 

@@ -5,8 +5,8 @@ let
   lib = libb // {
     isNaersk = platform: platform == "naersk";
     isCrate2Nix = platform: platform == "crate2nix";
-    # Equal to `nixpkgs` `supportedSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
-    defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+    # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
+    defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" ];
   };
 
   # Create an output (packages, apps, etc.) from a common.
