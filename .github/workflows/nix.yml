@@ -14,7 +14,7 @@ jobs:
     - name: Install nix
       uses: cachix/install-nix-action@v13
       with:
-        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210415_76980a1/install
+        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210429_d15a196/install
         extra_nix_config: |
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
@@ -23,9 +23,5 @@ jobs:
       with:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - name: Nix optimize
-      run: df -h && nix-store --optimise && df -h
-    - name: Cleanup disk
-      uses: curoky/cleanup-disk-action@v2.0
     - name: Tests
       run: nix develop -c check
