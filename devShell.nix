@@ -24,7 +24,7 @@ let
         includes = common.buildInputs;
       };
     };
-    packages = [ pkgs.nciRust.rustc pkgs.findutils ] ++ common.nativeBuildInputs ++ common.buildInputs;
+    packages = (with pkgs; [ nciRust.rustc fd ]) ++ common.nativeBuildInputs ++ common.buildInputs;
     commands = with pkgs; [
       {
         package = git;
@@ -44,21 +44,23 @@ let
         name = "check";
         category = "flake tools";
         help = "Check flake outputs";
-        command = "nix build -L --show-trace --no-link --impure --expr '
+        command = ''
+          nix build -L --show-trace --no-link --impure --expr '
             builtins.mapAttrs
               (n: v: builtins.seq v v)
               (
                 builtins.removeAttrs
-                  (builtins.getFlake (toString ./.)).checks.\${builtins.currentSystem}
-                  [ \"preCommitChecks\" ]
+                  (builtins.getFlake (toString ./.)).checks.${common.system}
+                  [ "preCommitChecks" ]
               )
-          '";
+          '
+        '';
       }
       {
         name = "fmt";
         category = "flake tools";
         help = "Format all Rust and Nix files.";
-        command = "rustfmt --edition 2018 $(find . -name '*.rs') && nixpkgs-fmt $(find . -name '*.nix')";
+        command = "rustfmt --edition 2018 $(fd --glob '*.rs') && nixpkgs-fmt $(fd --glob '*.nix')";
       }
     ] ++ lib.optionals (! isNull cachixName) [
       {
