@@ -26,16 +26,26 @@ to your `flake.nix`.
 
 You can use [flake-compat] to provide the default outputs of the flake for non-flake users.
 
-If you aren't using flakes, you can do:
+If you aren't using flakes, you can do (in your `default.nix` file for example):
 ```nix
 let
-  nixCargoIntegrationSrc = builtins.fetchGit { url = "https://github.com/yusdacra/nix-cargo-integration.git"; rev = <something>; sha256 = <something>; };
-  nixCargoIntegration = import "${nixCargoIntegrationSrc}/lib.nix" {
-      sources = { inherit flakeUtils rustOverlay devshell naersk nixpkgs crate2nix preCommitHooks; };
+  nixCargoIntegrationSrc = fetchTarball {
+    url = "https://github.com/yusdacra/nix-cargo-integration/archive/<rev>.tar.gz";
+    sha256 = "<hash>";
   };
-  outputs = nixCargoIntegration.makeOutputs { root = ./.; };
-in
+  nixCargoIntegration = import nixCargoIntegrationSrc;
+in nixCargoIntegration.makeOutputs { root = ./.; }
 ```
+
+You can also couple it with [niv](https://github.com/nmattia/niv):
+- First run `niv add yusdacra/nix-cargo-integration`
+- Then you can write in your `default.nix` file:
+    ```nix
+    let
+      sources = import ./sources.nix;
+      nixCargoIntegration = import sources.nix-cargo-integration;
+    in nixCargoIntegration.makeOutputs { root = ./.; }
+    ```
 
 ### Examples
 
