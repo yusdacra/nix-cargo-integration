@@ -5,7 +5,12 @@ let
   lib = libb // {
     isNaersk = platform: platform == "naersk";
     isCrate2Nix = platform: platform == "crate2nix";
-    flakeUtils = import sources.flakeUtils;
+    defaultSystems = [
+      "aarch64-linux"
+      "i686-linux"
+      "x86_64-darwin"
+      "x86_64-linux"
+    ];
   };
 
   # Create an output (packages, apps, etc.) from a common.
@@ -51,16 +56,17 @@ let
               exeName = bin.name;
               name = "${bin.name}${if v.config.release then "" else "-debug"}";
             };
+          drv =
+            if (builtins.length (bin.required-features or [ ])) < 1
+            then v.package
+            else (mkBuild (bin.required-features or [ ]) v.config.release v.config.doCheck).package;
+          exePath = "/bin/${ex.exeName}";
         in
         {
           name = ex.name;
-          value = lib.flakeUtils.mkApp {
-            name = ex.name;
-            drv =
-              if (builtins.length (bin.required-features or [ ])) < 1
-              then v.package
-              else (mkBuild (bin.required-features or [ ]) v.config.release v.config.doCheck).package;
-            exePath = "/bin/${ex.exeName}";
+          value = {
+            type = "app";
+            program = "${drv}${exePath}";
           };
         };
 
@@ -153,7 +159,7 @@ in
 
       dependencies = cargoLock.package;
       systems = (overrides.systems or (x: x))
-        (workspaceMetadata.systems or packageMetadata.systems or lib.flakeUtils.defaultSystems);
+        (workspaceMetadata.systems or packageMetadata.systems or lib.defaultSystems);
 
       mkCommon = memberName: cargoToml: system: import ./common.nix {
         inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks;

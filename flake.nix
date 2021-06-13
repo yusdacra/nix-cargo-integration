@@ -2,7 +2,6 @@
   inputs = {
     devshell.url = "github:numtide/devshell";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flakeUtils.url = "github:numtide/flake-utils";
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
       flake = false;
@@ -32,7 +31,7 @@
 
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./lib.nix {
-        sources = { inherit flakeUtils rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
+        sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
       };
       mkPlatform = buildPlatform:
         let
