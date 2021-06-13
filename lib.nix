@@ -159,8 +159,11 @@ in
       # Import the "main" Cargo.toml we will use. This Cargo.toml can either be a workspace manifest, or a package manifest.
       cargoToml = importCargoTOML root;
       # Import the Cargo.lock file.
-      cargoLock = (builtins.fromTOML (builtins.readFile (root + "/Cargo.lock")))
-        or throw "A Cargo.lock file must be present, please make sure it's at least staged in git.";
+      cargoLockPath = root + "/Cargo.lock";
+      cargoLock =
+        if builtins.pathExists cargoLockPath
+        then builtins.fromTOML (builtins.readFile cargoLockPath)
+        else throw "A Cargo.lock file must be present, please make sure it's at least staged in git.";
 
       # This is the "root package" that might or might not exist.
       # For example, the manifest might both specify a workspace *and* have a package in it.
