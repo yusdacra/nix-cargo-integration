@@ -60,4 +60,7 @@ in
       };
     in
     { propagatedEnv = env; } // env;
+  shaderc-sys = _:
+    let env = { SHADERC_LIB_DIR = "${pkgs.shaderc.lib}/lib"; };
+    in { propagatedEnv = env; } // env;
 }
