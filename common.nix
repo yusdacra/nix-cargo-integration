@@ -36,9 +36,14 @@ let
   pkgs = makePkgs {
     override = overrides.pkgs or (_: _: { });
     toolchainChannel =
-      let rustToolchain = root + "/rust-toolchain"; in
+      let
+        rustToolchain = root + "/rust-toolchain";
+        rustTomlToolchain = root + "/rust-toolchain.toml";
+      in
       if builtins.pathExists rustToolchain
       then rustToolchain
+      else if builtins.pathExists rustTomlToolchain
+      then rustTomlToolchain
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
   libb = lib // pkgs.nciUtils;
