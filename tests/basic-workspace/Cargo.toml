@@ -1,2 +1,2 @@
 [workspace]
-members = ["basic-bin", "basic-lib"]
+members = ["basic-bin", "basic-lib", "crates/*"]
