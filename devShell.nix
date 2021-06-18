@@ -13,7 +13,9 @@ let
   devshellFilePath = common.prevRoot + "/devshell.toml";
 
   # Import the devshell specified in devshell.toml if it exists
-  importedDevshell = if (builtins.pathExists devshellFilePath) then (pkgs.devshell.importTOML devshellFilePath) else null;
+  importedDevshell = if (builtins.pathExists devshellFilePath)
+    then (pkgs.devshell.importTOML devshellFilePath { inherit lib; })
+    else null;
 
   # Create a base devshell config
   baseConfig = {
