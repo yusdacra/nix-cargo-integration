@@ -170,8 +170,27 @@ in
       rootPkg = cargoToml.package or null;
       # Get the workspace attributes if it exists.
       workspaceToml = cargoToml.workspace or null;
+      # Get the workspace members if they exist.
+      workspaceMembers = workspaceToml.members or [ ];
+      # Process any globs that might be in workspace members.
+      globbedWorkspaceMembers = lib.flatten (builtins.map
+        (memberName:
+          let
+            components = lib.splitString "/" memberName;
+            parentDirRel = lib.concatStringsSep "/" (lib.init components);
+            parentDir = root + "/${parentDirRel}";
+            dirs = builtins.readDir parentDir;
+          in
+          if lib.last components == "*"
+          then
+            lib.mapAttrsToList
+              (name: _: "${parentDirRel}/${name}")
+              (lib.filterAttrs (_: type: type == "directory") dirs)
+          else memberName
+        )
+        workspaceMembers);
       # Get and import the members' Cargo.toml files if we are in a workspace.
-      members = lib.genAttrs (workspaceToml.members or [ ]) (name: importCargoTOML (root + "/${name}"));
+      members = lib.genAttrs globbedWorkspaceMembers (name: importCargoTOML (root + "/${name}"));
 
       # Get the metadata we will use from the root package attributes if it exists.
       packageMetadata = rootPkg.metadata.nix or null;
