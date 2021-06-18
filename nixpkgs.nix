@@ -17,6 +17,11 @@ let
         if (builtins.isPath toolchainChannel) && (builtins.pathExists toolchainChannel)
         then prev.rust-bin.fromRustupToolchainFile toolchainChannel
         else prev.rust-bin.${toolchainChannel}.latest.default;
+      isNightly =
+        lib.hasInfix "nightly"
+          (if builtins.isPath toolchainChannel && builtins.pathExists toolchainChannel
+          then builtins.readFile toolchainChannel
+          else toolchainChannel);
       # Override the base toolchain and add some default components.
       toolchain = baseRustToolchain.override {
         extensions = [ "rust-src" "rustfmt" "clippy" ];
@@ -26,10 +31,9 @@ let
       rustc = toolchain;
       rustfmt = toolchain;
       clippy = toolchain;
-    } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform) {
-      # Only use the toolchain's cargo if we are on crate2nix.
+    } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform || isNightly) {
+      # Only use the toolchain's cargo if we are on crate2nix, or if it's nightly.
       # naersk *does not* work with stable cargo, so we just use the nixpkgs provided cargo.
-      # TODO: if we are on a nightly toolchain, always use the toolchain cargo.
       cargo = toolchain;
     };
   # A package set with just our Rust toolchain overlayed.
