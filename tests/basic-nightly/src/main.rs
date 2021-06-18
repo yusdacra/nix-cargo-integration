@@ -1,4 +1,4 @@
-#![feature(try_trait)]
+#![feature(async_closure)]
 fn main() {
     println!("Hello, world!");
 }
