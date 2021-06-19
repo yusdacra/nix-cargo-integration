@@ -9,6 +9,6 @@ build = true
 
 [dependencies]
 linemd = { git = "https://github.com/yusdacra/linemd.git" }
-wgpu-profiler = { git = "https://github.com/Imberflur/wgpu-profiler", tag = "wgpu-0.8" }
+bool_ext = { git = "https://github.com/U007D/bool_ext.git", tag = "v0.5.1" }
 smol_str = { git = "https://github.com/rust-analyzer/smol_str.git", branch = "staging" }
-keyboard-keynames = { git = "https://gitlab.com/Frinksy/keyboard-keynames.git", rev = "a97ae509cdb9dc70cf1bf0af762d2d1d3a0d6e0c" }
+tuple = { git = "https://github.com/s3bk/tuple.git", rev = "fdf8b4400ffb10506c711018a3cb918412a3c8c1" }
