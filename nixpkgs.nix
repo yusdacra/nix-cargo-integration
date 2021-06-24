@@ -12,19 +12,36 @@ let
   rustToolchainOverlay =
     final: prev:
     let
+      inherit (builtins) readFile fromTOML isPath pathExists match;
+      inherit (lib) hasInfix unique head;
+
+      # Check if the passed toolchainChannel points to a toolchain file
+      hasRustToolchainFile = (isPath toolchainChannel) && (pathExists toolchainChannel);
       # Create the base Rust toolchain that we will override to add other components.
       baseRustToolchain =
-        if (builtins.isPath toolchainChannel) && (builtins.pathExists toolchainChannel)
+        if hasRustToolchainFile
         then prev.rust-bin.fromRustupToolchainFile toolchainChannel
         else prev.rust-bin.${toolchainChannel}.latest.default;
+      # Read and import the toolchain channel file, if we can
+      rustToolchainFile =
+        if hasRustToolchainFile
+        then
+          let
+            content = readFile toolchainChannel;
+            legacy = match "([^\r\n]+)\r?\n?" content;
+          in
+          if legacy != null
+          then null
+          else (fromTOML content).toolchain
+        else null;
       isNightly =
-        lib.hasInfix "nightly"
-          (if builtins.isPath toolchainChannel && builtins.pathExists toolchainChannel
-          then builtins.readFile toolchainChannel
+        hasInfix "nightly"
+          (if hasRustToolchainFile
+          then rustToolchainFile.channel or ""
           else toolchainChannel);
       # Override the base toolchain and add some default components.
       toolchain = baseRustToolchain.override {
-        extensions = [ "rust-src" "rustfmt" "clippy" ];
+        extensions = unique ((rustToolchainFile.components or [ ]) ++ [ "rust-src" "rustfmt" "clippy" ]);
       };
     in
     {
