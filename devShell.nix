@@ -8,7 +8,7 @@ let
   cachixKey = cachixMetadata.key or null;
 
   # Make devshell configs
-  devshellAttr = workspaceMetadata.devshell or packageMetadata.cachix or null;
+  devshellAttr = workspaceMetadata.devshell or packageMetadata.devshell or null;
   devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
   devshellFilePath = common.prevRoot + "/devshell.toml";
 
