@@ -1,14 +1,14 @@
 common:
 let
-  inherit (common) pkgs workspaceMetadata lib;
+  inherit (common) pkgs workspaceMetadata packageMetadata lib;
 
   # Extract cachix metadata
-  cachixMetadata = workspaceMetadata.cachix or null;
+  cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
   cachixName = cachixMetadata.name or null;
   cachixKey = cachixMetadata.key or null;
 
   # Make devshell configs
-  devshellAttr = workspaceMetadata.devshell or null;
+  devshellAttr = workspaceMetadata.devshell or packageMetadata.cachix or null;
   devshellConfig = if pkgs.lib.isAttrs devshellAttr then (builtins.removeAttrs devshellAttr [ "imports" ]) else { };
   devshellFilePath = common.prevRoot + "/devshell.toml";
 
