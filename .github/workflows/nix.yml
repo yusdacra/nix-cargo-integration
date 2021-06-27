@@ -14,7 +14,7 @@ jobs:
     - name: Install nix
       uses: cachix/install-nix-action@v13
       with:
-        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210429_d15a196/install
+        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210604_8e6ee1b/install
         extra_nix_config: |
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
