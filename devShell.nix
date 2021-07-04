@@ -101,7 +101,7 @@ let
 
   # Helper function to combine devshell configs without loss
   combineWithBase = config: {
-    devshell.startup = lib.recursiveUpdate baseConfig.devshell.startup (config.devshell.startup or { });
+    devshell.startup = lib.recursiveUpdate baseConfig.devshell.startup (config.startup or { });
     language = lib.recursiveUpdate baseConfig.language (config.language or { });
     packages = baseConfig.packages ++ (config.packages or [ ]);
     commands = baseConfig.commands ++ (config.commands or [ ]);
