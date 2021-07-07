@@ -208,8 +208,9 @@ in
         inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks;
       };
 
+      rootMemberName = if (lib.length workspaceMembers) > 0 then rootPkg.name else null;
       # Generate "commons" for the "root package".
-      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon null cargoToml) else null;
+      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon rootMemberName cargoToml) else null;
       # Generate "commons" for all members.
       memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value)) members;
       # Combine the member "commons" and the "root package" "commons".
