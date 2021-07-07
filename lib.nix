@@ -53,7 +53,7 @@ let
         let
           ex =
             if isNull bin
-            then { exeName = n; name = n; }
+            then { exeName = cargoPkg.name; name = n; }
             else {
               exeName = bin.name;
               name = "${bin.name}${if v.config.release then "" else "-debug"}";
