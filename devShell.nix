@@ -151,14 +151,17 @@ let
     '';
   };
 
-  # Helper function to combine devshell configs without loss
-  combineWithBase = config: {
-    devshell.startup = lib.recursiveUpdate baseConfig.devshell.startup (config.startup or { });
-    language = lib.recursiveUpdate baseConfig.language (config.language or { });
-    packages = baseConfig.packages ++ (config.packages or [ ]);
-    commands = baseConfig.commands ++ (config.commands or [ ]);
-    env = baseConfig.env ++ (config.env or [ ]);
-  } // (removeAttrs config [ "packages" "commands" "env" "language" "startup" ]);
+  # Helper function to combine devshell configs without loss.
+  combineWithBase = config: let
+    # Like nixpkgs.lib.recursiveUpdate, but allow merging lists together too.
+    recursiveUpdate' = lib.zipAttrsWith
+      (name: values:
+        if lib.tail values == [] then lib.head values
+        else if lib.all lib.isList values then lib.concatLists values
+        else if lib.all lib.isAttrs values then recursiveUpdate' values
+        else lib.head values
+      );
+  in recursiveUpdate' [ config baseConfig ];
 
   # Collect final config
   resultConfig = {
