@@ -36,7 +36,7 @@ let
   pushUpDevshellOptions = config: let
     movedOpts = lib.flip lib.filterAttrs config (name: _:
       lib.warnIf
-        (lib.hasAttr name config.devshell)
+        (lib.hasAttr name (config.devshell or { }))
         (lib.concatStrings [
           "Option '${name}' defined twice, both under 'config' and "
           "'config.devshell'. This likely happens when defining both in "
