@@ -1,0 +1,14 @@
+[package]
+name = "basic-devshell-cargo"
+version = "0.1.0"
+authors = ["Yusuf Bera Ertan <y.bera003.06@protonmail.com>"]
+edition = "2018"
+
+[package.metadata.nix]
+build = true
+
+[workspace.metadata.nix.devshell]
+name = "basic-devshell-cargo"
+
+[workspace.metadata.nix.devshell.devshell] # Should issue a warning
+name = "basic-devshell-cargo"
