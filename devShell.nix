@@ -152,16 +152,7 @@ let
   };
 
   # Helper function to combine devshell configs without loss.
-  combineWithBase = config: let
-    # Like nixpkgs.lib.recursiveUpdate, but allow merging lists together too.
-    recursiveUpdate' = lib.zipAttrsWith
-      (name: values:
-        if lib.tail values == [] then lib.head values
-        else if lib.all lib.isList values then lib.concatLists values
-        else if lib.all lib.isAttrs values then recursiveUpdate' values
-        else lib.head values
-      );
-  in recursiveUpdate' [ config baseConfig ];
+  combineWithBase = config: lib.mkMerge [ config baseConfig ];
 
   # Collect final config
   resultConfig = {
