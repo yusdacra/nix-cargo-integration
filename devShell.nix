@@ -11,7 +11,7 @@ let
   # devshell's modules.
   devshellOptions = lib.filterAttrs
     (_: lib.isType "option")
-    (pkgs.devshell.eval { configuration = {}; }).options.devshell;
+    (pkgs.devshell.eval { configuration = { }; }).options.devshell;
 
   # A helper function moving all options defined in the root of the config
   # (which name matches ones in `devshellOptions`) under a `devshell` attribute
@@ -33,28 +33,30 @@ let
   #   [workspace.metadata.nix.devshell.devshell]
   #   name = "example"
   #   ```
-  pushUpDevshellOptions = config: let
-    movedOpts = lib.flip lib.filterAttrs config (name: _:
-      lib.warnIf
-        (lib.hasAttr name (config.devshell or { }))
-        (lib.concatStrings [
-          "Option '${name}' defined twice, both under 'config' and "
-          "'config.devshell'. This likely happens when defining both in "
-          ''
-            `Cargo.toml`:
-            ```toml
-            [workspace.metadata.nix.devshell]
-            name = "example"
-            [workspace.metadata.nix.devshell.devshell]
-            name = "example"
-            ```
-          ''
-        ])
-        (lib.hasAttr name devshellOptions)
-    );
-  in lib.recursiveUpdate
-    (builtins.removeAttrs config (lib.attrNames movedOpts))
-    { devshell = movedOpts; };
+  pushUpDevshellOptions = config:
+    let
+      movedOpts = lib.flip lib.filterAttrs config (name: _:
+        lib.warnIf
+          (lib.hasAttr name (config.devshell or { }))
+          (lib.concatStrings [
+            "Option '${name}' defined twice, both under 'config' and "
+            "'config.devshell'. This likely happens when defining both in "
+            ''
+              `Cargo.toml`:
+              ```toml
+              [workspace.metadata.nix.devshell]
+              name = "example"
+              [workspace.metadata.nix.devshell.devshell]
+              name = "example"
+              ```
+            ''
+          ])
+          (lib.hasAttr name devshellOptions)
+      );
+    in
+    lib.recursiveUpdate
+      (builtins.removeAttrs config (lib.attrNames movedOpts))
+      { devshell = movedOpts; };
 
   # Make devshell configs
   devshellAttr = workspaceMetadata.devshell or packageMetadata.devshell or null;
