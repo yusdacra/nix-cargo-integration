@@ -21,7 +21,7 @@
       crate2nix = builtins.fetchGit {
         url = "https://github.com/yusdacra/crate2nix.git";
         ref = "feat/builtinfetchgit";
-        rev = "9bb6b9423517bbeb06dbd302d98dbdfb5777cd1b";
+        rev = "034297f18dcdda8fb3cafd04038b9cadd940640f";
       };
       preCommitHooks = builtins.fetchGit {
         url = "https://github.com/cachix/pre-commit-hooks.nix.git";
