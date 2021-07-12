@@ -63,4 +63,17 @@ in
   shaderc-sys = _:
     let env = { SHADERC_LIB_DIR = "${pkgs.shaderc.lib}/lib"; };
     in { propagatedEnv = env; } // env;
+  prost-build = prev:
+    let
+      env = {
+        PROTOC = "${protobuf}/bin/protoc";
+        PROTOC_INCLUDE = "${protobuf}/include";
+      };
+      inherit (pkgs) protobuf nciRust;
+      inherit (nciRust) rustfmt;
+    in
+    {
+      buildInputs = (prev.buildInputs or [ ]) ++ [ protobuf rustfmt ];
+      propagatedEnv = env;
+    } // env;
 }
