@@ -2,9 +2,9 @@
 
 Utility to integrate Cargo projects with Nix.
 
-- Uses [naersk] or [crate2nix] to build Cargo packages and [devshell] to provide development shell.
-- Allows configuration from `Cargo.toml` via `package.metadata.nix` and `workspace.metadata.nix` attributes.
-- Has sensible defaults, and tries to be as compatible as with Cargo itself (autobins, etc.).
+- Uses [naersk] or [crate2nix] to build Cargo packages and [devshell] to provide a development shell.
+- Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
+- Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
 
 ## Usage
