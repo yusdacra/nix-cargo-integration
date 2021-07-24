@@ -73,8 +73,8 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
         - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
-    - `overrides.build`: override for build (type: `common: prev: { }`)
-        - this will override *all* [naersk]/[crate2nix] build derivation(s), refer to [naersk]/[crate2nix] for more information
+    - `overrides.build`: override for build config (type: `common: prev: { }`)
+        - this will override [naersk]/[crate2nix] build config, refer to [naersk]/[crate2nix] for more information
     - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
         - this will override *all* [naersk]/[crate2nix] main crate build derivation(s), refer to [naersk]/[crate2nix] for more information
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
