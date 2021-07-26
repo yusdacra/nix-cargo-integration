@@ -5,6 +5,7 @@
 , workspaceMetadata ? null
 , overrides ? { }
 , dependencies ? [ ]
+, cargoVendorHash ? lib.fakeHash
 , lib
 , sources
 , system
@@ -112,7 +113,8 @@ let
       memberName
       workspaceMetadata
       packageMetadata
-      runtimeLibs;
+      runtimeLibs
+      cargoVendorHash;
 
     # Collect build inputs.
     buildInputs =

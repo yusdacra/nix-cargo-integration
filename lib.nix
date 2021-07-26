@@ -152,6 +152,7 @@ in
     , enablePreCommitHooks ? false
     , renameOutputs ? { }
     , defaultOutputs ? { }
+    , cargoVendorHash ? lib.fakeHash
     }:
     let
       # Helper function to import a Cargo.toml from a root.
@@ -206,7 +207,7 @@ in
 
       # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
       mkCommon = memberName: cargoToml: system: import ./common.nix {
-        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks;
+        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks cargoVendorHash;
       };
 
       rootMemberName = if (lib.length workspaceMembers) > 0 then rootPkg.name else null;

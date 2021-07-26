@@ -78,6 +78,7 @@ in
   buildCrate =
     { root
     , memberName ? null
+    , cargoVendorHash ? lib.fakeHash
     , ... # pass everything else to buildRustPackage
     }@args:
     let
@@ -87,16 +88,16 @@ in
         if isNull memberName
         then root + "/Cargo.toml"
         else root + "/${memberName}/Cargo.toml";
+      lockFile = root + "/Cargo.lock";
+
       cargoToml = fromTOML (readFile tomlPath);
     in
     pkgs.rustPlatform.buildRustPackage
       {
-        pname = cargoToml.package.name or "unknown";
-        version = cargoToml.package.version or "unknown";
+        cargoHash = cargoVendorHash;
+        pname = cargoToml.package.name;
+        version = cargoToml.package.version;
         src = root;
-        cargoLock = {
-          lockFile = root + "/Cargo.lock";
-        };
       } // (lib.optionalAttrs (isNull memberName) {
       sourceRoot = memberName;
     }) // (builtins.removeAttrs args [ "root" "memberName" ]);

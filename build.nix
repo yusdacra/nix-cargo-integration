@@ -83,7 +83,7 @@ let
   baseBRPConfig = applyOverrides ({
     pname = pkgName;
     inherit (cargoPkg) version;
-    inherit (common) root buildInputs nativeBuildInputs;
+    inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
     stdenv = pkgs.stdenvNoCC;
     inherit doCheck;
     dontFixup = !release;
