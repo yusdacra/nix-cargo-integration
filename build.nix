@@ -49,8 +49,10 @@ let
       // (putIfHasAttr "genericName" desktopFileMetadata)
       // (putIfHasAttr "categories" desktopFileMetadata);
 
-  runtimeLibsEnv = prev:
+  runtimeLibsOv = prev:
+    prev //
     lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
+      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
       postInstall = ''
         ${prev.postInstall or ""}
         for f in $out/bin/*; do
@@ -59,74 +61,76 @@ let
         done
       '';
     };
-
-  baseNaerskConfig =
-    let
-      library = packageMetadata.library or false;
-      # Specify --package if we are building in a workspace
-      packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
-      # Specify --features if we have enabled features other than the default ones
-      featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
-    in
-    {
-      inherit (common) root nativeBuildInputs buildInputs;
-      inherit (cargoPkg) version;
-      name = pkgName;
-      allRefs = true;
-      gitSubmodules = true;
-      cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
-      # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
-      cargoTestOptions = def:
-        def ++ [ "--tests" "--bins" "--examples" ]
-        ++ lib.optional library "--lib"
-        ++ packageOption ++ featuresOption;
-      override = _: {
-        # Use no cc stdenv, since we supply our own cc
-        stdenv = pkgs.stdenvNoCC;
-      } // common.env;
-      overrideMain =
-        let
-          # Runtime libs wrapper that adds LD_LIBRARY_PATH wrapping
-          runtimeWrapOverride = prev:
-            prev // {
-              nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.makeWrapper ];
-            } // runtimeLibsEnv prev;
-          # Desktop file wrapper that adds the desktop file we generated
-          desktopOverride = prev: prev // lib.optionalAttrs mkDesktopFile {
-            nativeBuildInputs = prev.nativeBuildInputs ++ [ pkgs.copyDesktopItems ];
-            desktopItems = [ desktopFile ];
-          };
-        in
-        prev:
-        let
-          overrode =
-            runtimeWrapOverride
-              (desktopOverride (prev // common.env // {
-                inherit meta;
-                dontFixup = !release;
-                # Use no cc stdenv, since we supply our own cc
-                stdenv = pkgs.stdenvNoCC;
-              }));
-        in
-        overrode // (common.overrides.mainBuild common overrode);
-      copyLibs = library;
-      inherit release doCheck doDoc;
+  desktopItemOv = prev:
+    prev //
+    lib.optionalAttrs mkDesktopFile {
+      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
+      desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
+  applyOverrides = prev:
+    lib.pipe prev [
+      desktopItemOv
+      runtimeLibsOv
+    ];
+
+  library = packageMetadata.library or false;
+  # Specify --package if we are building in a workspace
+  packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+  # Specify --features if we have enabled features other than the default ones
+  featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
+  releaseOption = lib.optional release "--release";
+
+  baseBRPConfig = applyOverrides ({
+    pname = pkgName;
+    inherit (cargoPkg) version;
+    inherit (common) root buildInputs nativeBuildInputs;
+    stdenv = pkgs.stdenvNoCC;
+    inherit doCheck;
+    dontFixup = !release;
+    buildFlags = releaseOption ++ packageOption ++ featuresOption;
+    checkFlags = releaseOption ++ packageOption ++ featuresOption;
+  } // common.env);
+
+  baseNaerskConfig = {
+    inherit (common) root nativeBuildInputs buildInputs;
+    inherit (cargoPkg) version;
+    name = pkgName;
+    allRefs = true;
+    gitSubmodules = true;
+    cargoBuildOptions = def: def ++ packageOption ++ featuresOption;
+    # FIXME: doctests fail to compile (they compile with nightly cargo but then rustdoc fails)
+    cargoTestOptions = def:
+      def ++ [ "--tests" "--bins" "--examples" ]
+      ++ lib.optional library "--lib"
+      ++ packageOption ++ featuresOption;
+    override = _: {
+      # Use no cc stdenv, since we supply our own cc
+      stdenv = pkgs.stdenvNoCC;
+    } // common.env;
+    overrideMain =
+      prev:
+      let
+        overrode =
+          applyOverrides (prev // common.env // {
+            inherit meta;
+            dontFixup = !release;
+            # Use no cc stdenv, since we supply our own cc
+            stdenv = pkgs.stdenvNoCC;
+          });
+      in
+      overrode // (common.overrides.mainBuild common overrode);
+    copyLibs = library;
+    inherit release doCheck doDoc;
+  };
 
   baseCrate2NixConfig =
     let
       # Override that adds stuff like make wrapper, desktop file, common envs and so on.
-      overrideMain = prev: {
+      overrideMain = prev: applyOverrides ({
         dontFixup = !release;
-        nativeBuildInputs =
-          (prev.nativeBuildInputs or [ ])
-            ++ common.nativeBuildInputs
-            ++ [ pkgs.makeWrapper ]
-            ++ lib.optional mkDesktopFile pkgs.copyDesktopItems;
+        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs;
         buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
-      } // runtimeLibsEnv prev
-      // lib.optionalAttrs mkDesktopFile { desktopItems = [ desktopFile ]; }
-      // common.env;
+      } // common.env);
     in
     {
       inherit pkgs release;
@@ -161,15 +165,13 @@ let
   overrideConfig = config:
     config // (common.overrides.build common config);
 in
-if lib.isNaersk buildPlatform
-then
+if lib.isNaersk buildPlatform then
   let config = overrideConfig baseNaerskConfig; in
   {
     inherit config;
     package = lib.buildCrate config;
   }
-else if lib.isCrate2Nix buildPlatform
-then
+else if lib.isCrate2Nix buildPlatform then
   let config = overrideConfig baseCrate2NixConfig; in
   {
     inherit config;
@@ -200,5 +202,11 @@ then
           (pkg.override { inherit (config) runTests; })
         ];
       };
+  }
+else if lib.isBuildRustPackage buildPlatform then
+  let config = overrideConfig baseBRPConfig; in
+  {
+    inherit config;
+    package = lib.buildCrate config;
   }
 else throw "invalid build platform: ${buildPlatform}"

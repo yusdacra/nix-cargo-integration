@@ -49,11 +49,12 @@
 
       naerskPlatform = mkPlatform "naersk";
       crate2nixPlatform = mkPlatform "crate2nix";
+      buildRustPackagePlatform = mkPlatform "buildRustPackage";
     in
     {
       inherit lib;
 
-      checks = libb.recursiveUpdate naerskPlatform crate2nixPlatform;
+      checks = libb.recursiveUpdate (libb.recursiveUpdate naerskPlatform crate2nixPlatform) buildRustPackagePlatform;
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
