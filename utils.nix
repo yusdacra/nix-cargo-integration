@@ -100,7 +100,7 @@ in
         src = root;
       } // (lib.optionalAttrs (isNull memberName) {
       sourceRoot = memberName;
-    }) // (builtins.removeAttrs args [ "root" "memberName" ]);
+    }) // (builtins.removeAttrs args [ "root" "memberName" "cargoVendorHash" ]);
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
   # crate2nix build crate.
   buildCrate =
