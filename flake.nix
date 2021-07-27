@@ -42,7 +42,7 @@
           tests = libb.genAttrs testNames (test: lib.makeOutputs {
             inherit buildPlatform;
             root = ./tests + "/${test}";
-            cargoVendorHash = hashes.${test};
+            cargoVendorHash = hashes.${test} or libb.fakeHash;
           });
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
           checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
