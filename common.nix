@@ -1,4 +1,5 @@
 { memberName ? null
+, isRootMember ? false
 , buildPlatform ? "naersk"
 , enablePreCommitHooks ? false
 , cargoToml ? null
@@ -114,7 +115,8 @@ let
       workspaceMetadata
       packageMetadata
       runtimeLibs
-      cargoVendorHash;
+      cargoVendorHash
+      isRootMember;
 
     # Collect build inputs.
     buildInputs =

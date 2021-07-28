@@ -184,7 +184,7 @@ else if lib.isCrate2Nix buildPlatform then
             {
               inherit (common) root;
               # Use member name if it exists, which means we are building a crate in a workspace
-              inherit memberName;
+              memberName = if isNull memberName then if common.isRootMember then cargoPkg.name else null else memberName;
               # If no features are specified, default to default features to generate Cargo.nix.
               # If there are features specified, turn off default features and use the provided features to generate Cargo.nix.
               additionalCargoNixArgs =
