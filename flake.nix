@@ -33,16 +33,12 @@
       lib = import ./lib.nix {
         sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
       };
-      hashes = {
-        "basic-git" = "sha256-OpOvR9BfLHeSLVSJZqWPGJ3e0HpPWf6KK6dOD6ftkfE=";
-      };
       mkPlatform = buildPlatform:
         let
           testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
           tests = libb.genAttrs testNames (test: lib.makeOutputs {
             inherit buildPlatform;
             root = ./tests + "/${test}";
-            cargoVendorHash = hashes.${test} or libb.fakeHash;
           });
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
           checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
@@ -53,12 +49,11 @@
 
       naerskPlatform = mkPlatform "naersk";
       crate2nixPlatform = mkPlatform "crate2nix";
-      buildRustPackagePlatform = mkPlatform "buildRustPackage";
     in
     {
       inherit lib;
 
-      checks = libb.recursiveUpdate (libb.recursiveUpdate naerskPlatform crate2nixPlatform) buildRustPackagePlatform;
+      checks = libb.recursiveUpdate naerskPlatform crate2nixPlatform;
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
