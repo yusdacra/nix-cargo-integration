@@ -73,6 +73,34 @@ in
       (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (collectOverride acc el))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides mainOverride ];
+} // lib.optionalAttrs (builtins.hasAttr "rustPlatform" pkgs) {
+  # buildRustPackage build crate.
+  buildCrate =
+    { root
+    , memberPath ? null
+    , cargoVendorHash ? lib.fakeHash
+    , ... # pass everything else to buildRustPackage
+    }@args:
+    let
+      inherit (builtins) readFile fromTOML;
+
+      tomlPath =
+        if isNull memberPath
+        then root + "/Cargo.toml"
+        else root + "/${memberPath}/Cargo.toml";
+      lockFile = root + "/Cargo.lock";
+
+      cargoToml = fromTOML (readFile tomlPath);
+    in
+    pkgs.rustPlatform.buildRustPackage
+      {
+        cargoHash = cargoVendorHash;
+        pname = cargoToml.package.name;
+        version = cargoToml.package.version;
+        src = root;
+      } // (lib.optionalAttrs (isNull memberPath) {
+      sourceRoot = memberPath;
+    }) // (builtins.removeAttrs args [ "root" "memberPath" "cargoVendorHash" ]);
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
   # crate2nix build crate.
   buildCrate =

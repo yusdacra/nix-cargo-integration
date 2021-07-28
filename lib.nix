@@ -5,6 +5,7 @@ let
   lib = libb // {
     isNaersk = platform: platform == "naersk";
     isCrate2Nix = platform: platform == "crate2nix";
+    isBuildRustPackage = platform: platform == "buildRustPackage";
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" ];
   };
@@ -151,6 +152,7 @@ in
     , enablePreCommitHooks ? false
     , renameOutputs ? { }
     , defaultOutputs ? { }
+    , cargoVendorHash ? lib.fakeHash
     }:
     let
       # Helper function to import a Cargo.toml from a root.
@@ -204,15 +206,15 @@ in
         (workspaceMetadata.systems or packageMetadata.systems or lib.defaultSystems);
 
       # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
-      mkCommon = memberName: cargoToml: system: import ./common.nix {
-        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks;
+      mkCommon = memberName: cargoToml: isRootMember: system: import ./common.nix {
+        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks cargoVendorHash isRootMember;
       };
 
-      rootMemberName = if (lib.length workspaceMembers) > 0 then rootPkg.name else null;
+      isRootMember = if (lib.length workspaceMembers) > 0 then true else false;
       # Generate "commons" for the "root package".
-      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon rootMemberName cargoToml) else null;
+      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon null cargoToml isRootMember) else null;
       # Generate "commons" for all members.
-      memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value)) members;
+      memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value false)) members;
       # Combine the member "commons" and the "root package" "commons".
       allCommons' = memberCommons' ++ (lib.optional (! isNull rootCommons) rootCommons);
 

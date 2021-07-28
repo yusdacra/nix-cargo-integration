@@ -2,7 +2,7 @@
 
 Utility to integrate Cargo projects with Nix.
 
-- Uses [naersk] or [crate2nix] to build Cargo packages and [devshell] to provide a development shell.
+- Uses [naersk], [crate2nix] or `buildRustPackage` to build Cargo packages and [devshell] to provide a development shell.
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
@@ -62,7 +62,7 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
 #### Arguments
 
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
-- `buildPlatform`: platform to build crates with (type: `"naersk" or "crate2nix"`) (default: `"naersk"`)
+- `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage`) (default: `"naersk"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)

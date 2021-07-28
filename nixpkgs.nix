@@ -79,6 +79,12 @@ let
           crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = rustPkgs; };
         })
       ]
+      else if lib.isBuildRustPackage buildPlatform
+      then [
+        (final: prev: {
+          rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; };
+        })
+      ]
       else throw "invalid build platform: ${buildPlatform}"
     ) ++ [
       # Import our utilities here so that they can be utilized.
