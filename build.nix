@@ -67,10 +67,13 @@ let
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
+  mainBuildOv = prev: prev // common.overrides.mainBuild common prev;
   applyOverrides = prev:
     lib.pipe prev [
+      (prev: prev // commonConfig)
       desktopItemOv
       runtimeLibsOv
+      mainBuildOv
     ];
 
   library = packageMetadata.library or false;
@@ -81,17 +84,21 @@ let
   releaseOption = lib.optional release "--release";
   memberName = if isNull common.memberName then null else cargoPkg.name;
   memberPath = common.memberName;
+  commonConfig = common.env // {
+    inherit meta;
+    dontFixup = !release;
+    # Use no cc stdenv, since we supply our own cc
+    stdenv = pkgs.stdenvNoCC;
+  };
 
-  baseBRPConfig = common.overrides.mainBuild (applyOverrides ({
+  baseBRPConfig = applyOverrides {
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
-    stdenv = pkgs.stdenvNoCC;
     inherit doCheck memberPath;
-    dontFixup = !release;
     buildFlags = releaseOption ++ packageOption ++ featuresOption;
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
-  } // common.env));
+  };
 
   baseNaerskConfig = {
     inherit (common) root nativeBuildInputs buildInputs;
@@ -105,22 +112,8 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = _: {
-      # Use no cc stdenv, since we supply our own cc
-      stdenv = pkgs.stdenvNoCC;
-    } // common.env;
-    overrideMain =
-      prev:
-      let
-        overrode =
-          applyOverrides (prev // common.env // {
-            inherit meta;
-            dontFixup = !release;
-            # Use no cc stdenv, since we supply our own cc
-            stdenv = pkgs.stdenvNoCC;
-          });
-      in
-      overrode // (common.overrides.mainBuild common overrode);
+    override = _: commonConfig;
+    overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
   };
@@ -128,11 +121,10 @@ let
   baseCrate2NixConfig =
     let
       # Override that adds stuff like make wrapper, desktop file, common envs and so on.
-      overrideMain = prev: applyOverrides ({
-        dontFixup = !release;
+      overrideMain = prev: applyOverrides (prev // {
         nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs;
         buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
-      } // common.env);
+      });
     in
     {
       inherit pkgs release;
