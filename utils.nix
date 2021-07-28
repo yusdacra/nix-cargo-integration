@@ -77,7 +77,7 @@ in
   # buildRustPackage build crate.
   buildCrate =
     { root
-    , memberName ? null
+    , memberPath ? null
     , cargoVendorHash ? lib.fakeHash
     , ... # pass everything else to buildRustPackage
     }@args:
@@ -85,9 +85,9 @@ in
       inherit (builtins) readFile fromTOML;
 
       tomlPath =
-        if isNull memberName
+        if isNull memberPath
         then root + "/Cargo.toml"
-        else root + "/${memberName}/Cargo.toml";
+        else root + "/${memberPath}/Cargo.toml";
       lockFile = root + "/Cargo.lock";
 
       cargoToml = fromTOML (readFile tomlPath);
@@ -98,9 +98,9 @@ in
         pname = cargoToml.package.name;
         version = cargoToml.package.version;
         src = root;
-      } // (lib.optionalAttrs (isNull memberName) {
-      sourceRoot = memberName;
-    }) // (builtins.removeAttrs args [ "root" "memberName" "cargoVendorHash" ]);
+      } // (lib.optionalAttrs (isNull memberPath) {
+      sourceRoot = memberPath;
+    }) // (builtins.removeAttrs args [ "root" "memberPath" "cargoVendorHash" ]);
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
   # crate2nix build crate.
   buildCrate =

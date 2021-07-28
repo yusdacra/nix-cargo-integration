@@ -80,13 +80,14 @@ let
   featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
   releaseOption = lib.optional release "--release";
   memberName = if isNull common.memberName then null else cargoPkg.name;
+  memberPath = common.memberName;
 
   baseBRPConfig = applyOverrides ({
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
     stdenv = pkgs.stdenvNoCC;
-    inherit doCheck memberName;
+    inherit doCheck memberPath;
     dontFixup = !release;
     buildFlags = releaseOption ++ packageOption ++ featuresOption;
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
