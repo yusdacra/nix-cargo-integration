@@ -82,7 +82,7 @@ let
   memberName = if isNull common.memberName then null else cargoPkg.name;
   memberPath = common.memberName;
 
-  baseBRPConfig = applyOverrides ({
+  baseBRPConfig = common.overrides.mainBuild (applyOverrides ({
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
@@ -91,7 +91,7 @@ let
     dontFixup = !release;
     buildFlags = releaseOption ++ packageOption ++ featuresOption;
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
-  } // common.env);
+  } // common.env));
 
   baseNaerskConfig = {
     inherit (common) root nativeBuildInputs buildInputs;
