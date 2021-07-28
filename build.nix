@@ -79,13 +79,14 @@ let
   # Specify --features if we have enabled features other than the default ones
   featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
   releaseOption = lib.optional release "--release";
+  memberName = if isNull common.memberName then null else cargoPkg.name;
 
   baseBRPConfig = applyOverrides ({
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
     stdenv = pkgs.stdenvNoCC;
-    inherit doCheck;
+    inherit doCheck memberName;
     dontFixup = !release;
     buildFlags = releaseOption ++ packageOption ++ featuresOption;
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
@@ -182,7 +183,7 @@ else if lib.isCrate2Nix buildPlatform then
             {
               inherit (common) root;
               # Use member name if it exists, which means we are building a crate in a workspace
-              memberName = if isNull common.memberName then null else cargoPkg.name;
+              inherit memberName;
               # If no features are specified, default to default features to generate Cargo.nix.
               # If there are features specified, turn off default features and use the provided features to generate Cargo.nix.
               additionalCargoNixArgs =
