@@ -6,8 +6,10 @@
   outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs {
     root = ./.;
     # The build platform that will be used for anything build related.
-    # Available platforms are "naersk" and "crate2nix".
+    # Available platforms are "naersk", "crate2nix" and "buildRustPackage".
     buildPlatform = "naersk";
+    # `cargoVendorHash` is only used for buildRustPackage platform.
+    # cargoVendorHash = "";
     # Which package outputs to rename to what.
     # This renames both their package names and the generated output names.
     # Applies to generated apps too.

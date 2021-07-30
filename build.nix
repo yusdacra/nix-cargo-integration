@@ -49,6 +49,7 @@ let
       // (putIfHasAttr "genericName" desktopFileMetadata)
       // (putIfHasAttr "categories" desktopFileMetadata);
 
+  # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
     prev //
     lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
@@ -61,6 +62,7 @@ let
         done
       '';
     };
+  # Override that adds the desktop item for this package.
   desktopItemOv = prev:
     prev //
     lib.optionalAttrs mkDesktopFile {
@@ -68,6 +70,7 @@ let
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
   mainBuildOv = prev: prev // common.overrides.mainBuild common prev;
+  # Function to apply all overrides.
   applyOverrides = prev:
     lib.pipe prev [
       (prev: prev // commonConfig)
@@ -76,13 +79,17 @@ let
       mainBuildOv
     ];
 
+  # Whether this package contains a library output or not.
   library = packageMetadata.library or false;
   # Specify --package if we are building in a workspace
   packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
   # Specify --features if we have enabled features other than the default ones
   featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
+  # Whether to build the package with release profile.
   releaseOption = lib.optional release "--release";
+  # Member name of the package. Defaults to the crate name in Cargo.toml.
   memberName = if isNull common.memberName then null else cargoPkg.name;
+  # Member "path" of the package. This is used to locate the Cargo.toml of the crate.
   memberPath = common.memberName;
   commonConfig = common.env // {
     inherit meta;
@@ -91,6 +98,7 @@ let
     stdenv = pkgs.stdenvNoCC;
   };
 
+  # Base config for buildRustPackage platform.
   baseBRPConfig = applyOverrides {
     pname = pkgName;
     inherit (cargoPkg) version;
@@ -100,6 +108,7 @@ let
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
   };
 
+  # Base config for naersk platform.
   baseNaerskConfig = {
     inherit (common) root nativeBuildInputs buildInputs;
     inherit (cargoPkg) version;
@@ -118,6 +127,7 @@ let
     inherit release doCheck doDoc;
   };
 
+  # Base config crate2nix platform.
   baseCrate2NixConfig =
     let
       # Override that adds stuff like make wrapper, desktop file, common envs and so on.
