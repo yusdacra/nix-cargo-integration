@@ -84,6 +84,7 @@ in
     let
       inherit (builtins) readFile fromTOML;
 
+      # Find the Cargo.toml of the package we are trying to build.
       tomlPath =
         if isNull memberPath
         then root + "/Cargo.toml"
@@ -99,6 +100,7 @@ in
         version = cargoToml.package.version;
         src = root;
       } // (lib.optionalAttrs (isNull memberPath) {
+      # Set sourceRoot to member path if the package we are building is a member.
       sourceRoot = memberPath;
     }) // (builtins.removeAttrs args [ "root" "memberPath" "cargoVendorHash" ]);
 } // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
