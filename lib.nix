@@ -264,7 +264,7 @@ in
       };
       checkedOutputs = lib.warnIf
         (!(builtins.hasAttr "packages" finalOutputs) && !(builtins.hasAttr "apps" finalOutputs))
-        "No packages found. Did you add the package.metadata.nix section to Cargo.toml?"
+        "No packages found. Did you add the `package.metadata.nix` section to a `Cargo.toml` and added `build = true` under it?"
         finalOutputs;
     in
     checkedOutputs;
