@@ -262,6 +262,10 @@ in
       } // lib.optionalAttrs (builtins.hasAttr "app" defaultOutputs) {
         defaultApp = lib.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
       };
+      checkedOutputs = lib.warnIf
+        (!(builtins.hasAttr "packages" finalOutputs) && !(builtins.hasAttr "apps" finalOutputs))
+        "No packages found. Did you add the package.metadata.nix section to Cargo.toml?"
+        finalOutputs;
     in
-    finalOutputs;
+    checkedOutputs;
 }
