@@ -8,20 +8,10 @@
 let
   inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
 
-  putIfHasAttr = attr: set: lib.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
-
   desktopFileMetadata = packageMetadata.desktopFile or null;
   mkDesktopFile = ! isNull desktopFileMetadata;
 
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
-
-  # TODO: try to convert cargo maintainers to nixpkgs maintainers
-  meta = {
-    description = cargoPkg.description or "${pkgName} is a Rust project.";
-    platforms = [ common.system ];
-  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
-  // (putIfHasAttr "homepage" cargoPkg)
-  // (putIfHasAttr "longDescription" packageMetadata);
 
   desktopFile =
     let
@@ -43,11 +33,11 @@ let
       (pkgs.makeDesktopItem {
         name = pkgName;
         exec = packageMetadata.executable or pkgName;
-        comment = desktopFileMetadata.comment or meta.description;
+        comment = desktopFileMetadata.comment or common.meta.description or "";
         desktopName = desktopFileMetadata.name or pkgName;
-      }) // (putIfHasAttr "icon" desktopFileMetadata)
-      // (putIfHasAttr "genericName" desktopFileMetadata)
-      // (putIfHasAttr "categories" desktopFileMetadata);
+      }) // (lib.putIfHasAttr "icon" desktopFileMetadata)
+      // (lib.putIfHasAttr "genericName" desktopFileMetadata)
+      // (lib.putIfHasAttr "categories" desktopFileMetadata);
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
@@ -92,7 +82,7 @@ let
   # Member "path" of the package. This is used to locate the Cargo.toml of the crate.
   memberPath = common.memberName;
   commonConfig = common.env // {
-    inherit meta;
+    inherit (common) meta;
     dontFixup = !release;
     # Use no cc stdenv, since we supply our own cc
     stdenv = pkgs.stdenvNoCC;
@@ -200,7 +190,7 @@ else if lib.isCrate2Nix buildPlatform then
         # otherwise nix will try to build it even if you only run `nix flake show`
         # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
-        inherit meta;
+        inherit (common) meta;
         name = "${pkgName}-${cargoPkg.version}";
         paths = [
           (pkg.override { inherit (config) runTests; })

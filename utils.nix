@@ -14,19 +14,50 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
-  # Tries to convert a cargo license to nixpkgs license.
-  cargoLicenseToNixpkgs = license:
-    let
-      l = lib.toLower license;
-    in
-      {
-        "gplv3" = "gpl3";
-        "gplv2" = "gpl2";
-        "gpl-3.0" = "gpl3";
-        "gpl-2.0" = "gpl2";
-        "mpl-2.0" = "mpl20";
-        "mpl-1.0" = "mpl10";
-      }."${l}" or l;
+  createNixpkgsDrv = common: pkgs.writeTextFile {
+    name = "${common.cargoPkg.name}.nix";
+    text =
+      let
+        inherit (builtins) map hasAttr baseNameOf concatStringsSep;
+        inherit (lib) optionalString cargoLicenseToNixpkgs mapAttrsToList;
+
+        buildInputs = map lib.getName common.buildInputs;
+        nativeBuildInputs = map lib.getName common.nativeBuildInputs;
+      in
+      ''
+        { lib,
+          rustPlatform,
+          fetchgit,
+          stdenvNoCc,
+          ${concatStringsSep "" (map (p: "${p}, ") buildInputs)}
+          ${concatStringsSep "" (map (p: "${p}, ") nativeBuildInputs)}
+        }:
+        rustPlatform.buildRustPackage {
+          pname = ${common.cargoPkg.name};
+          version = ${common.cargoPkg.version};
+
+          stdenv = stdenvNoCc;
+
+          buildInputs = [ ${concatStringsSep " " buildInputs} ];
+          nativeBuildInputs = [ ${concatStringsSep " " nativeBuildInputs} ];
+
+          src = fetchgit {
+            url = "https://github.com/<owner>/${baseNameOf common.root}";
+            rev = "<rev>";
+          };
+
+          cargoSha256 = "${common.cargoVendorHash}";
+
+          ${concatStringsSep "" (mapAttrsToList (n: v: "${n} = \"${toString v}\"\n") common.env)}
+
+          meta = with lib; {
+            ${optionalString (hasAttr "description" common.meta) "description = \"${common.meta.description}\";"}
+            ${optionalString (hasAttr "homepage" common.meta) "homepage = \"${common.meta.homepage}\";"}
+            ${optionalString (hasAttr "license" common.cargoPkg) "license = licenses.${cargoLicenseToNixpkgs common.cargoPkg.license};"}
+          };
+        }
+      '';
+  };
 
   # Creates crate overrides for crate2nix to use.
   # The crate overrides will be "collected" in common.nix for naersk and devshell to use them.
