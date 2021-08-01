@@ -1,6 +1,7 @@
-pkgs:
+attrs:
 let
-  lib = pkgs.lib;
+  pkgs = if builtins.isAttrs attrs then attrs.pkgs else attrs;
+  lib = if builtins.isAttrs attrs then attrs.lib or pkgs.lib else pkgs.lib;
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -18,42 +19,50 @@ in
     name = "${common.cargoPkg.name}.nix";
     text =
       let
-        inherit (builtins) map hasAttr baseNameOf concatStringsSep;
+        inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter;
         inherit (lib) optionalString cargoLicenseToNixpkgs mapAttrsToList;
 
-        buildInputs = map lib.getName common.buildInputs;
-        nativeBuildInputs = map lib.getName common.nativeBuildInputs;
+        clang = [ "clang-wrapper" "clang" ];
+        gcc = [ "gcc-wrapper" "gcc" ];
+
+        filterUnwanted = filter (n: !(any (on: on == n) (clang ++ gcc ++ [ "pkg-config-wrapper" "binutils-wrapper" "zlib" ])));
+        mapToName = map lib.getName;
+        concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
+
+        bi = filterUnwanted (mapToName buildInputs);
+        nbi = filterUnwanted (mapToName nativeBuildInputs);
+        stdenv = if any (n: any (on: on == n) clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
+        putIfStdenv = lib.optionalString (stdenv != null);
       in
       ''
         { lib,
-          rustPlatform,
-          fetchgit,
-          stdenvNoCc,
-          ${concatStringsSep "" (map (p: "${p}, ") buildInputs)}
-          ${concatStringsSep "" (map (p: "${p}, ") nativeBuildInputs)}
+          rustPlatform,${putIfStdenv "\n  ${stdenv},"}
+          fetchFromGitHub,${concatForInput bi} ${concatForInput nbi}
         }:
         rustPlatform.buildRustPackage {
           pname = ${common.cargoPkg.name};
-          version = ${common.cargoPkg.version};
+          version = ${common.cargoPkg.version};${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
-          stdenv = stdenvNoCc;
+          buildInputs = [ ${concatStringsSep " " bi} ];
+          nativeBuildInputs = [ ${concatStringsSep " " nbi} ];
 
-          buildInputs = [ ${concatStringsSep " " buildInputs} ];
-          nativeBuildInputs = [ ${concatStringsSep " " nativeBuildInputs} ];
-
-          src = fetchgit {
-            url = "https://github.com/<owner>/${baseNameOf common.root}";
-            rev = "<rev>";
+          # Change to use whatever source you want
+          src = fetchFromGitHub {
+            owner = "<enter owner>";
+            repo = "${baseNameOf common.root}";
+            rev = "<enter revision>";
+            sha256 = lib.fakeHash;
           };
 
-          cargoSha256 = "${common.cargoVendorHash}";
+          cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};
 
           ${concatStringsSep "" (mapAttrsToList (n: v: "${n} = \"${toString v}\"\n") common.env)}
 
           meta = with lib; {
-            ${optionalString (hasAttr "description" common.meta) "description = \"${common.meta.description}\";"}
-            ${optionalString (hasAttr "homepage" common.meta) "homepage = \"${common.meta.homepage}\";"}
-            ${optionalString (hasAttr "license" common.cargoPkg) "license = licenses.${cargoLicenseToNixpkgs common.cargoPkg.license};"}
+            description = "${common.meta.description or "<enter description>"}";
+            homepage = "${common.meta.homepage or "<enter homepage>"}";
+            license = licenses.${cargoLicenseToNixpkgs (common.cargoPkg.license or "unfree")};
           };
         }
       '';

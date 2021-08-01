@@ -72,7 +72,7 @@ let
       then (_: prev: { rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; }; })
       else throw "invalid build platform: ${buildPlatform}")
       # Import our utilities here so that they can be utilized.
-      (_: prev: { nciUtils = import ./utils.nix prev; })
+      (_: prev: { nciUtils = import ./utils.nix { pkgs = prev; inherit lib; }; })
     ];
   };
 
@@ -112,7 +112,7 @@ let
       # Finally import our utilities. They must use the Rust package set, since they contain
       # build platform utilities.
       (final: prev: {
-        nciUtils = import ./utils.nix rustPkgs;
+        nciUtils = import ./utils.nix { pkgs = rustPkgs; inherit lib; };
       })
     ];
   };
