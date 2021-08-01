@@ -15,25 +15,27 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
+  # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
   createNixpkgsDrv = common: pkgs.writeTextFile {
     name = "${common.cargoPkg.name}.nix";
     text =
       let
         inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash;
-        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter;
-        inherit (lib) optionalString cargoLicenseToNixpkgs mapAttrsToList;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames;
+        inherit (lib) optionalString cargoLicenseToNixpkgs mapAttrsToList getName;
+        has = i: any (oi: i == oi);
 
         clang = [ "clang-wrapper" "clang" ];
         gcc = [ "gcc-wrapper" "gcc" ];
 
-        filterUnwanted = filter (n: !(any (on: on == n) (clang ++ gcc ++ [ "pkg-config-wrapper" "binutils-wrapper" "zlib" ])));
-        mapToName = map lib.getName;
+        filterUnwanted = filter (n: !(has n (clang ++ gcc ++ [ "pkg-config-wrapper" "binutils-wrapper" ])));
+        mapToName = map getName;
         concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
 
         bi = filterUnwanted (mapToName buildInputs);
         nbi = filterUnwanted (mapToName nativeBuildInputs);
-        stdenv = if any (n: any (on: on == n) clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
-        putIfStdenv = lib.optionalString (stdenv != null);
+        stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
+        putIfStdenv = optionalString (stdenv != null);
       in
       ''
         { lib,
@@ -55,14 +57,17 @@ in
             sha256 = lib.fakeHash;
           };
 
-          cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};
-
-          ${concatStringsSep "" (mapAttrsToList (n: v: "${n} = \"${toString v}\"\n") common.env)}
+          cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
+            optionalString
+              ((length (attrNames common.env)) > 0)
+              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\"") common.env)}"
+          }
 
           meta = with lib; {
             description = "${common.meta.description or "<enter description>"}";
             homepage = "${common.meta.homepage or "<enter homepage>"}";
             license = licenses.${cargoLicenseToNixpkgs (common.cargoPkg.license or "unfree")};
+            maintainers = with maintainers; [ ];
           };
         }
       '';
