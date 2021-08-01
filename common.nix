@@ -126,6 +126,15 @@ let
     // (lib.putIfHasAttr "homepage" cargoPkg)
     // (lib.putIfHasAttr "longDescription" packageMetadata);
 
+    mkDesktopFile = ! isNull (packageMetadata.desktopFile or null);
+    mkRuntimeLibsOv = (builtins.length runtimeLibs) > 0;
+    mkRuntimeLibsScript = libs: ''
+      for f in $out/bin/*; do
+        wrapProgram "$f" \
+          --set LD_LIBRARY_PATH "${libs}"
+      done
+    '';
+
     # Collect build inputs.
     buildInputs =
       libb.resolveToPkgs

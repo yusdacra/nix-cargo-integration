@@ -21,8 +21,8 @@ in
     text =
       let
         inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash;
-        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames;
-        inherit (lib) optionalString cargoLicenseToNixpkgs mapAttrsToList getName;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames split isList;
+        inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init;
         has = i: any (oi: i == oi);
 
         clang = [ "clang-wrapper" "clang" ];
@@ -33,9 +33,21 @@ in
         concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
 
         bi = filterUnwanted (mapToName buildInputs);
-        nbi = filterUnwanted (mapToName nativeBuildInputs);
+        nbi = (filterUnwanted (mapToName nativeBuildInputs)) ++ (optional common.mkRuntimeLibsOv "makeWrapper");
+        runtimeLibs = "\${lib.makeLibraryPath (with pkgs; [ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
         stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
         putIfStdenv = optionalString (stdenv != null);
+
+        runtimeLibsScript =
+          concatStringsSep "\n" (
+            map
+              (line: "    ${line}")
+              (init (
+                filter
+                  (list: if isList list then (length list) > 0 else true)
+                  (split "\n" (common.mkRuntimeLibsScript runtimeLibs))
+              ))
+          );
       in
       ''
         { lib,
@@ -45,9 +57,6 @@ in
         rustPlatform.buildRustPackage {
           pname = ${common.cargoPkg.name};
           version = ${common.cargoPkg.version};${putIfStdenv "\n\n  stdenv = ${stdenv};"}
-
-          buildInputs = [ ${concatStringsSep " " bi} ];
-          nativeBuildInputs = [ ${concatStringsSep " " nbi} ];
 
           # Change to use whatever source you want
           src = fetchFromGitHub {
@@ -61,6 +70,13 @@ in
             optionalString
               ((length (attrNames common.env)) > 0)
               "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\"") common.env)}"
+          }
+
+          buildInputs = [ ${concatStringsSep " " bi} ];
+          nativeBuildInputs = [ ${concatStringsSep " " nbi} ];${
+            optionalString
+              common.mkRuntimeLibsOv
+              "\n\n  postFixup = ''\n${runtimeLibsScript}\n  '';"
           }
 
           meta = with lib; {

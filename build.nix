@@ -6,10 +6,9 @@
 , common
 }:
 let
-  inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
+  inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform mkDesktopFile mkRuntimeLibsOv;
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
-  mkDesktopFile = ! isNull desktopFileMetadata;
 
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
@@ -39,36 +38,6 @@ let
       // (lib.putIfHasAttr "genericName" desktopFileMetadata)
       // (lib.putIfHasAttr "categories" desktopFileMetadata);
 
-  # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
-  runtimeLibsOv = prev:
-    prev //
-    lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
-      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
-      postInstall = ''
-        ${prev.postInstall or ""}
-        for f in $out/bin/*; do
-          wrapProgram "$f" \
-            --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
-        done
-      '';
-    };
-  # Override that adds the desktop item for this package.
-  desktopItemOv = prev:
-    prev //
-    lib.optionalAttrs mkDesktopFile {
-      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
-      desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
-    };
-  mainBuildOv = prev: prev // common.overrides.mainBuild common prev;
-  # Function to apply all overrides.
-  applyOverrides = prev:
-    lib.pipe prev [
-      (prev: prev // commonConfig)
-      desktopItemOv
-      runtimeLibsOv
-      mainBuildOv
-    ];
-
   # Whether this package contains a library output or not.
   library = packageMetadata.library or false;
   # Specify --package if we are building in a workspace
@@ -87,6 +56,33 @@ let
     # Use no cc stdenv, since we supply our own cc
     stdenv = pkgs.stdenvNoCC;
   };
+
+  # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
+  runtimeLibsOv = prev:
+    prev //
+    lib.optionalAttrs mkRuntimeLibsOv {
+      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
+      postFixup = ''
+        ${prev.postFixup or ""}
+        ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}
+      '';
+    };
+  # Override that adds the desktop item for this package.
+  desktopItemOv = prev:
+    prev //
+    lib.optionalAttrs mkDesktopFile {
+      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
+      desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
+    };
+  mainBuildOv = prev: prev // common.overrides.mainBuild common prev;
+  # Function to apply all overrides.
+  applyOverrides = prev:
+    lib.pipe prev [
+      (prev: prev // commonConfig)
+      desktopItemOv
+      runtimeLibsOv
+      mainBuildOv
+    ];
 
   # Base config for buildRustPackage platform.
   baseBRPConfig = applyOverrides {
@@ -147,12 +143,11 @@ let
           ${cargoPkg.name} = prev:
             let
               # First override
-              overrode = overrideMain prev;
+              overrode = (crateOverrides.${cargoPkg.name} or (_: { })) prev;
               # Second override (might contain user provided values)
-              overroded = overrode // (crateOverrides.${cargoPkg.name} or (_: { })) overrode;
+              overroded = overrideMain overrode;
             in
-            # Third override (is entirely user provided)
-            overroded // (common.overrides.mainBuild common overrode);
+            overroded;
         };
     };
 
