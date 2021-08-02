@@ -129,7 +129,7 @@ let
       isRootMember
       meta;
 
-    mkDesktopFile = ! isNull (packageMetadata.desktopFile or null);
+    mkDesktopFile = ! isNull desktopFileMetadata;
     mkDesktopItemConfig = pkgName: {
       name = pkgName;
       exec = packageMetadata.executable or pkgName;

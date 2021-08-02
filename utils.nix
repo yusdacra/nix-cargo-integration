@@ -20,8 +20,8 @@ in
     name = "${common.cargoPkg.name}.nix";
     text =
       let
-        inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash;
-        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList;
+        inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString;
         inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init filterAttrs;
         has = i: any (oi: i == oi);
 
@@ -61,13 +61,15 @@ in
                   (common.mkDesktopItemConfig common.cargoPkg.name)
               )
           );
+        desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
+        desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
       in
       ''
         { lib,
           rustPlatform,${putIfStdenv "\n  ${stdenv},"}
           fetchFromGitHub,${concatForInput bi} ${concatForInput nbi}
         }:
-        rustPlatform.buildRustPackage {
+        rustPlatform.buildRustPackage rec {
           pname = ${common.cargoPkg.name};
           version = ${common.cargoPkg.version};${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
@@ -93,7 +95,11 @@ in
           }${
             optionalString
               common.mkDesktopFile
-              "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];"
+              (
+                if isString desktopFileMetadata
+                then desktopLink
+                else desktopItems
+              )
           }
 
           meta = with lib; {
