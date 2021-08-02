@@ -8,6 +8,7 @@ Allows changing between "build platforms" by just changing one attribute (see `b
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
 - Can generate nixpkgs-compatible nix expressions, so you don't need to maintain a seperate derivation for nixpkgs! (see `How to generate a nixpkgs-compatible expression`)
+- [naersk] and [crate2nix] `buildPlatform`s allow building packages directly from `Cargo.lock`. [buildRustPackage] uses the `cargoVendorHash` attribute.
 
 ## Usage
 
