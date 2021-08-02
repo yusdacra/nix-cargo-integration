@@ -6,6 +6,7 @@ Utility to integrate Cargo projects with Nix.
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
+- Can generate nixpkgs-compatible nix expressions, so you don't need to maintain a seperate derivation for nixpkgs!
 
 ## Usage
 

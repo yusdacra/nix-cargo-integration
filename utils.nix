@@ -1,6 +1,7 @@
-pkgs:
+attrs:
 let
-  lib = pkgs.lib;
+  pkgs = if builtins.isAttrs attrs then attrs.pkgs else attrs;
+  lib = if builtins.isAttrs attrs then attrs.lib or pkgs.lib else pkgs.lib;
 
   # courtesy of devshell
   resolveToPkg = key:
@@ -14,19 +15,102 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
-  # Tries to convert a cargo license to nixpkgs license.
-  cargoLicenseToNixpkgs = license:
-    let
-      l = lib.toLower license;
-    in
-      {
-        "gplv3" = "gpl3";
-        "gplv2" = "gpl2";
-        "gpl-3.0" = "gpl3";
-        "gpl-2.0" = "gpl2";
-        "mpl-2.0" = "mpl20";
-        "mpl-1.0" = "mpl10";
-      }."${l}" or l;
+  # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
+  createNixpkgsDrv = common: pkgs.writeTextFile {
+    name = "${common.cargoPkg.name}.nix";
+    text =
+      let
+        inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString;
+        inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init filterAttrs;
+        has = i: any (oi: i == oi);
+
+        clang = [ "clang-wrapper" "clang" ];
+        gcc = [ "gcc-wrapper" "gcc" ];
+
+        filterUnwanted = filter (n: !(has n (clang ++ gcc ++ [ "pkg-config-wrapper" "binutils-wrapper" ])));
+        mapToName = map getName;
+        concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
+
+        bi = filterUnwanted (mapToName buildInputs);
+        nbi = (filterUnwanted (mapToName nativeBuildInputs))
+        ++ (optional common.mkRuntimeLibsOv "makeWrapper")
+        ++ (optional common.mkDesktopFile "copyDesktopItems");
+        runtimeLibs = "\${lib.makeLibraryPath (with pkgs; [ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
+        stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
+        putIfStdenv = optionalString (stdenv != null);
+
+        runtimeLibsScript =
+          concatStringsSep "\n" (
+            map
+              (line: "    ${line}")
+              (init (
+                filter
+                  (list: if isList list then (length list) > 0 else true)
+                  (split "\n" (common.mkRuntimeLibsScript runtimeLibs))
+              ))
+          );
+
+        desktopItemAttrs =
+          concatStringsSep "\n" (
+            mapAttrsToList
+              (n: v: "    ${n} = ${v};")
+              (
+                filterAttrs
+                  (_: v: (toString v) != "")
+                  (common.mkDesktopItemConfig common.cargoPkg.name)
+              )
+          );
+        desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
+        desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
+      in
+      ''
+        { lib,
+          rustPlatform,${putIfStdenv "\n  ${stdenv},"}
+          fetchFromGitHub,${concatForInput bi} ${concatForInput nbi}
+        }:
+        rustPlatform.buildRustPackage rec {
+          pname = ${common.cargoPkg.name};
+          version = ${common.cargoPkg.version};${putIfStdenv "\n\n  stdenv = ${stdenv};"}
+
+          # Change to use whatever source you want
+          src = fetchFromGitHub {
+            owner = "<enter owner>";
+            repo = "${baseNameOf common.root}";
+            rev = "<enter revision>";
+            sha256 = lib.fakeHash;
+          };
+
+          cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
+            optionalString
+              ((length (attrNames common.env)) > 0)
+              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\"") common.env)}"
+          }
+
+          buildInputs = [ ${concatStringsSep " " bi} ];
+          nativeBuildInputs = [ ${concatStringsSep " " nbi} ];${
+            optionalString
+              common.mkRuntimeLibsOv
+              "\n\n  postFixup = ''\n${runtimeLibsScript}\n  '';"
+          }${
+            optionalString
+              common.mkDesktopFile
+              (
+                if isString desktopFileMetadata
+                then desktopLink
+                else desktopItems
+              )
+          }
+
+          meta = with lib; {
+            description = "${common.meta.description or "<enter description>"}";
+            homepage = "${common.meta.homepage or "<enter homepage>"}";
+            license = licenses.${cargoLicenseToNixpkgs (common.cargoPkg.license or "unfree")};
+            maintainers = with maintainers; [ ];
+          };
+        }
+      '';
+  };
 
   # Creates crate overrides for crate2nix to use.
   # The crate overrides will be "collected" in common.nix for naersk and devshell to use them.

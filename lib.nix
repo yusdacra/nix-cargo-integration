@@ -8,6 +8,20 @@ let
     isBuildRustPackage = platform: platform == "buildRustPackage";
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" ];
+    # Tries to convert a cargo license to nixpkgs license.
+    cargoLicenseToNixpkgs = license:
+      let
+        l = libb.toLower license;
+      in
+        {
+          "gplv3" = "gpl3";
+          "gplv2" = "gpl2";
+          "gpl-3.0" = "gpl3";
+          "gpl-2.0" = "gpl2";
+          "mpl-2.0" = "mpl20";
+          "mpl-1.0" = "mpl10";
+        }."${l}" or l;
+    putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
   };
 
   # Create an output (packages, apps, etc.) from a common.
@@ -83,7 +97,9 @@ let
       };
       # Packages set to be put in the outputs.
       packages = {
-        ${system} = builtins.mapAttrs (_: v: v.package) packagesRaw.${system};
+        ${system} = (builtins.mapAttrs (_: v: v.package) packagesRaw.${system}) // {
+          "${name}-derivation" = lib.createNixpkgsDrv common;
+        };
       };
       # Checks to be put in outputs.
       checks = {

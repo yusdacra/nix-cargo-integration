@@ -6,31 +6,12 @@
 , common
 }:
 let
-  inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform;
-
-  putIfHasAttr = attr: set: lib.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
-
-  desktopFileMetadata = packageMetadata.desktopFile or null;
-  mkDesktopFile = ! isNull desktopFileMetadata;
+  inherit (common) pkgs lib packageMetadata desktopFileMetadata cargoPkg buildPlatform mkDesktopFile mkRuntimeLibsOv;
 
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
-  # TODO: try to convert cargo maintainers to nixpkgs maintainers
-  meta = {
-    description = cargoPkg.description or "${pkgName} is a Rust project.";
-    platforms = [ common.system ];
-  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
-  // (putIfHasAttr "homepage" cargoPkg)
-  // (putIfHasAttr "longDescription" packageMetadata);
-
   desktopFile =
     let
-      # If icon path starts with relative path prefix, make it absolute using root as base
-      # Otherwise treat it as an absolute path
-      makeIcon = icon:
-        if (lib.hasPrefix "./" icon)
-        then (common.root + "/${lib.removePrefix "./" icon}")
-        else icon;
       desktopFilePath = common.root + "/${lib.removePrefix "./" desktopFileMetadata}";
     in
     if builtins.isString desktopFileMetadata
@@ -39,27 +20,35 @@ let
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else
-      (pkgs.makeDesktopItem {
-        name = pkgName;
-        exec = packageMetadata.executable or pkgName;
-        comment = desktopFileMetadata.comment or meta.description;
-        desktopName = desktopFileMetadata.name or pkgName;
-      }) // (putIfHasAttr "icon" desktopFileMetadata)
-      // (putIfHasAttr "genericName" desktopFileMetadata)
-      // (putIfHasAttr "categories" desktopFileMetadata);
+    else pkgs.makeDesktopItem (common.mkDesktopItemConfig pkgName);
+
+  # Whether this package contains a library output or not.
+  library = packageMetadata.library or false;
+  # Specify --package if we are building in a workspace
+  packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+  # Specify --features if we have enabled features other than the default ones
+  featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
+  # Whether to build the package with release profile.
+  releaseOption = lib.optional release "--release";
+  # Member name of the package. Defaults to the crate name in Cargo.toml.
+  memberName = if isNull common.memberName then null else cargoPkg.name;
+  # Member "path" of the package. This is used to locate the Cargo.toml of the crate.
+  memberPath = common.memberName;
+  commonConfig = common.env // {
+    inherit (common) meta;
+    dontFixup = !release;
+    # Use no cc stdenv, since we supply our own cc
+    stdenv = pkgs.stdenvNoCC;
+  };
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
     prev //
-    lib.optionalAttrs ((builtins.length common.runtimeLibs) > 0) {
+    lib.optionalAttrs mkRuntimeLibsOv {
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
-      postInstall = ''
-        ${prev.postInstall or ""}
-        for f in $out/bin/*; do
-          wrapProgram "$f" \
-            --set LD_LIBRARY_PATH ${lib.makeLibraryPath common.runtimeLibs}
-        done
+      postFixup = ''
+        ${prev.postFixup or ""}
+        ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}
       '';
     };
   # Override that adds the desktop item for this package.
@@ -78,25 +67,6 @@ let
       runtimeLibsOv
       mainBuildOv
     ];
-
-  # Whether this package contains a library output or not.
-  library = packageMetadata.library or false;
-  # Specify --package if we are building in a workspace
-  packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
-  # Specify --features if we have enabled features other than the default ones
-  featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
-  # Whether to build the package with release profile.
-  releaseOption = lib.optional release "--release";
-  # Member name of the package. Defaults to the crate name in Cargo.toml.
-  memberName = if isNull common.memberName then null else cargoPkg.name;
-  # Member "path" of the package. This is used to locate the Cargo.toml of the crate.
-  memberPath = common.memberName;
-  commonConfig = common.env // {
-    inherit meta;
-    dontFixup = !release;
-    # Use no cc stdenv, since we supply our own cc
-    stdenv = pkgs.stdenvNoCC;
-  };
 
   # Base config for buildRustPackage platform.
   baseBRPConfig = applyOverrides {
@@ -157,12 +127,11 @@ let
           ${cargoPkg.name} = prev:
             let
               # First override
-              overrode = overrideMain prev;
+              overrode = (crateOverrides.${cargoPkg.name} or (_: { })) prev;
               # Second override (might contain user provided values)
-              overroded = overrode // (crateOverrides.${cargoPkg.name} or (_: { })) overrode;
+              overroded = overrideMain overrode;
             in
-            # Third override (is entirely user provided)
-            overroded // (common.overrides.mainBuild common overrode);
+            overroded;
         };
     };
 
@@ -200,7 +169,7 @@ else if lib.isCrate2Nix buildPlatform then
         # otherwise nix will try to build it even if you only run `nix flake show`
         # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
-        inherit meta;
+        inherit (common) meta;
         name = "${pkgName}-${cargoPkg.version}";
         paths = [
           (pkg.override { inherit (config) runTests; })
