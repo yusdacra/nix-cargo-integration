@@ -64,6 +64,9 @@ about them. Upstream projects such as [devshell], `nixpkgs` ([buildRustPackage])
 breaking changes, these breakages will be limited to `overrides`' `shell` and `build` in the
 public API, since these directly modify [devshell] / `buildPlatform` configs.
 
+NOTE: `nix-cargo-integration` does not directly use upstream [naersk] / [crate2nix]. It uses
+forks of them which contain additional fixes and features that aren't upstream.
+
 ### `makeOutputs`
 
 Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
@@ -149,7 +152,15 @@ will be available in `package.metadata.nix`.
     - if `rust-toolchain` file exists, it will be used instead of this attribute
 
 #### `preCommitHooks` attributes
-
+overrides.sources: override for the sources used by common (type: common: prev: { })
+overrides.pkgs: override for the configuration while importing nixpkgs in common (type: common: prev: { })
+overrides.crateOverrides: override for crate2nix crate overrides (type: common: prev: { })
+overrides.common: override for common (type: prev: { })
+this will override all common attribute set(s), refer to common.nix for more information
+overrides.shell: override for devshell (type: common: prev: { })
+this will override all devshell configuration(s), refer to devshell for more information
+overrides.build: override for build config (type: common: prev: { })
+this will override naersk/crate2nix/buildRustPackage build config, refer to n
 - `enable`: whether to enable pre commit hooks (type: boolean) (default: `false`)
 
 #### `cachix` attributes
