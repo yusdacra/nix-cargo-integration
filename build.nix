@@ -166,8 +166,9 @@ else if lib.isCrate2Nix buildPlatform then
           );
       in
       # This is a workaround so that crate2nix doesnt get built until we actually build
-        # otherwise nix will try to build it even if you only run `nix flake show`
-        # TODO: probably provide a way to override the inner derivation?
+      # otherwise nix will try to build it even if you only run `nix flake show`
+      # https://github.com/NixOS/nix/issues/4265
+      # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
         inherit (common) meta;
         name = "${pkgName}-${cargoPkg.version}";
