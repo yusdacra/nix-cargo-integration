@@ -66,7 +66,7 @@ public API, since these directly modify [devshell] / `buildPlatform` configs.
 
 ### `makeOutputs`
 
-Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
+Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
 
 #### Arguments
 
