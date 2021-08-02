@@ -3,10 +3,11 @@
 Utility to integrate Cargo projects with Nix.
 
 - Uses [naersk], [crate2nix] or `buildRustPackage` to build Cargo packages and [devshell] to provide a development shell.
+Allows changing between "build platforms" by just changing one attribute (see `buildPlatform`).
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
-- Can generate nixpkgs-compatible nix expressions, so you don't need to maintain a seperate derivation for nixpkgs!
+- Can generate nixpkgs-compatible nix expressions, so you don't need to maintain a seperate derivation for nixpkgs! (see `How to generate a nixpkgs-compatible expression`)
 
 ## Usage
 
@@ -76,9 +77,9 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
-        - this will override [naersk]/[crate2nix] build config, refer to [naersk]/[crate2nix] for more information
+        - this will override [naersk]/[crate2nix]/buildRustPackage build config, refer to [naersk]/[crate2nix]/buildRustPackage for more information
     - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
-        - this will override *all* [naersk]/[crate2nix] main crate build derivation(s), refer to [naersk]/[crate2nix] for more information
+        - this will override *all* [naersk]/[crate2nix]/buildRustPackage main crate build derivation(s), refer to [naersk]/[crate2nix]/buildRustPackage for more information
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
 - `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
     - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)
@@ -99,10 +100,10 @@ For example:
 PROTOC = "protoc"
 ```
 
-#### `crateOverride` attributes (only used for `crate2nix` build platform)
+#### `crateOverride` attributes
 
 Key-value pairings that are put here will be used to override crates in build derivation.
-Dependencies put here will also be exported to the development environment.
+Dependencies / environment variables put here will also be exported to the development environment.
 For example:
 ```toml
 [package.metadata.nix.crateOverride.xcb]
