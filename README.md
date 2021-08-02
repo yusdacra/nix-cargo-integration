@@ -65,6 +65,7 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
 - `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage`) (default: `"naersk"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
+- `cargoVendorHash`: vendor hash feeded into `buildRustPackage`'s `cargoSha256` (type: string)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
