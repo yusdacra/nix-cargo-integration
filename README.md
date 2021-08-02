@@ -2,7 +2,7 @@
 
 Utility to integrate Cargo projects with Nix.
 
-- Uses [naersk], [crate2nix] or `buildRustPackage` to build Cargo packages and [devshell] to provide a development shell.
+- Uses [naersk], [crate2nix] or [buildRustPackage] to build Cargo packages and [devshell] to provide a development shell.
 Allows changing between "build platforms" by just changing one attribute (see `buildPlatform`).
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
@@ -60,9 +60,9 @@ You can also couple it with [niv](https://github.com/nmattia/niv):
 **IMPORTANT** public API promises: Any API that is not documented here **IS NOT** counted
 as "public" and therefore can be changed without breaking SemVer. This does not mean that
 changes will be done without any notice. You are still welcome to create issues / discussions
-about them. Upstream projects such as `devshell`, `nixpkgs` (`buildRustPackage`) etc. can have
+about them. Upstream projects such as [devshell], `nixpkgs` ([buildRustPackage]) etc. can have
 breaking changes, these breakages will be limited to `overrides`' `shell` and `build` in the
-public API, since these directly modify `devshell` / `buildPlatform` configs.
+public API, since these directly modify [devshell] / `buildPlatform` configs.
 
 ### `makeOutputs`
 
@@ -71,9 +71,9 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
 #### Arguments
 
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
-- `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage`) (default: `"naersk"`)
+- `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage"`) (default: `"naersk"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
-- `cargoVendorHash`: vendor hash feeded into `buildRustPackage`'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
+- `cargoVendorHash`: vendor hash feeded into [buildRustPackage]'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
@@ -84,9 +84,9 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
-        - this will override [naersk]/[crate2nix]/buildRustPackage build config, refer to [naersk]/[crate2nix]/buildRustPackage for more information
+        - this will override [naersk]/[crate2nix]/[buildRustPackage] build config, refer to [naersk]/[crate2nix]/[buildRustPackage] for more information
     - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
-        - this will override *all* [naersk]/[crate2nix]/buildRustPackage main crate build derivation(s), refer to [naersk]/[crate2nix]/buildRustPackage for more information
+        - this will override *all* [naersk]/[crate2nix]/[buildRustPackage] main crate build derivation(s), refer to [naersk]/[crate2nix]/[buildRustPackage] for more information
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
 - `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
     - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)
@@ -120,12 +120,9 @@ env.TEST_ENV = "test"
 
 ### `package.metadata.nix` attributes
 
-- `build`: whether to enable outputs which build the package (type: boolean)
-    - defaults to `false` if not specified
-- `library`: whether to copy built library to package output (type: boolean)
-    - defaults to `false` if not specified
-- `app`: whether to enable the application output (type: boolean)
-    - defaults to `false` if not specified
+- `build`: whether to enable outputs which build the package (type: boolean) (default: `false`)
+- `library`: whether to copy built library to package output (type: boolean) (default: `false`)
+- `app`: whether to enable the application output (type: boolean) (default: `false`)
 - `longDescription`: a longer description (type: string)
 
 #### `desktopFile` attributes
@@ -136,10 +133,8 @@ The path must start with "./" and specify a path relative ro `root`.
 - `icon`: icon string according to XDG (type: string)
     - strings starting with "./" will be treated as relative to `root`
     - everything else will be put into the desktop file as-is
-- `comment`: comment for the desktop file (type: string)
-    - defaults to `package.description` if not specified
-- `name`: desktop name for the desktop file (type: string)
-    - defaults to `package.name` if not specified
+- `comment`: comment for the desktop file (type: string) (default: `package.description`)
+- `name`: desktop name for the desktop file (type: string) (default: `package.name`)
 - `genericName`: generic name for the desktop file (type: string)
 - `categories`: categories for the desktop file according to XDG specification (type: string)
 
@@ -172,6 +167,7 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 [naersk]: https://github.com/nmattia/naersk "naersk"
 [crate2nix]: https://github.com/kolloch/crate2nix "crate2nix"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
+[buildRustPackage]: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/rust.section.md#compiling-rust-applications-with-cargo-compiling-rust-applications-with-cargo "buildRustPackage"
 
 ### How to generate a nixpkgs-compatible expression
 
