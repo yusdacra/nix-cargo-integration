@@ -1,6 +1,6 @@
 # nix-cargo-integration
 
-Utility to integrate Cargo projects with Nix.
+Library to easily and effortlessly integrate Cargo projects with Nix.
 
 - Uses [naersk], [crate2nix] or [buildRustPackage] to build Cargo packages and [devshell] to provide a development shell.
 Allows changing between "build platforms" by just changing one attribute (see `buildPlatform`).
