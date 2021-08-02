@@ -57,6 +57,13 @@ You can also couple it with [niv](https://github.com/nmattia/niv):
 
 ## Library documentation
 
+**IMPORTANT** public API promises: Any API that is not documented here **IS NOT** counted
+as "public" and therefore can be changed without breaking SemVer. This does not mean that
+changes will be done without any notice. You are still welcome to create issues / discussions
+about them. Upstream projects such as `devshell`, `nixpkgs` (`buildRustPackage`) etc. can have
+breaking changes, these breakages will be limited to `overrides`' `shell` and `build` in the
+public API, since these directly modify `devshell` / `buildPlatform` configs.
+
 ### `makeOutputs`
 
 Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
@@ -66,12 +73,12 @@ Runs [makeOutput](#makeOutput) for all systems specified in `Cargo.toml` (defaul
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
 - `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage`) (default: `"naersk"`)
 - `root`: directory where `Cargo.toml` is in (type: path)
-- `cargoVendorHash`: vendor hash feeded into `buildRustPackage`'s `cargoSha256` (type: string)
+- `cargoVendorHash`: vendor hash feeded into `buildRustPackage`'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
     - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
-    - `override.crateOverrides`: override for crate2nix crate overrides (type: `common: prev: { }`)
+    - `overrides.crateOverrides`: override for crate2nix crate overrides (type: `common: prev: { }`)
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
