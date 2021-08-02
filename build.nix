@@ -6,20 +6,12 @@
 , common
 }:
 let
-  inherit (common) pkgs lib packageMetadata cargoPkg buildPlatform mkDesktopFile mkRuntimeLibsOv;
-
-  desktopFileMetadata = packageMetadata.desktopFile or null;
+  inherit (common) pkgs lib packageMetadata desktopFileMetadata cargoPkg buildPlatform mkDesktopFile mkRuntimeLibsOv;
 
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
   desktopFile =
     let
-      # If icon path starts with relative path prefix, make it absolute using root as base
-      # Otherwise treat it as an absolute path
-      makeIcon = icon:
-        if (lib.hasPrefix "./" icon)
-        then (common.root + "/${lib.removePrefix "./" icon}")
-        else icon;
       desktopFilePath = common.root + "/${lib.removePrefix "./" desktopFileMetadata}";
     in
     if builtins.isString desktopFileMetadata
@@ -28,15 +20,7 @@ let
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else
-      (pkgs.makeDesktopItem {
-        name = pkgName;
-        exec = packageMetadata.executable or pkgName;
-        comment = desktopFileMetadata.comment or common.meta.description or "";
-        desktopName = desktopFileMetadata.name or pkgName;
-      }) // (lib.putIfHasAttr "icon" desktopFileMetadata)
-      // (lib.putIfHasAttr "genericName" desktopFileMetadata)
-      // (lib.putIfHasAttr "categories" desktopFileMetadata);
+    else pkgs.makeDesktopItem (common.mkDesktopItemConfig pkgName);
 
   # Whether this package contains a library output or not.
   library = packageMetadata.library or false;

@@ -21,8 +21,8 @@ in
     text =
       let
         inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash;
-        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames split isList;
-        inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList;
+        inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init filterAttrs;
         has = i: any (oi: i == oi);
 
         clang = [ "clang-wrapper" "clang" ];
@@ -33,7 +33,9 @@ in
         concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
 
         bi = filterUnwanted (mapToName buildInputs);
-        nbi = (filterUnwanted (mapToName nativeBuildInputs)) ++ (optional common.mkRuntimeLibsOv "makeWrapper");
+        nbi = (filterUnwanted (mapToName nativeBuildInputs))
+        ++ (optional common.mkRuntimeLibsOv "makeWrapper")
+        ++ (optional common.mkDesktopFile "copyDesktopItems");
         runtimeLibs = "\${lib.makeLibraryPath (with pkgs; [ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
         stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
         putIfStdenv = optionalString (stdenv != null);
@@ -47,6 +49,17 @@ in
                   (list: if isList list then (length list) > 0 else true)
                   (split "\n" (common.mkRuntimeLibsScript runtimeLibs))
               ))
+          );
+
+        desktopItemAttrs =
+          concatStringsSep "\n" (
+            mapAttrsToList
+              (n: v: "    ${n} = ${v};")
+              (
+                filterAttrs
+                  (_: v: (toString v) != "")
+                  (common.mkDesktopItemConfig common.cargoPkg.name)
+              )
           );
       in
       ''
@@ -77,6 +90,10 @@ in
             optionalString
               common.mkRuntimeLibsOv
               "\n\n  postFixup = ''\n${runtimeLibsScript}\n  '';"
+          }${
+            optionalString
+              common.mkDesktopFile
+              "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];"
           }
 
           meta = with lib; {
