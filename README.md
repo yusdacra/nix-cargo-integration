@@ -164,3 +164,9 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 [naersk]: https://github.com/nmattia/naersk "naersk"
 [crate2nix]: https://github.com/kolloch/crate2nix "crate2nix"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
+
+### How to generate a nixpkgs-compatible expression
+
+`nix-cargo-integration` will generate outputs named `<packageOutputName>-derivation`.
+You can `nix build` these, and it will result in a `.nix` text file. After generating one,
+be sure to review it and change anything broken, such as source fetching.
