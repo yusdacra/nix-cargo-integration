@@ -164,17 +164,25 @@ else if lib.isCrate2Nix buildPlatform then
                   [ "--no-default-features" "--features" (lib.concatStringsSep " " config.rootFeatures) ];
             } // (builtins.removeAttrs config [ "runTests" ])
           );
+        package = pkg.override { inherit (config) runTests; };
+        mkJoin = package:
+          let
+            joined = pkgs.symlinkJoin {
+              inherit (common) meta;
+              name = "${pkgName}-${cargoPkg.version}";
+              paths = [ package ];
+            };
+          in
+          joined // {
+            overrideAttrsTop = joined.overrideAttrs;
+          };
       in
       # This is a workaround so that crate2nix doesnt get built until we actually build
         # otherwise nix will try to build it even if you only run `nix flake show`
         # https://github.com/NixOS/nix/issues/4265
-        # TODO: probably provide a way to override the inner derivation?
-      pkgs.symlinkJoin {
-        inherit (common) meta;
-        name = "${pkgName}-${cargoPkg.version}";
-        paths = [
-          (pkg.override { inherit (config) runTests; })
-        ];
+      (mkJoin package) // {
+        overrideAttrs = f: mkJoin (package.overrideAttrs f);
+        override = attrs: mkJoin (package.override attrs);
       };
   }
 else if lib.isBuildRustPackage buildPlatform then
