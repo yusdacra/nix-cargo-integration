@@ -69,7 +69,7 @@ let
     ];
 
   # Base config for buildRustPackage platform.
-  baseBRPConfig = applyOverrides {
+  baseBRPConfig = applyOverrides rec {
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
@@ -166,9 +166,9 @@ else if lib.isCrate2Nix buildPlatform then
           );
       in
       # This is a workaround so that crate2nix doesnt get built until we actually build
-      # otherwise nix will try to build it even if you only run `nix flake show`
-      # https://github.com/NixOS/nix/issues/4265
-      # TODO: probably provide a way to override the inner derivation?
+        # otherwise nix will try to build it even if you only run `nix flake show`
+        # https://github.com/NixOS/nix/issues/4265
+        # TODO: probably provide a way to override the inner derivation?
       pkgs.symlinkJoin {
         inherit (common) meta;
         name = "${pkgName}-${cargoPkg.version}";
@@ -181,6 +181,15 @@ else if lib.isBuildRustPackage buildPlatform then
   let config = overrideConfig baseBRPConfig; in
   {
     inherit config;
-    package = lib.buildCrate config;
+    package = (lib.buildCrate config).overrideAttrs (old: {
+      nativeBuildInputs = (lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook old.nativeBuildInputs) ++ [
+        (pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
+          inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
+          stdenv = config.stdenv // {
+            cc = common.cCompiler;
+          };
+        }).cargoBuildHook
+      ];
+    });
   }
 else throw "invalid build platform: ${buildPlatform}"
