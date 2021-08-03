@@ -87,7 +87,9 @@ let
     overlays = [
       rustOverlay
       # Import our Rust toolchain as an `nciRust` attribute to allow users to utilize it.
+      # Also add rustPkgs here, since it can be useful.
       (final: prev: {
+        inherit rustPkgs;
         nciRust = rustToolchainOverlay final prev;
       })
       (import (sources.devshell + "/overlay.nix"))
