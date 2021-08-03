@@ -43,7 +43,7 @@
           tsts = libb.genAttrs testNames (test: lib.makeOutputs {
             inherit buildPlatform;
             root = ./tests + "/${test}";
-            cargoVendorHash = hashes.${test};
+            cargoVendorHash = hashes.${test} or libb.fakeHash;
           });
           tests = libb.filterAttrs (n: _: if buildPlatform != "buildRustPackage" then true else if builtins.hasAttr n hashes then true else false) tsts;
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
