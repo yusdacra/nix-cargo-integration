@@ -142,19 +142,25 @@ let
           trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
         '')
     ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) common.env);
-    devshell.startup.setupPreCommitHooks.text = ''
+    startup.setupPreCommitHooks.text = ''
       echo "pre-commit hooks are disabled."
     '';
   } // lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
-    devshell.startup.setupPreCommitHooks.text = ''
+    startup.setupPreCommitHooks.text = ''
       echo "Setting up pre-commit hooks..."
       ${common.preCommitChecks.shellHook}
       echo "Successfully set up pre-commit-hooks!"
     '';
   };
 
-  # Helper function to combine devshell configs without loss.
-  combineWithBase = config: lib.mkMerge [ config baseConfig ];
+  # Helper function to combine devshell configs without loss
+  combineWithBase = config: {
+    devshell.startup = lib.recursiveUpdate baseConfig.startup (config.startup or { });
+    language = lib.recursiveUpdate baseConfig.language (config.language or { });
+    packages = baseConfig.packages ++ (config.packages or [ ]);
+    commands = baseConfig.commands ++ (config.commands or [ ]);
+    env = baseConfig.env ++ (config.env or [ ]);
+  } // (removeAttrs config [ "packages" "commands" "env" "language" "startup" ]);
 
   # Collect final config
   resultConfig = {
