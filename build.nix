@@ -190,14 +190,15 @@ else if lib.isBuildRustPackage buildPlatform then
   {
     inherit config;
     package = (lib.buildCrate config).overrideAttrs (old: {
-      nativeBuildInputs = (lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook old.nativeBuildInputs) ++ [
+      nativeBuildInputs = lib.unique ((lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook old.nativeBuildInputs) ++ [
         (pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
           inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
           stdenv = config.stdenv // {
             cc = common.cCompiler;
           };
         }).cargoBuildHook
-      ];
+      ] ++ config.nativeBuildInputs);
+      buildInputs = lib.unique (old.buildInputs ++ config.buildInputs);
     });
   }
 else throw "invalid build platform: ${buildPlatform}"
