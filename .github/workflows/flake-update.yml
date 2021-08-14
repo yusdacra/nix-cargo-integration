@@ -5,7 +5,7 @@ on:
     - cron: '0 6 * * *'
 
 jobs:
-  update-flake-deps-master:
+  update-flake-deps:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
@@ -26,25 +26,3 @@ jobs:
       with:
         commit_message: "chore(deps): update flake deps"
         branch: master
-  update-flake-deps-release:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.PAT }}
-        ref: release-1.0
-    - name: Install nix
-      uses: cachix/install-nix-action@v13
-      with:
-        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210604_8e6ee1b/install
-        extra_nix_config: |
-          experimental-features = nix-command flakes
-        nix_path: nixpkgs=channel:nixos-unstable
-    - name: Update flake deps
-      run: nix flake update
-    - name: Commit
-      uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "chore(deps): update flake deps"
-        branch: release-1.0
