@@ -57,7 +57,17 @@
       crate2nixPlatform = mkPlatform "crate2nix";
       brpPlatform = mkPlatform "buildRustPackage";
 
-      cliOutputs = lib.makeOutputs { root = ./cli; overrides = { build = _: _: { singleStep = true; }; }; };
+      cliOutputs = lib.makeOutputs {
+        root = ./cli;
+        overrides = {
+          build = _: _: { singleStep = true; };
+          mainBuild = _: _: {
+            NCI_SRC = builtins.toString inputs.self;
+            # Make sure the src doesnt get garbage collected
+            postInstall = "ln -s $NCI_SRC $out/nci_src";
+          };
+        };
+      };
     in
     {
       inherit lib;

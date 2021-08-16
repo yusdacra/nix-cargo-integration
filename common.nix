@@ -15,7 +15,8 @@
 let
   # Extract the metadata we will need.
   cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
-  packageMetadata = cargoPkg.metadata.nix or null;
+  _packageMetadata = cargoPkg.metadata.nix or { };
+  packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: { })) _packageMetadata);
   desktopFileMetadata = packageMetadata.desktopFile or null;
 
   # This is named "prevRoot" since we will override it later on.

@@ -186,3 +186,18 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 `nix-cargo-integration` will generate outputs named `<packageOutputName>-derivation`.
 You can `nix build` these, and it will result in a `.nix` text file. After generating one,
 be sure to review it and change anything broken, such as source fetching.
+
+### Using the CLI
+
+This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:
+```
+alias nci="nix run github:yusdacra/nix-cargo-integration --"
+# Show the outputs of this (flake) source
+nci show github:owner/repo
+# Run the default app of this source
+nci run github:owner/repo
+# Run a specific app of this source
+nci run github:owner/repo
+nci metadata github:owner/repo
+nci update github:owner/repo
+```
