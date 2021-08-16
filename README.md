@@ -9,6 +9,7 @@ Allows changing between "build platforms" by just changing one attribute (see `b
 - Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
 - Can generate nixpkgs-compatible nix expressions, so you don't need to maintain a seperate derivation for nixpkgs! (see `How to generate a nixpkgs-compatible expression`)
 - [naersk] and [crate2nix] `buildPlatform`s allow building packages directly from `Cargo.lock`. [buildRustPackage] uses the `cargoVendorHash` attribute.
+- A CLI tool that let's you compile and run arbitrary Rust repositories directly without messing with any files or setting up overlays (see `Using the nci CLI`)
 
 ## Usage
 
@@ -187,17 +188,19 @@ NOTE: Attributes specified here **will not** be used if a top-level `devshell.to
 You can `nix build` these, and it will result in a `.nix` text file. After generating one,
 be sure to review it and change anything broken, such as source fetching.
 
-### Using the CLI
+### Using the `nci` CLI
 
 This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:
-```
+```bash
 alias nci="nix run github:yusdacra/nix-cargo-integration --"
 # Show the outputs of this (flake) source
 nci show github:owner/repo
 # Run the default app of this source
 nci run github:owner/repo
 # Run a specific app of this source
-nci run github:owner/repo
+nci run github:owner/repo app-name
+# Show the flake metadata for this source
 nci metadata github:owner/repo
+# Update the source
 nci update github:owner/repo
 ```
