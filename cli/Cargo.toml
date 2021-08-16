@@ -1,0 +1,9 @@
+[package]
+name = "nci-cli"
+version = "0.1.0"
+edition = "2018"
+authors = ["Yusuf Bera Ertan <y.bera003.06@protonmail.com>"]
+
+[package.metadata.nix]
+build = true
+app = true

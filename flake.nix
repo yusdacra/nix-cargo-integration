@@ -56,9 +56,22 @@
       naerskPlatform = mkPlatform "naersk";
       crate2nixPlatform = mkPlatform "crate2nix";
       brpPlatform = mkPlatform "buildRustPackage";
+
+      cliOutputs = lib.makeOutputs {
+        root = ./cli;
+        overrides = {
+          build = _: _: { singleStep = true; };
+          mainBuild = _: _: {
+            NCI_SRC = builtins.toString inputs.self;
+            # Make sure the src doesnt get garbage collected
+            postInstall = "ln -s $NCI_SRC $out/nci_src";
+          };
+        };
+      };
     in
     {
       inherit lib;
+      inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
       checks = libb.recursiveUpdate (libb.recursiveUpdate naerskPlatform crate2nixPlatform) brpPlatform;
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;

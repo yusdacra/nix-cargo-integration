@@ -36,20 +36,21 @@ let
       autobins = cargoPkg.autobins or (edition == "2018");
 
       # Find the package source.
-      pkgSrc = if isNull memberName then "${root}/src" else "${root}/${memberName}/src";
+      pkgSrc = if isNull memberName then root + "/src" else root + "/" + memberName + "/src";
 
       # Emulate autobins behaviour, get all the binaries of this package.
       allBins =
         lib.unique (
-          [ null ]
+          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) null)
           ++ bins
           ++ (lib.optionals
-            (autobins && (builtins.pathExists "${pkgSrc}/bin"))
+            (autobins && (builtins.pathExists (pkgSrc + "/bin")))
             (lib.genAttrs
               (builtins.map
                 (lib.removeSuffix ".rs")
-                (builtins.attrNames (builtins.readDir "${pkgSrc}/bin")))
-              (name: { inherit name; })
+                (builtins.attrNames (builtins.readDir (pkgSrc + "/bin")))
+                (name: { inherit name; })
+              )
             )
           )
         );
@@ -127,7 +128,7 @@ let
     } // lib.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       defaultApp = {
-        ${system} = apps.${system}.${name};
+        ${system} = apps.${system}."${let f = lib.head allBins; in if isNull f then name else f.name}";
       };
     });
 in
