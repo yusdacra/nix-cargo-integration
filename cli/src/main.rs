@@ -37,13 +37,16 @@ fn main() -> io::Result<()> {
             Ok(())
         };
 
-        match cmd.as_ref() {
-            "show" => run_url(&["flake", "show"], "")?,
-            "run" => {
-                let app = arg::get(3).map(|app| format!("#{}", app));
-                run_url(&["run"], app.as_deref().unwrap_or(""))?
-            }
-            "metadata" => run_url(&["flake", "metadata"], "")?,
+        let cmd_frag = |cmd| {
+            let frag = arg::get(3).map(|frag| format!("#{}", frag));
+            run_url(&[cmd], frag.as_deref().unwrap_or(""))
+        };
+
+        let cmd = cmd.as_str();
+        match cmd {
+            "show" | "metadata" => run_url(&["flake", cmd], "")?,
+            "run" => cmd_frag(cmd)?,
+            "build" => cmd_frag(cmd)?,
             "update" => run_url(&["flake", "lock", "--update-input", "source"], "")?,
             _ => println!("{}", HELP),
         }
