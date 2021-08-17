@@ -3,6 +3,7 @@ use std::{env::var, fs, io, path::Path};
 const NCI_SRC: Option<&str> = option_env!("NCI_SRC");
 const HELP: &str = r#"
 show <source url> -> run `nix flake show` the specified source
+build <source url> <package: default package> -> builds a package (defaults to the default package) in the specified source
 run <source url> <app: default app> -> run an app (defaults to the default app) in the specified source
 metadata <source url> -> show metadata of specified source
 update <source url> -> update the specified source

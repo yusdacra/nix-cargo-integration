@@ -199,6 +199,10 @@ nci show github:owner/repo
 nci run github:owner/repo
 # Run a specific app of this source
 nci run github:owner/repo app-name
+# Build the default package of this source
+nci build github:owner/repo
+# Build a specific package of this source
+nci build github:owner/repo package-name
 # Show the flake metadata for this source
 nci metadata github:owner/repo
 # Update the source
