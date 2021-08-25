@@ -32,11 +32,11 @@ in
         mapToName = map getName;
         concatForInput = i: concatStringsSep "" (map (p: "\n  ${p},") i);
 
-        bi = filterUnwanted (mapToName buildInputs);
+        bi = filterUnwanted ((mapToName buildInputs) ++ (mapToName common.runtimeLibs));
         nbi = (filterUnwanted (mapToName nativeBuildInputs))
         ++ (optional common.mkRuntimeLibsOv "makeWrapper")
         ++ (optional common.mkDesktopFile "copyDesktopItems");
-        runtimeLibs = "\${lib.makeLibraryPath (with pkgs; [ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
+        runtimeLibs = "\${lib.makeLibraryPath ([ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
         stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
         putIfStdenv = optionalString (stdenv != null);
 
@@ -70,13 +70,13 @@ in
           fetchFromGitHub,${concatForInput bi} ${concatForInput nbi}
         }:
         rustPlatform.buildRustPackage rec {
-          pname = ${common.cargoPkg.name};
-          version = ${common.cargoPkg.version};${putIfStdenv "\n\n  stdenv = ${stdenv};"}
+          pname = "${common.cargoPkg.name}";
+          version = "${common.cargoPkg.version}";${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
           # Change to use whatever source you want
           src = fetchFromGitHub {
             owner = "<enter owner>";
-            repo = "${baseNameOf common.root}";
+            repo = "<enter repo name>";
             rev = "<enter revision>";
             sha256 = lib.fakeHash;
           };
@@ -84,7 +84,7 @@ in
           cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
             optionalString
               ((length (attrNames common.env)) > 0)
-              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\"") common.env)}"
+              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\";") common.env)}"
           }
 
           buildInputs = [ ${concatStringsSep " " bi} ];
