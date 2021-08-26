@@ -76,7 +76,7 @@ in
           # Change to use whatever source you want
           src = fetchFromGitHub {
             owner = "<enter owner>";
-            repo = "<enter repo name>";
+            repo = "${common.cargoPkg.name}";
             rev = "<enter revision>";
             sha256 = lib.fakeHash;
           };
