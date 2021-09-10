@@ -41,7 +41,7 @@ let
       # Emulate autobins behaviour, get all the binaries of this package.
       allBins =
         lib.unique (
-          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) null)
+          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) { inherit name; })
           ++ bins
           ++ (lib.optionals
             (autobins && (builtins.pathExists (pkgSrc + "/bin")))
@@ -128,7 +128,7 @@ let
     } // lib.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       defaultApp = {
-        ${system} = apps.${system}."${let f = lib.head allBins; in if isNull f then name else f.name}";
+        ${system} = apps.${system}."${if (lib.length allBins) > 0 then (lib.head allBins).name else name }";
       };
     });
 in
