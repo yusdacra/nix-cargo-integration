@@ -55,7 +55,7 @@ in
           let
             filtered =
               filterAttrs
-                (_: v: (lib.hasPrefix "/nix/store" v) || (toString v) != "")
+                (_: v: !(lib.hasPrefix "/nix/store" v) || (toString v) != "")
                 (common.mkDesktopItemConfig common.cargoPkg.name);
             attrsWithIcon =
               if !(hasAttr "icon" filtered) && (hasAttr "icon" common.desktopFileMetadata)
