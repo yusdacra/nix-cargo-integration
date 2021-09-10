@@ -20,9 +20,9 @@ in
     name = "${common.cargoPkg.name}.nix";
     text =
       let
-        inherit (common) pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
+        inherit (common) root pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
         inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString;
-        inherit (lib) optional optionalString cargoLicenseToNixpkgs mapAttrsToList getName init filterAttrs;
+        inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs;
         has = i: any (oi: i == oi);
 
         clang = [ "clang-wrapper" "clang" ];
@@ -63,23 +63,42 @@ in
           );
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
         desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
+
+        isGitHub = builtins.pathExists (root + "/.github");
+        isGitLab = builtins.pathExists (root + "/.gitlab");
+
+        mkForgeFetch = name: rec {
+          fetcher = "fetchFrom${name}";
+          fetchCode = ''
+            src = ${fetcher} {
+              owner = "<enter owner>";
+              repo = "${common.cargoPkg.name}";
+              rev = "${common.cargoPkg.version or "<enter rev>"}";
+              sha256 = lib.fakeHash;
+            };'';
+        };
+
+        githubFetcher = mkForgeFetch "GitHub";
+        gitlabFetcher = mkForgeFetch "GitLab";
+
+        fetcher =
+          if isGitLab
+          then gitlabFetcher
+          else if isGitHub
+          then githubFetcher
+          else githubFetcher;
       in
       ''
         { lib,
           rustPlatform,${putIfStdenv "\n  ${stdenv},"}
-          fetchFromGitHub,${concatForInput bi} ${concatForInput nbi}
+          ${fetcher.fetcher},${concatForInput bi} ${concatForInput nbi}
         }:
         rustPlatform.buildRustPackage rec {
           pname = "${common.cargoPkg.name}";
           version = "${common.cargoPkg.version}";${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
           # Change to use whatever source you want
-          src = fetchFromGitHub {
-            owner = "<enter owner>";
-            repo = "${common.cargoPkg.name}";
-            rev = "<enter revision>";
-            sha256 = lib.fakeHash;
-          };
+          ${concatMapStringsSep "\n" (line: "  ${line}") (lib.splitString "\n" fetcher.fetchCode)}
 
           cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
             optionalString
