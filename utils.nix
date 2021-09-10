@@ -53,19 +53,17 @@ in
 
         desktopItemAttrs =
           let
-            attrs = mapAttrsToList
-              (n: v: "    ${n} = \"${v}\";")
-              (
-                filterAttrs
-                  (_: v: (lib.hasPrefix "/nix/store" v) || (toString v) != "")
-                  (common.mkDesktopItemConfig common.cargoPkg.name)
-              );
+            filtered =
+              filterAttrs
+                (_: v: (lib.hasPrefix "/nix/store" v) || (toString v) != "")
+                (common.mkDesktopItemConfig common.cargoPkg.name);
             attrsWithIcon =
-              if !(hasAttr "icon" attrs) && (hasAttr "icon" common.desktopFileMetadata)
-              then attrs // { icon = "\"${common.desktopFileMetadata.icon}\""; }
-              else attrs;
+              if !(hasAttr "icon" filtered) && (hasAttr "icon" common.desktopFileMetadata)
+              then filtered // { icon = "\"${common.desktopFileMetadata.icon}\""; }
+              else filtered;
+            attrs = mapAttrsToList (n: v: "    ${n} = \"${v}\";") attrsWithIcon;
           in
-          concatStringsSep "\n" attrsWithIcon;
+          concatStringsSep "\n" attrs;
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
         desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
 
