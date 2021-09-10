@@ -52,15 +52,20 @@ in
           );
 
         desktopItemAttrs =
-          concatStringsSep "\n" (
-            mapAttrsToList
-              (n: v: "    ${n} = ${v};")
+          let
+            attrs = mapAttrsToList
+              (n: v: "    ${n} = \"${v}\";")
               (
                 filterAttrs
-                  (_: v: (toString v) != "")
+                  (_: v: (lib.hasPrefix "/nix/store" v) || (toString v) != "")
                   (common.mkDesktopItemConfig common.cargoPkg.name)
-              )
-          );
+              );
+            attrsWithIcon =
+              if !(hasAttr "icon" attrs) && (hasAttr "icon" common.desktopFileMetadata)
+              then attrs // { icon = "\"${common.desktopFileMetadata.icon}\""; }
+              else attrs;
+          in
+          concatStringsSep "\n" attrsWithIcon;
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
         desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
 
