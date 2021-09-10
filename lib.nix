@@ -42,11 +42,10 @@ let
       # Find the package source.
       pkgSrc =
         let
-          src = (
+          src =
             if isNull memberName
             then root + "/src"
-            else root + "/" + memberName + "/src"
-          );
+            else root + "/${memberName}" + "/src";
         in
         lib.dbg "package source for ${name} at: ${src}" src;
 
