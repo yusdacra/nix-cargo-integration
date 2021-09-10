@@ -59,9 +59,9 @@ in
                 (common.mkDesktopItemConfig common.cargoPkg.name);
             attrsWithIcon =
               if !(hasAttr "icon" filtered) && (hasAttr "icon" common.desktopFileMetadata)
-              then filtered // { icon = "\"${common.desktopFileMetadata.icon}\""; }
+              then filtered // { icon = "${common.desktopFileMetadata.icon}"; }
               else filtered;
-            attrs = mapAttrsToList (n: v: "    ${n} = \"${v}\";") attrsWithIcon;
+            attrs = mapAttrsToList (n: v: "    ${n} = ${if n == "icon" then v else "\"${v}\""};") attrsWithIcon;
           in
           concatStringsSep "\n" attrs;
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
