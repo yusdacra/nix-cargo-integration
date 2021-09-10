@@ -208,3 +208,11 @@ nci metadata github:owner/repo
 # Update the source
 nci update github:owner/repo
 ```
+
+### Enabling trace
+
+Traces in the library can be enabled by setting the `NCI_DEBUG` environment
+variable to `1` and passing `--impure` to `nix`. Example:
+```
+NCI_DEBUG=1 nix build --impure .
+```

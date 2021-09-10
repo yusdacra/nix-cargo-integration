@@ -22,6 +22,10 @@ let
           "mpl-1.0" = "mpl10";
         }."${l}" or l;
     putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
+    dbg = msg: x:
+      if (builtins.getEnv "NCI_DEBUG") == "1"
+      then builtins.trace msg x
+      else x;
   };
 
   # Create an output (packages, apps, etc.) from a common.
@@ -36,7 +40,15 @@ let
       autobins = cargoPkg.autobins or (edition == "2018");
 
       # Find the package source.
-      pkgSrc = if isNull memberName then root + "/src" else root + "/" + memberName + "/src";
+      pkgSrc =
+        let
+          src = (
+            if isNull memberName
+            then root + "/src"
+            else root + "/" + memberName + "/src"
+          );
+        in
+        lib.dbg "package source for ${name} at: ${src}" src;
 
       # Emulate autobins behaviour, get all the binaries of this package.
       allBins =
@@ -116,7 +128,7 @@ let
             (
               builtins.map
                 (exe: lib.mapAttrs' (mkApp exe) packagesRaw.${system})
-                allBins
+                (lib.dbg "binaries for ${name}: ${lib.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
             );
       };
     in
@@ -183,7 +195,7 @@ in
       importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
 
       # Import the "main" Cargo.toml we will use. This Cargo.toml can either be a workspace manifest, or a package manifest.
-      cargoToml = importCargoTOML root;
+      cargoToml = importCargoTOML (lib.dbg "root at: ${root}" root);
       # Import the Cargo.lock file.
       cargoLockPath = root + "/Cargo.lock";
       cargoLock =
@@ -216,7 +228,10 @@ in
         )
         workspaceMembers);
       # Get and import the members' Cargo.toml files if we are in a workspace.
-      members = lib.genAttrs globbedWorkspaceMembers (name: importCargoTOML (root + "/${name}"));
+      members =
+        lib.genAttrs
+          (lib.dbg "workspace members: ${lib.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
+          (name: importCargoTOML (root + "/${name}"));
 
       # Get the metadata we will use from the root package attributes if it exists.
       packageMetadata = rootPkg.metadata.nix or null;
