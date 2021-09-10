@@ -41,7 +41,10 @@ let
       # Emulate autobins behaviour, get all the binaries of this package.
       allBins =
         lib.unique (
-          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) { inherit name; })
+          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) {
+            inherit name;
+            exeName = cargoPkg.name;
+          })
           ++ bins
           ++ (lib.optionals
             (autobins && (builtins.pathExists (pkgSrc + "/bin")))
@@ -67,13 +70,10 @@ let
       # This takes one "binary output" of this Cargo package.
       mkApp = bin: n: v:
         let
-          ex =
-            if isNull bin
-            then { exeName = cargoPkg.name; name = n; }
-            else {
-              exeName = bin.name;
-              name = "${bin.name}${if v.config.release then "" else "-debug"}";
-            };
+          ex = {
+            exeName = bin.exeName or bin.name;
+            name = "${bin.name}${if v.config.release then "" else "-debug"}";
+          };
           drv =
             if (builtins.length (bin.required-features or [ ])) < 1
             then v.package
@@ -128,7 +128,14 @@ let
     } // lib.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       defaultApp = {
-        ${system} = apps.${system}."${if (lib.length allBins) > 0 then (lib.head allBins).name else name }";
+        ${system} =
+          let
+            appName =
+              if (lib.length allBins) > 0
+              then (lib.head allBins).name
+              else name;
+          in
+          apps.${system}.${appName};
       };
     });
 in
