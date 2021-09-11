@@ -53,15 +53,16 @@ in
 
         desktopItemAttrs =
           let
+            desktopItem = common.mkDesktopItemConfig common.cargoPkg.name;
             filtered =
               filterAttrs
                 (_: v: !(lib.hasPrefix "/nix/store" v) && (toString v) != "")
-                (common.mkDesktopItemConfig common.cargoPkg.name);
+                desktopItem;
             attrsWithIcon =
               if !(hasAttr "icon" filtered) && (hasAttr "icon" common.desktopFileMetadata)
-              then filtered // { icon = "${common.desktopFileMetadata.icon}"; }
+              then filtered // { icon = "\${src}/${lib.removePrefix "./" common.desktopFileMetadata.icon}"; }
               else filtered;
-            attrs = mapAttrsToList (n: v: "    ${n} = ${if n == "icon" then v else "\"${v}\""};") attrsWithIcon;
+            attrs = mapAttrsToList (n: v: "    ${n} = \"${v}\";") attrsWithIcon;
           in
           concatStringsSep "\n" attrs;
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
@@ -72,13 +73,15 @@ in
 
         mkForgeFetch = name: rec {
           fetcher = "fetchFrom${name}";
-          fetchCode = ''
-            src = ${fetcher} {
-              owner = "<enter owner>";
-              repo = "${common.cargoPkg.name}";
-              rev = "${common.cargoPkg.version or "<enter rev>"}";
-              sha256 = lib.fakeHash;
-            };'';
+          fetchCode =
+            let version = "v\${version}"; in
+            ''
+              src = ${fetcher} {
+                owner = "<enter owner>";
+                repo = "${common.cargoPkg.name}";
+                rev = "${version}";
+                sha256 = lib.fakeHash;
+              };'';
         };
 
         githubFetcher = mkForgeFetch "GitHub";
