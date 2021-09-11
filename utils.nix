@@ -20,7 +20,7 @@ in
     name = "${common.cargoPkg.name}.nix";
     text =
       let
-        inherit (common) root pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
+        inherit (common) root cargoPkg pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
         inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString;
         inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs;
         has = i: any (oi: i == oi);
@@ -53,7 +53,7 @@ in
 
         desktopItemAttrs =
           let
-            desktopItem = common.mkDesktopItemConfig common.cargoPkg.name;
+            desktopItem = common.mkDesktopItemConfig cargoPkg.name;
             filtered =
               filterAttrs
                 (_: v: !(lib.hasPrefix "/nix/store" v) && (toString v) != "")
@@ -66,7 +66,7 @@ in
           in
           concatStringsSep "\n" attrs;
         desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
-        desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${common.cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
+        desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
 
         isGitHub = builtins.pathExists (root + "/.github");
         isGitLab = builtins.pathExists (root + "/.gitlab");
@@ -78,7 +78,7 @@ in
             ''
               src = ${fetcher} {
                 owner = "<enter owner>";
-                repo = "${common.cargoPkg.name}";
+                repo = "${cargoPkg.name}";
                 rev = "${version}";
                 sha256 = lib.fakeHash;
               };'';
@@ -100,8 +100,8 @@ in
           ${fetcher.fetcher},${concatForInput bi} ${concatForInput nbi}
         }:
         rustPlatform.buildRustPackage rec {
-          pname = "${common.cargoPkg.name}";
-          version = "${common.cargoPkg.version}";${putIfStdenv "\n\n  stdenv = ${stdenv};"}
+          pname = "${cargoPkg.name}";
+          version = "${cargoPkg.version}";${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
           # Change to use whatever source you want
           ${concatMapStringsSep "\n" (line: "  ${line}") (lib.splitString "\n" fetcher.fetchCode)}
@@ -127,10 +127,13 @@ in
               )
           }
 
+          cargoBuildFlags = [ "--package" "${cargoPkg.name}" ];
+          cargoTestFlags = cargoBuildFlags;
+
           meta = with lib; {
             description = "${common.meta.description or "<enter description>"}";
             homepage = "${common.meta.homepage or "<enter homepage>"}";
-            license = licenses.${cargoLicenseToNixpkgs (common.cargoPkg.license or "unfree")};
+            license = licenses.${cargoLicenseToNixpkgs (cargoPkg.license or "unfree")};
             maintainers = with maintainers; [ ];
           };
         }
