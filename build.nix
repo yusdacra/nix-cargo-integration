@@ -45,7 +45,6 @@ let
   runtimeLibsOv = prev:
     prev //
     lib.optionalAttrs mkRuntimeLibsOv {
-      nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
       postFixup = ''
         ${prev.postFixup or ""}
         ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}

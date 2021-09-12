@@ -156,8 +156,7 @@ let
     mkRuntimeLibsOv = (builtins.length runtimeLibs) > 0;
     mkRuntimeLibsScript = libs: ''
       for f in $out/bin/*; do
-        wrapProgram "$f" \
-          --set LD_LIBRARY_PATH "${libs}"
+        patchelf --set-rpath "${libs}" "$f"
       done
     '';
 
