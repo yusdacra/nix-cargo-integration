@@ -77,8 +77,8 @@ let
     language = {
       c = {
         compiler = common.cCompiler;
-        libraries = common.buildInputs;
-        includes = common.buildInputs;
+        libraries = common.buildInputs ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
+        includes = common.buildInputs ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
       };
     };
     packages = (with pkgs; [ nciRust.rustc fd ]) ++ common.nativeBuildInputs ++ common.buildInputs;
@@ -133,8 +133,8 @@ let
       command = "nix build -L --show-trace --no-link --impure --expr '(builtins.getFlake (toString ./.)).checks.${common.system}.preCommitChecks'";
     };
     env = with lib; [
-      { name = "LD_LIBRARY_PATH"; eval = "$LD_LIBRARY_PATH:${makeLibraryPath common.runtimeLibs}"; }
-      { name = "LIBRARY_PATH"; eval = "$DEVSHELL_DIR/lib"; }
+      { name = "LD_LIBRARY_PATH"; prefix = "$DEVSHELL_DIR/lib:${makeLibraryPath common.runtimeLibs}"; }
+      { name = "LIBRARY_PATH"; prefix = "$DEVSHELL_DIR/lib"; }
     ] ++ (
       optional ((! isNull cachixName) && (! isNull cachixKey))
         (nameValuePair "NIX_CONFIG" ''
