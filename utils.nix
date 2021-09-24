@@ -21,8 +21,8 @@ in
     text =
       let
         inherit (common) root cargoPkg pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
-        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString;
-        inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs;
+        inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString stringLength elemAt;
+        inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs unique hasPrefix splitString drop;
         has = i: any (oi: i == oi);
 
         clang = [ "clang-wrapper" "clang" ];
@@ -93,11 +93,29 @@ in
           else if isGitHub
           then githubFetcher
           else githubFetcher;
+
+        envToString = value:
+          let val = toString value; in
+          if hasPrefix "/nix/store" value
+          then
+            let
+              pathSegments = filter (v: (stringLength v) > 0) (splitString "/" val);
+
+              hashName = elemAt pathSegments 2;
+              nameSegments = drop 1 (splitString "-" hashName);
+              name = concatStringsSep "-" nameSegments;
+              drvName = getName (lib.strings.sanitizeDerivationName name);
+
+              relPathSegments = drop 3 pathSegments;
+              relPath = concatStringsSep "/" relPathSegments;
+            in
+            "\${${drvName}}/" + relPath
+          else val;
       in
       ''
         { lib,
           rustPlatform,${putIfStdenv "\n  ${stdenv},"}
-          ${fetcher.fetcher},${concatForInput bi} ${concatForInput nbi}
+          ${fetcher.fetcher},${concatForInput (unique (bi ++ nbi))}
         }:
         rustPlatform.buildRustPackage rec {
           pname = "${cargoPkg.name}";
@@ -109,7 +127,7 @@ in
           cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
             optionalString
               ((length (attrNames common.env)) > 0)
-              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${toString v}\";") common.env)}"
+              "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${envToString v}\";") common.env)}"
           }
 
           buildInputs = [ ${concatStringsSep " " bi} ];
