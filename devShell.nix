@@ -58,20 +58,6 @@ let
       (builtins.removeAttrs config (lib.attrNames movedOpts))
       { devshell = movedOpts; };
 
-  # Make devshell configs
-  devshellAttr = workspaceMetadata.devshell or packageMetadata.devshell or null;
-  devshellConfig =
-    if pkgs.lib.isAttrs devshellAttr then
-      pushUpDevshellOptions (builtins.removeAttrs devshellAttr [ "imports" ])
-    else { };
-  devshellFilePath = common.prevRoot + "/devshell.toml";
-
-  # Import the devshell specified in devshell.toml if it exists
-  importedDevshell =
-    if (builtins.pathExists devshellFilePath)
-    then (pkgs.devshell.importTOML devshellFilePath { inherit lib; })
-    else null;
-
   # Create a base devshell config
   baseConfig = {
     language = {
@@ -153,14 +139,33 @@ let
     '';
   };
 
-  # Helper function to combine devshell configs without loss
-  combineWithBase = config: {
-    devshell.startup = lib.recursiveUpdate baseConfig.startup (config.startup or { });
-    language = lib.recursiveUpdate baseConfig.language (config.language or { });
-    packages = baseConfig.packages ++ (config.packages or [ ]);
-    commands = baseConfig.commands ++ (config.commands or [ ]);
-    env = baseConfig.env ++ (config.env or [ ]);
+  # Make devshell configs
+  mkDevshellConfig = attrs:
+    if pkgs.lib.isAttrs attrs then
+      pushUpDevshellOptions (builtins.removeAttrs attrs [ "imports" ])
+    else { };
+  workspaceConfig = mkDevshellConfig (workspaceMetadata.devshell or null);
+  packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
+  devshellFilePath = common.prevRoot + "/devshell.toml";
+
+  # Import the devshell specified in devshell.toml if it exists
+  importedDevshell =
+    if (builtins.pathExists devshellFilePath)
+    then (pkgs.devshell.importTOML devshellFilePath { inherit lib; })
+    else null;
+
+  # Helper functions to combine devshell configs without loss
+  combineWith = base: config: {
+    devshell.startup = lib.recursiveUpdate (base.startup or { }) (config.startup or { });
+    language = lib.recursiveUpdate (base.language or { }) (config.language or { });
+    packages = (base.packages or [ ]) ++ (config.packages or [ ]);
+    commands = (base.commands or [ ]) ++ (config.commands or [ ]);
+    env = (base.env or [ ]) ++ (config.env or [ ]);
   } // (removeAttrs config [ "packages" "commands" "env" "language" "startup" ]);
+  combineWithBase = combineWith baseConfig;
+
+  # Workspace and package combined config
+  devshellConfig = combineWith workspaceConfig packageConfig;
 
   # Collect final config
   resultConfig = {
