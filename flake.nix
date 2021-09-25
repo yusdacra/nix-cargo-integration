@@ -30,7 +30,7 @@
       };
 
       libb = import "${nixpkgs}/lib/default.nix";
-      lib = import ./lib.nix {
+      lib = import ./src/lib.nix {
         sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
       };
       hashes = {
