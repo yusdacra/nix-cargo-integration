@@ -27,6 +27,8 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 - `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage"`) (default: `"naersk"`)
 - `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or pacakge manifest) is in (type: path)
 - `cargoVendorHash`: vendor hash feeded into [buildRustPackage]'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
+- `useCrate2NixFromPkgs`: toggles using the `crate2nix` package from `nixpkgs` instead of the package in `crate2nix` source (type: boolean) (default: `false`)
+    - this can be helpful if you are facing frequent rebuilds of `crate2nix` (see #38)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
