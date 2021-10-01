@@ -2,6 +2,7 @@
 , system
 , lib
 , overrideData
+, useCrate2NixFromPkgs ? false
 , toolchainChannel ? "stable"
 , buildPlatform ? "naersk"
 , override ? (_: _: { })
@@ -67,7 +68,13 @@ let
       (if lib.isNaersk buildPlatform
       then (_: _: { naersk = rustPkgs.callPackage sources.naersk { }; })
       else if lib.isCrate2Nix buildPlatform
-      then (_: _: { crate2nixTools = import "${sources.crate2nix}/tools.nix" { pkgs = rustPkgs; }; })
+      then
+        (_: _: {
+          crate2nixTools = import "${sources.crate2nix}/tools.nix" {
+            inherit useCrate2NixFromPkgs;
+            pkgs = rustPkgs;
+          };
+        })
       else if lib.isBuildRustPackage buildPlatform
       then (_: prev: { rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; }; })
       else throw "invalid build platform: ${buildPlatform}")

@@ -1,6 +1,7 @@
 { memberName ? null
 , isRootMember ? false
 , buildPlatform ? "naersk"
+, useCrate2NixFromPkgs ? false
 , enablePreCommitHooks ? false
 , cargoToml ? null
 , workspaceMetadata ? null
@@ -31,7 +32,7 @@ let
     , override ? (_: _: { })
     }:
     import ./nixpkgs.nix {
-      inherit system sources lib override toolchainChannel;
+      inherit system sources lib override toolchainChannel useCrate2NixFromPkgs;
       overrideData = overrideData // { inherit toolchainChannel; };
       buildPlatform = platform;
     };

@@ -188,6 +188,7 @@ in
     , renameOutputs ? { }
     , defaultOutputs ? { }
     , cargoVendorHash ? lib.fakeHash
+    , useCrate2NixFromPkgs ? false
     }:
     let
       # Helper function to import a Cargo.toml from a root.
@@ -245,7 +246,10 @@ in
 
       # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
       mkCommon = memberName: cargoToml: isRootMember: system: import ./common.nix {
-        inherit lib dependencies buildPlatform memberName cargoToml workspaceMetadata system root overrides sources enablePreCommitHooks cargoVendorHash isRootMember;
+        inherit
+          lib dependencies buildPlatform memberName cargoToml workspaceMetadata
+          system root overrides sources enablePreCommitHooks cargoVendorHash
+          isRootMember useCrate2NixFromPkgs;
       };
 
       isRootMember = if (lib.length workspaceMembers) > 0 then true else false;
