@@ -37,25 +37,26 @@
         basic-bin = "sha256-LvziPSGSAtdUeM4NZcD9qQjyMJ+n7EmutJVc+vcF1tI=";
         basic-bin-clang = "sha256-EPfiuvJ5wy/coHSfD0JHiqaTrgU0mR8ONlQ/U9ba1t4=";
       };
-      mkPlatform = buildPlatform:
+      mkPlatform = buildPlatform: outAttrs: nameSuffix:
         let
           testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
-          tsts = libb.genAttrs testNames (test: lib.makeOutputs {
+          tsts = libb.genAttrs testNames (test: lib.makeOutputs ({
             inherit buildPlatform;
             root = ./tests + "/${test}";
             cargoVendorHash = hashes.${test} or libb.fakeHash;
-          });
+          } // outAttrs));
           tests = libb.filterAttrs (n: _: if buildPlatform != "buildRustPackage" then true else if builtins.hasAttr n hashes then true else false) tsts;
-          flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "") + "-${buildPlatform}"))) v.${attrs}) tests;
+          flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "") + "-${buildPlatform}${nameSuffix}"))) v.${attrs}) tests;
           checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
           packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "packages");
-          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell-${buildPlatform}" = drv; }) test.devShell) tests;
+          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell-${buildPlatform}${nameSuffix}" = drv; }) test.devShell) tests;
         in
         libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);
 
-      naerskPlatform = mkPlatform "naersk";
-      crate2nixPlatform = mkPlatform "crate2nix";
-      brpPlatform = mkPlatform "buildRustPackage";
+      naerskPlatform = mkPlatform "naersk" { } "";
+      crate2nixPlatform = mkPlatform "crate2nix" { } "";
+      nixpkgsCrate2nixPlatform = mkPlatform "crate2nix" { useCrate2NixFromPkgs = true; } "-nixpkgs";
+      brpPlatform = mkPlatform "buildRustPackage" { } "";
 
       cliOutputs = lib.makeOutputs {
         root = ./cli;
@@ -73,7 +74,7 @@
       inherit lib;
       inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
-      checks = libb.recursiveUpdate (libb.recursiveUpdate naerskPlatform crate2nixPlatform) brpPlatform;
+      checks = libb.foldAttrs libb.recursiveUpdate { } [ brpPlatform naerskPlatform crate2nixPlatform /*nixpkgsCrate2nixPlatform*/ ];
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
