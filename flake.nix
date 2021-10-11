@@ -74,7 +74,7 @@
       inherit lib;
       inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
-      checks = libb.foldAttrs libb.recursiveUpdate { } [ brpPlatform naerskPlatform crate2nixPlatform nixpkgsCrate2nixPlatform ];
+      checks = libb.foldAttrs libb.recursiveUpdate { } [ brpPlatform naerskPlatform crate2nixPlatform /*nixpkgsCrate2nixPlatform*/ ];
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
