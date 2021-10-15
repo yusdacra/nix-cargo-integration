@@ -1,6 +1,7 @@
 # Index
 
 - [Library documentation](#library-documentation)
+- [Build platform specific usage](#build-platform-specific-usage)
 - [Generating a nixpkgs-compatible package expression](#generating-a-nixpkgs-compatible-package-expression)
 - [Using the `nci` CLI](#using-the-nci-cli)
 - [Enabling trace](#enabling-trace)
@@ -117,6 +118,12 @@ will be available in `package.metadata.nix`.
 Refer to [devshell] documentation.
 
 NOTE: Attributes specified here **will not** be used if a top-level `devshell.toml` file exists.
+
+## Build platform specific usage
+
+- Disabling tests:
+    - for `crate2nix`: add `runTests = false;` to the `build` override.
+    - for `naersk` and `buildRustPackage`: add `doCheck = false;` to the `build` override.
 
 ## Generating a nixpkgs-compatible package expression
 
