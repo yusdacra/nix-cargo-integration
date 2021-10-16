@@ -144,24 +144,33 @@ let
     if pkgs.lib.isAttrs attrs then
       pushUpDevshellOptions (builtins.removeAttrs attrs [ "imports" ])
     else { };
+
+  # Make configs work workspace and package
   workspaceConfig = mkDevshellConfig (workspaceMetadata.devshell or null);
   packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
-  devshellFilePath = common.prevRoot + "/devshell.toml";
 
   # Import the devshell specified in devshell.toml if it exists
+  devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell =
     if (builtins.pathExists devshellFilePath)
     then (pkgs.devshell.importTOML devshellFilePath { inherit lib; })
     else null;
 
   # Helper functions to combine devshell configs without loss
-  combineWith = base: config: {
-    devshell.startup = lib.recursiveUpdate (base.startup or { }) (config.startup or { });
-    language = lib.recursiveUpdate (base.language or { }) (config.language or { });
-    packages = (base.packages or [ ]) ++ (config.packages or [ ]);
-    commands = (base.commands or [ ]) ++ (config.commands or [ ]);
-    env = (base.env or [ ]) ++ (config.env or [ ]);
-  } // (removeAttrs config [ "packages" "commands" "env" "language" "startup" ]);
+  getOptions = attrs: name: def: attrs.${name} or attrs.devshell.${name} or def;
+  removeDevshellOptions = attrs: builtins.removeAttrs attrs [ "startup" ];
+  combineWith = base: config:
+    let
+      getBaseOpts = getOptions base;
+      getConfOpts = getOptions config;
+    in
+    lib.recursiveUpdate (lib.recursiveUpdate (removeDevshellOptions base) (removeDevshellOptions config)) {
+      devshell.startup = lib.recursiveUpdate (getBaseOpts "startup" { }) (getConfOpts "startup" { });
+      language = lib.recursiveUpdate (getBaseOpts "language" { }) (getConfOpts "language" { });
+      packages = (getBaseOpts "packages" [ ]) ++ (getConfOpts "packages" [ ]);
+      commands = (getBaseOpts "commands" [ ]) ++ (getConfOpts "commands" [ ]);
+      env = (getBaseOpts "env" [ ]) ++ (getConfOpts "env" [ ]);
+    };
   combineWithBase = combineWith baseConfig;
 
   # Workspace and package combined config
