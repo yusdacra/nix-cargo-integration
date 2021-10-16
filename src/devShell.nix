@@ -70,6 +70,20 @@ let
     packages = (with pkgs; [ nciRust.rustc fd ]) ++ common.nativeBuildInputs ++ common.buildInputs;
     commands = with pkgs; [
       {
+        package = nciRust.rustc;
+        name = "rustc";
+        category = "rust";
+        command = "rustc $@";
+        help = "The Rust compiler";
+      }
+      {
+        package = nciRust.rustc;
+        name = "cargo";
+        category = "rust";
+        command = "cargo $@";
+        help = "Rust's package manager";
+      }
+      {
         package = git;
         category = "vcs";
       }
@@ -98,8 +112,14 @@ let
       {
         name = "fmt";
         category = "flake tools";
-        help = "Format all Rust and Nix files.";
+        help = "Format all Rust and Nix files";
         command = "rustfmt --edition 2018 $(fd --glob '*.rs') && nixpkgs-fmt $(fd --glob '*.nix')";
+      }
+      {
+        name = "update-input";
+        category = "flake tools";
+        help = "Alias for `nix flake lock --update-input input`";
+        command = "nix flake lock --update-input $@";
       }
     ] ++ lib.optionals (! isNull cachixName) [
       {
