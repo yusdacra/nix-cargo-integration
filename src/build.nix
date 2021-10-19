@@ -117,10 +117,7 @@ let
       defaultCrateOverrides =
         let
           # Remove propagated envs from overrides, no longer needed
-          crateOverrides =
-            builtins.mapAttrs
-              (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ]))
-              common.crateOverrides;
+          crateOverrides = lib.removePropagatedEnv common.crateOverrides;
         in
         crateOverrides // {
           ${cargoPkg.name} = prev:

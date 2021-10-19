@@ -15,6 +15,9 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
+  # Removes `propagatedEnv` attributes from some `crateOverride`s.
+  removePropagatedEnv = builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ]));
+
   # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
   createNixpkgsDrv = common: pkgs.writeTextFile {
     name = "${common.cargoPkg.name}.nix";
