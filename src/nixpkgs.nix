@@ -4,6 +4,7 @@
 , overrideData
 , useCrate2NixFromPkgs ? false
 , toolchainChannel ? "stable"
+, extraToolchainComponents ? null
 , buildPlatform ? "naersk"
 , override ? (_: _: { })
 }:
@@ -22,7 +23,7 @@ let
       baseRustToolchain =
         if hasRustToolchainFile
         then prev.rust-bin.fromRustupToolchainFile toolchainChannel
-        else prev.rust-bin.${toolchainChannel}.latest.default;
+        else prev.rust-bin.${toolchainChannel}.latest.minimal;
       # Read and import the toolchain channel file, if we can
       rustToolchainFile =
         if hasRustToolchainFile
@@ -43,7 +44,10 @@ let
           else toolchainChannel);
       # Override the base toolchain and add some default components.
       toolchain = baseRustToolchain.override {
-        extensions = unique ((rustToolchainFile.components or [ ]) ++ [ "rust-src" "rustfmt" "clippy" ]);
+        extensions =
+          if extraToolchainComponents != null
+          then extraToolchainComponents
+          else [ "rust-docs" "rust-src" "rustfmt" "clippy" ];
       };
     in
     {

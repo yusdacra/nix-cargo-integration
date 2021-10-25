@@ -3,6 +3,7 @@
 , buildPlatform ? "naersk"
 , useCrate2NixFromPkgs ? false
 , enablePreCommitHooks ? false
+, extraToolchainComponents ? null
 , cargoToml ? null
 , workspaceMetadata ? null
 , overrides ? { }
@@ -29,11 +30,12 @@ let
   makePkgs =
     { platform ? buildPlatform
     , toolchainChannel ? "stable"
+    , extraToolchainComponents ? null
     , override ? (_: _: { })
     }:
     import ./nixpkgs.nix {
-      inherit system sources lib override toolchainChannel useCrate2NixFromPkgs;
-      overrideData = overrideData // { inherit toolchainChannel; };
+      inherit system sources lib override toolchainChannel extraToolchainComponents useCrate2NixFromPkgs;
+      overrideData = overrideData // { inherit toolchainChannel extraToolchainComponents; };
       buildPlatform = platform;
     };
 
@@ -50,6 +52,10 @@ let
       else if builtins.pathExists rustTomlToolchain
       then rustTomlToolchain
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
+    extraToolchainComponents =
+      workspaceMetadata.extraToolchainComponents
+      or packageMetadata.extraToolchainComponents
+      or extraToolchainComponents;
   };
   libb = lib // pkgs.nciUtils;
   overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };

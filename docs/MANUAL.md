@@ -30,6 +30,10 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 - `cargoVendorHash`: vendor hash feeded into [buildRustPackage]'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
 - `useCrate2NixFromPkgs`: toggles using the `crate2nix` package from `nixpkgs` instead of the package in `crate2nix` source (type: boolean) (default: `false`)
     - this can be helpful if you are facing frequent rebuilds of `crate2nix` (see https://github.com/yusdacra/nix-cargo-integration/issues/38)
+- `extraToolchainComponents`: adds some extra components to the Rust toolchain (type: string list) (default: `[ "rust-docs" "rust-src" "rustfmt" "clippy" ]`)
+    - can be set to `[ ]` (empty list) to not add any extra components
+    - by default the `minimal` profile set of `rustup` is used (see [rustup profiles])
+    - if `rust-toolchain` or `rust-toolchain.toml` file exists, this attribute won't be used
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
@@ -102,7 +106,9 @@ will be available in `package.metadata.nix`.
 - `systems`: systems to enable for the flake (type: list)
     - defaults to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly") (default: "stable")
-    - if `rust-toolchain` file exists, it will be used instead of this attribute
+    - if `rust-toolchain` or `rust-toolchain.toml` file exists, this attribute won't be used
+- `extraToolchainComponents`: extra toolchain components to add to the Rust toolchain
+    - if `rust-toolchain` or `rust-toolchain.toml` file exists, this attribute won't be used
 
 #### `preCommitHooks` attributes
 
@@ -165,3 +171,4 @@ NCI_DEBUG=1 nix build --impure .
 [crate2nix]: https://github.com/kolloch/crate2nix "crate2nix"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
 [buildRustPackage]: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/rust.section.md#compiling-rust-applications-with-cargo-compiling-rust-applications-with-cargo "buildRustPackage"
+[rustup profiles]: https://rust-lang.github.io/rustup/concepts/profiles.html "rustup profiles"

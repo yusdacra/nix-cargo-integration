@@ -189,6 +189,7 @@ in
     , defaultOutputs ? { }
     , cargoVendorHash ? lib.fakeHash
     , useCrate2NixFromPkgs ? false
+    , extraToolchainComponents ? null
     }:
     let
       # Helper function to import a Cargo.toml from a root.
@@ -249,7 +250,7 @@ in
         inherit
           lib dependencies buildPlatform memberName cargoToml workspaceMetadata
           system root overrides sources enablePreCommitHooks cargoVendorHash
-          isRootMember useCrate2NixFromPkgs;
+          isRootMember useCrate2NixFromPkgs extraToolchainComponents;
       };
 
       isRootMember = if (lib.length workspaceMembers) > 0 then true else false;
