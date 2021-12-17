@@ -35,15 +35,18 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
     - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
-    - `overrides.crateOverrides`: override for crate2nix crate overrides (type: `common: prev: { }`)
+    - `overrides.crateOverrides`: override for crate overrides (type: `common: prev: { }`)
+        - with [crate2nix], this will allow you to override per-crate
+        - with [naersk], the overrides here will be collected and be used for
+        overriding the dependencies derivation / main derivation.
+        - with [buildRustPackage], the overrides here will be collected and
+        be used for overriding the resulting derivation.
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
         - this will override [naersk]/[crate2nix]/[buildRustPackage] build config, refer to [naersk]/[crate2nix]/[buildRustPackage] for more information
-    - `overrides.mainBuild`: override for main crate build derivation (type: `common: prev: { }`)
-        - this will override *all* [naersk]/[crate2nix]/[buildRustPackage] main crate build derivation(s), refer to [naersk]/[crate2nix]/[buildRustPackage] for more information
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
 - `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
     - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)
