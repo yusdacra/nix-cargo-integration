@@ -94,7 +94,7 @@ let
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined =
     let
-      filteredOverrides = builtins.removeAttrs [ packageMetadata.name ] noPropagatedEnvOverrides;
+      filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ packageMetadata.name ];
       func = prev: libb.pipe prev (libb.attrValues filteredOverrides);
     in
     func;
