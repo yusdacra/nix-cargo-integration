@@ -2,11 +2,11 @@
   "nodes": {
     "devshell": {
       "locked": {
-        "lastModified": 1639577277,
-        "narHash": "sha256-oSLOHHpEZHXiMiMgEHpa8BZrCr9zq2jghkgeNz5QBFo=",
+        "lastModified": 1639692811,
+        "narHash": "sha256-wOOBH0fVsfNqw/5ZWRoKspyesoXBgiwEOUBH4c7JKEo=",
         "owner": "numtide",
         "repo": "devshell",
-        "rev": "651955eb153566d68ecb2953718b9c57ad77c8a6",
+        "rev": "d3a1f5bec3632b33346865b1c165bf2420bb2f52",
         "type": "github"
       },
       "original": {
@@ -41,11 +41,11 @@
     "rustOverlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1639621032,
-        "narHash": "sha256-mlfjt4FRYqtbRsPpJ9sc6kU/z2X61pJF3lMG7q5uEv4=",
+        "lastModified": 1639707561,
+        "narHash": "sha256-UQEGZ59iyOqinum75PcywRo3rlU5bA9CK0ftjX+a9qk=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "e3325d325d01110303c9aeeab01c50ee633d49a8",
+        "rev": "680503c71d912ba1bc93dac4564832bfc6b43122",
         "type": "github"
       },
       "original": {
