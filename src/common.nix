@@ -94,12 +94,12 @@ let
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined =
     let
-      filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ packageMetadata.name ];
+      filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
       func = prev: libb.pipe prev (libb.attrValues filteredOverrides);
     in
     func;
   # The main crate override is taken here
-  mainBuildOverride = noPropagatedEnvOverrides.${packageMetadata.name} or (_: { });
+  mainBuildOverride = noPropagatedEnvOverrides.${cargoPkg.name} or (_: { });
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
