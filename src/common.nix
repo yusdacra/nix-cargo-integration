@@ -99,7 +99,7 @@ let
     in
     func;
   # The main crate override is taken here
-  mainBuildOverride = noPropagatedEnvOverrides.${cargoPkg.name} or (_: { });
+  mainBuildOverride = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: {})) prev);
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
