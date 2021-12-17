@@ -57,18 +57,17 @@ let
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
-  mainBuildOv = prev: prev // common.overrides.mainBuild common prev;
   # Function to apply all overrides.
   applyOverrides = prev:
     lib.pipe prev [
       (prev: prev // commonConfig)
       desktopItemOv
       runtimeLibsOv
-      mainBuildOv
+      common.mainBuildOverride
     ];
 
   # Base config for buildRustPackage platform.
-  baseBRPConfig = common.lib.crateOverridesCombined (applyOverrides rec {
+  baseBRPConfig = common.crateOverridesCombined (applyOverrides rec {
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root cargoVendorHash;
@@ -90,7 +89,7 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = prev: common.lib.crateOverridesCombined (commonConfig // prev);
+    override = prev: common.crateOverridesCombined (commonConfig // prev);
     overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
@@ -98,13 +97,6 @@ let
 
   # Base config crate2nix platform.
   baseCrate2NixConfig =
-    let
-      # Override that adds stuff like make wrapper, desktop file, common envs and so on.
-      overrideMain = prev: applyOverrides (prev // {
-        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs;
-        buildInputs = (prev.buildInputs or [ ]) ++ common.buildInputs;
-      });
-    in
     {
       inherit pkgs release;
       runTests = doCheck;
@@ -115,19 +107,8 @@ let
         then features ++ def
         else def;
       defaultCrateOverrides =
-        let
-          # Remove propagated envs from overrides, no longer needed
-          crateOverrides = lib.removePropagatedEnv common.crateOverrides;
-        in
-        crateOverrides // {
-          ${cargoPkg.name} = prev:
-            let
-              # First override
-              overrode = (crateOverrides.${cargoPkg.name} or (_: { })) prev;
-              # Second override (might contain user provided values)
-              overroded = overrideMain overrode;
-            in
-            overroded;
+        common.noPropagatedEnvOverrides // {
+          ${cargoPkg.name} = applyOverrides;
         };
     };
 

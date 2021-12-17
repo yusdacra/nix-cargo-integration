@@ -90,8 +90,16 @@ let
   crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them. Mainly used to collect (native) build inputs.
   crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
-  # Combine all crate overrides into one big override function
-  crateOverridesCombined = prev: libb.pipe prev (libb.attrValues (libb.removePropagatedEnv crateOverrides));
+  noPropagatedEnvOverrides = libb.removePropagatedEnv crateOverrides;
+  # Combine all crate overrides into one big override function, except the main crate override
+  crateOverridesCombined =
+    let
+      filteredOverrides = libb.removeAttrs [ packageMetadata.name ] noPropagatedEnvOverrides;
+      func = prev: libb.pipe prev (libb.attrValues filteredOverrides);
+    in
+    func;
+  # The main crate override is taken here
+  mainBuildOverride = noPropagatedEnvOverrides.${packageMetadata.name} or (_: { });
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
@@ -108,8 +116,6 @@ let
     lib = {
       inherit
         crateOverridesGetFlattenLists
-        crateOverridesEmpty
-        crateOverridesCombined
         makePkgs;
     } // libb;
 
@@ -118,6 +124,9 @@ let
       useCCompilerBintools
       pkgs
       crateOverrides
+      crateOverridesEmpty
+      crateOverridesCombined
+      noPropagatedEnvOverrides
       cargoPkg
       cargoToml
       buildPlatform
@@ -132,7 +141,8 @@ let
       runtimeLibs
       cargoVendorHash
       isRootMember
-      meta;
+      meta
+      mainBuildOverride;
 
     mkDesktopFile = ! isNull desktopFileMetadata;
     mkDesktopItemConfig = pkgName: {
@@ -193,7 +203,6 @@ let
     overrides = {
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
-      mainBuild = overrides.mainBuild or (_: _: { });
     };
   } // libb.optionalAttrs
     (
