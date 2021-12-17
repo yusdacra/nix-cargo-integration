@@ -90,6 +90,8 @@ let
   crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them. Mainly used to collect (native) build inputs.
   crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
+  # Combine all crate overrides into one big override function
+  crateOverridesCombined = prev: libb.pipe prev (libb.attrValues (libb.removePropagatedEnv crateOverrides));
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
@@ -107,6 +109,7 @@ let
       inherit
         crateOverridesGetFlattenLists
         crateOverridesEmpty
+        crateOverridesCombined
         makePkgs;
     } // libb;
 

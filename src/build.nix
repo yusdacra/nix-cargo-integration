@@ -68,18 +68,18 @@ let
     ];
 
   # Base config for buildRustPackage platform.
-  baseBRPConfig = applyOverrides rec {
+  baseBRPConfig = common.lib.crateOverridesCombined (applyOverrides rec {
     pname = pkgName;
     inherit (cargoPkg) version;
-    inherit (common) root buildInputs nativeBuildInputs cargoVendorHash;
+    inherit (common) root cargoVendorHash;
     inherit doCheck memberPath;
     buildFlags = releaseOption ++ packageOption ++ featuresOption;
     checkFlags = releaseOption ++ packageOption ++ featuresOption;
-  };
+  });
 
   # Base config for naersk platform.
   baseNaerskConfig = {
-    inherit (common) root nativeBuildInputs buildInputs;
+    inherit (common) root;
     inherit (cargoPkg) version;
     name = pkgName;
     allRefs = true;
@@ -90,7 +90,7 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = _: commonConfig;
+    override = prev: common.lib.crateOverridesCombined (commonConfig // prev);
     overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
