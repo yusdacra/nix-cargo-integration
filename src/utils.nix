@@ -261,4 +261,20 @@ in
 } // lib.optionalAttrs (builtins.hasAttr "naersk" pkgs) {
   # naersk build crate.
   buildCrate = pkgs.naersk.buildPackage;
+} // lib.optionalAttrs (builtins.hasAttr "dream2nixTools" pkgs) {
+  # dream2nix build crate.
+  buildCrate =
+    { root
+    , memberName ? null
+    , ... # pass everything else to dream2nix
+    }@args:
+    let
+      attrs = {
+        source = root;
+      } // (builtins.removeAttrs args [ "root" "memberName" ]);
+      outputs = pkgs.dream2nixTools.riseAndShine attrs;
+    in
+    if memberName != null
+    then outputs.packages.${memberName}
+    else outputs.defaultPackage;
 }

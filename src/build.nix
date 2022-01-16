@@ -45,8 +45,7 @@ let
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
-    prev //
-    lib.optionalAttrs mkRuntimeLibsOv {
+    prev // {
       postFixup = ''
         ${prev.postFixup or ""}
         ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}
@@ -54,8 +53,7 @@ let
     };
   # Override that adds the desktop item for this package.
   desktopItemOv = prev:
-    prev //
-    lib.optionalAttrs mkDesktopFile {
+    prev // {
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
@@ -63,10 +61,19 @@ let
   applyOverrides = prev:
     lib.pipe prev [
       (prev: prev // commonConfig)
-      desktopItemOv
-      runtimeLibsOv
+      (prev: if mkDesktopFile then desktopItemOv prev else prev)
+      (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
       common.mainBuildOverride
     ];
+
+  # Base config for dream2nix platform.
+  baseD2NConfig = {
+    inherit (common) root;
+
+    # We can't use this as dream2nix override system doesn't work like
+    # crate2nix's do.
+    # packageOverrides = { };
+  };
 
   # Base config for buildRustPackage platform.
   baseBRPConfig = common.crateOverridesCombined (applyOverrides rec {
@@ -179,5 +186,13 @@ else if lib.isBuildRustPackage buildPlatform then
         }).cargoBuildHook
       ];
     });
+  }
+else if lib.isDream2Nix buildPlatform then
+  let config = overrideConfig baseD2NConfig; in
+  {
+    inherit config;
+    package = (lib.buildCrate config).overrideAttrs (old:
+      lib.pipe old [ common.crateOverridesCombined applyOverrides ]
+    );
   }
 else throw "invalid build platform: ${buildPlatform}"

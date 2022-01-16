@@ -6,6 +6,7 @@ let
     isNaersk = platform: platform == "naersk";
     isCrate2Nix = platform: platform == "crate2nix";
     isBuildRustPackage = platform: platform == "buildRustPackage";
+    isDream2Nix = platform: platform == "dream2nix";
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
     # Tries to convert a cargo license to nixpkgs license.

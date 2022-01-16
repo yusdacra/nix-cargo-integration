@@ -28,10 +28,15 @@
         ref = "master";
         rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
       };
+      dream2nix = builtins.fetchGit {
+        url = "https://github.com/nix-community/dream2nix.git";
+        ref = "main";
+        rev = "3fa75b5189ad78f3600a6b6a4570e6b87c1a47f1";
+      };
 
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./src/lib.nix {
-        sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
+        sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix dream2nix preCommitHooks; };
       };
       hashes = {
         basic-bin = "sha256-LvziPSGSAtdUeM4NZcD9qQjyMJ+n7EmutJVc+vcF1tI=";

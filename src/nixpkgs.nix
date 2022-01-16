@@ -79,6 +79,8 @@ let
         })
       else if lib.isBuildRustPackage buildPlatform
       then (_: prev: { rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; }; })
+      else if lib.isDream2Nix buildPlatform
+      then (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
       else throw "invalid build platform: ${buildPlatform}")
       # Import our utilities here so that they can be utilized.
       (_: prev: { nciUtils = import ./utils.nix { pkgs = prev; inherit lib; }; })
