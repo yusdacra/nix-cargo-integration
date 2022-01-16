@@ -8,8 +8,10 @@
 let
   inherit (common) pkgs lib packageMetadata desktopFileMetadata cargoPkg buildPlatform mkDesktopFile mkRuntimeLibsOv;
 
+  # Actual package name to use for the derivation.
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
+  # Desktop file to put in the package derivation.
   desktopFile =
     let
       desktopFilePath = common.root + "/${lib.removePrefix "./" desktopFileMetadata}";
@@ -168,6 +170,7 @@ else if lib.isBuildRustPackage buildPlatform then
     inherit config;
     package = (lib.buildCrate config).overrideAttrs (old: {
       nativeBuildInputs = (lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook old.nativeBuildInputs) ++ [
+        # Use our own rust and cargo, and our own C compiler.
         (pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
           inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
           stdenv = config.stdenv // {

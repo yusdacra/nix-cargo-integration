@@ -99,7 +99,7 @@ let
     in
     func;
   # The main crate override is taken here
-  mainBuildOverride = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: {})) prev);
+  mainBuildOverride = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev);
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
@@ -144,7 +144,10 @@ let
       meta
       mainBuildOverride;
 
+    # Whether a desktop file should be added to the resulting package.
     mkDesktopFile = ! isNull desktopFileMetadata;
+    # Generate a desktop item config using provided package name
+    # and information from the package's `Cargo.toml`.
     mkDesktopItemConfig = pkgName: {
       name = pkgName;
       exec = packageMetadata.executable or pkgName;
@@ -167,7 +170,10 @@ let
     // (lib.putIfHasAttr "genericName" desktopFileMetadata)
     // (lib.putIfHasAttr "categories" desktopFileMetadata);
 
+    # Whether the binaries should be patched with the libraries inside
+    # `runtimeLibs`.
     mkRuntimeLibsOv = (builtins.length runtimeLibs) > 0;
+    # Utility for generating a script to patch binaries with libraries.
     mkRuntimeLibsScript = libs: ''
       for f in $out/bin/*; do
         patchelf --set-rpath "${libs}" "$f"
