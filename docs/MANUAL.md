@@ -19,6 +19,14 @@ public API, since these directly modify [devshell] / `buildPlatform` configs.
 NOTE: `nix-cargo-integration` does not directly use upstream [naersk] / [crate2nix]. It uses
 forks of them which contain additional fixes and features that aren't upstream.
 
+### The `common` attribute set
+
+This attribute set is passed to (almost) all overrides. It contains everything you may
+need for adding stuff, such as the nixpkgs package set (`common.pkgs`), library with
+`nix-cargo-integration` utilities (`common.lib`) and other shared data between build
+and development shell (`common.buildInputs`, `common.env` etc.). For more information
+on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
+
 ### `makeOutputs`
 
 Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
@@ -42,7 +50,7 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
         - with [buildRustPackage], the overrides here will be collected and
         be used for overriding the resulting derivation.
     - `overrides.common`: override for common (type: `prev: { }`)
-        - this will override *all* common attribute set(s), refer to [common.nix](./common.nix) for more information
+        - this will override *all* common attribute set(s), refer to [common.nix](./src/common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
