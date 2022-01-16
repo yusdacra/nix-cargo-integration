@@ -23,7 +23,7 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Tests
-      run: nix build .#platformChecks.brp
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.brp.x86_64-linux [ "preCommitChecks" ]'
 
   naersk-tests:
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Tests
-      run: nix build .#platformChecks.naersk
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.naersk.x86_64-linux [ "preCommitChecks" ]'
 
   crate2nix-tests:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Tests
-      run: nix build .#platformChecks.crate2nix
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.crate2nix.x86_64-linux [ "preCommitChecks" ]'
 
   dream2nix-tests:
     runs-on: ubuntu-latest
@@ -80,4 +80,4 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Tests
-      run: nix build .#platformChecks.dream2nix
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.dream2nix.x86_64-linux [ "preCommitChecks" ]'
