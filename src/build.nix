@@ -72,7 +72,22 @@ let
 
     # We can't use this as dream2nix override system doesn't work like
     # crate2nix's do.
-    # packageOverrides = { };
+    packageOverrides =
+      let
+        emptyOverrides = lib.pipe { } [ common.crateOverridesCombined applyOverrides ];
+        overrideAttrNames = lib.attrNames emptyOverrides;
+        makeOv = name:
+          if lib.isList emptyOverrides.${name}
+          then prev: prev ++ emptyOverrides.${name}
+          else if lib.isAttrs emptyOverrides.${name}
+          then prev: prev // emptyOverrides.${name}
+          else emptyOverrides.${name};
+      in
+      {
+        ${cargoPkg.name} = {
+          nci-overrides = lib.genAttrs overrideAttrNames makeOv;
+        };
+      };
   };
 
   # Base config for buildRustPackage platform.
@@ -191,8 +206,6 @@ else if lib.isDream2Nix buildPlatform then
   let config = overrideConfig baseD2NConfig; in
   {
     inherit config;
-    package = (lib.buildCrate config).overrideAttrs (old:
-      lib.pipe old [ common.crateOverridesCombined applyOverrides ]
-    );
+    package = lib.buildCrate config;
   }
 else throw "invalid build platform: ${buildPlatform}"

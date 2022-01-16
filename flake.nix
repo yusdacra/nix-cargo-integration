@@ -67,12 +67,14 @@
       cliOutputs = lib.makeOutputs {
         root = ./cli;
         overrides = {
-          build = _: _: { singleStep = true; };
-          mainBuild = _: _: {
-            NCI_SRC = builtins.toString inputs.self;
-            # Make sure the src doesnt get garbage collected
-            postInstall = "ln -s $NCI_SRC $out/nci_src";
+          crateOverrides = common: _: {
+            nci-cli = prev: {
+              NCI_SRC = builtins.toString inputs.self;
+              # Make sure the src doesnt get garbage collected
+              postInstall = "ln -s $NCI_SRC $out/nci_src";
+            };
           };
+          build = _: _: { singleStep = true; };
         };
       };
     in
