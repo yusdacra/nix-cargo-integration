@@ -31,7 +31,7 @@
       dream2nix = builtins.fetchGit {
         url = "https://github.com/nix-community/dream2nix.git";
         ref = "main";
-        rev = "3fa75b5189ad78f3600a6b6a4570e6b87c1a47f1";
+        rev = "dcdf2f27dfb94c9ab1e6fa7108f2da633f2466e2";
       };
 
       libb = import "${nixpkgs}/lib/default.nix";
