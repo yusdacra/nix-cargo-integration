@@ -62,6 +62,7 @@
       crate2nixPlatform = mkPlatform "crate2nix" { } "";
       nixpkgsCrate2nixPlatform = mkPlatform "crate2nix" { useCrate2NixFromPkgs = true; } "-nixpkgs";
       brpPlatform = mkPlatform "buildRustPackage" { } "";
+      dream2nixPlatform = mkPlatform "dream2nix" { } "";
 
       cliOutputs = lib.makeOutputs {
         root = ./cli;
@@ -79,7 +80,7 @@
       inherit lib;
       inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
-      checks = libb.foldAttrs libb.recursiveUpdate { } [ brpPlatform naerskPlatform crate2nixPlatform /*nixpkgsCrate2nixPlatform*/ ];
+      platformChecks = { brp = brpPlatform; naersk = naerskPlatform; crate2nix = crate2nixPlatform; dream2nix = dream2nixPlatform; };
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
