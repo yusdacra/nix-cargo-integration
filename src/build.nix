@@ -113,7 +113,7 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = prev: common.crateOverridesCombined (commonConfig // prev);
+    override = prev: prev // (common.crateOverridesCombined (commonConfig // prev));
     overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
