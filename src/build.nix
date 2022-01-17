@@ -208,7 +208,7 @@ else if lib.isBuildRustPackage buildPlatform then
   let config = overrideConfig baseBRPConfig; in
   {
     inherit config;
-    package = (lib.buildCrate config).overrideAttrs overrideBRPHook;
+    package = lib.buildCrate (overrideBRPHook config);
   }
 else if lib.isDream2Nix buildPlatform then
   let config = overrideConfig baseD2NConfig; in
