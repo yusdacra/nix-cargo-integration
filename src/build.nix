@@ -40,7 +40,7 @@ let
     inherit (common) meta;
     dontFixup = !release;
     # Use no cc stdenv, since we supply our own cc
-    stdenv = pkgs.stdenvNoCC;
+    stdenv = pkgs.rustPkgs.stdenvNoCC;
   };
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
@@ -76,8 +76,13 @@ let
             cc = common.cCompiler;
           };
         };
+        notOldHook = pkg:
+          pkg != pkgs.rustPkgs.rustPlatform.cargoBuildHook
+            || pkg != pkgs.rustPkgs.rustPlatform.cargoSetupHook
+            || pkg != pkgs.rustPkgs.rustPlatform.cargoCheckHook
+            || pkg != pkgs.rustPkgs.rustPlatform.cargoInstallHook;
       in
-      (lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook prev.nativeBuildInputs) ++ [
+      (lib.filter notOldHook prev.nativeBuildInputs) ++ [
         cargoHooks.cargoSetupHook
         cargoHooks.cargoBuildHook
         cargoHooks.cargoCheckHook
@@ -93,7 +98,7 @@ let
 
     packageOverrides = {
       ${cargoPkg.name} = {
-        nci-overrides-1.overrideAttrs = prev: prev // {
+        nci-overrides-1 = {
           inherit doCheck;
           buildFlags = packageOption;
           buildFeatures = features;
@@ -108,7 +113,7 @@ let
   };
 
   # Base config for buildRustPackage platform.
-  baseBRPConfig = common.crateOverridesCombined (applyOverrides rec {
+  baseBRPConfig = applyOverrides (common.crateOverridesCombined {
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root cargoVendorHash;
@@ -186,7 +191,7 @@ else if lib.isCrate2Nix buildPlatform then
         package = pkg.override { inherit (config) runTests; };
         mkJoin = package:
           let
-            joined = pkgs.symlinkJoin {
+            joined = pkgs.rustPkgs.symlinkJoin {
               inherit (common) meta;
               name = "${pkgName}-${cargoPkg.version}";
               paths = [ package ];
