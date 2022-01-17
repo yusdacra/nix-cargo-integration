@@ -50,7 +50,7 @@ let
       rustc = toolchain;
       rustfmt = toolchain;
       clippy = toolchain;
-    } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform || isNightly) {
+    } // lib.optionalAttrs (!(lib.isNaersk buildPlatform) || isNightly) {
       # Only use the toolchain's cargo if we are on crate2nix, or if it's nightly.
       # naersk *does not* work with stable cargo, so we just use the nixpkgs provided cargo.
       cargo = toolchain;
