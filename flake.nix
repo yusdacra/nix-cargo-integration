@@ -16,7 +16,7 @@
       naersk = builtins.fetchGit {
         url = "https://github.com/yusdacra/naersk.git";
         ref = "feat/cargolock-git-deps";
-        rev = "f411315a2954bd60bdcba2bc0cff7f4b0012a12a";
+        rev = "8616a0dc9f4f87f6cb8b55c91bc2bd69bc12ba03";
       };
       crate2nix = builtins.fetchGit {
         url = "https://github.com/yusdacra/crate2nix.git";
