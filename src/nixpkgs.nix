@@ -80,6 +80,8 @@ let
             pkgs = if useCrate2NixFromPkgs then import sources.nixpkgs { inherit system; } else prev;
           };
         })
+      else if lib.isBuildRustPackage buildPlatform
+      then (_: _: { })
       else if lib.isDream2Nix buildPlatform
       then (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
       else throw "invalid build platform: ${buildPlatform}")
