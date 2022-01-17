@@ -41,6 +41,7 @@
       hashes = {
         basic-bin = "sha256-LvziPSGSAtdUeM4NZcD9qQjyMJ+n7EmutJVc+vcF1tI=";
         basic-bin-clang = "sha256-EPfiuvJ5wy/coHSfD0JHiqaTrgU0mR8ONlQ/U9ba1t4=";
+        basic-nightly = libb.fakeHash;
       };
       mkPlatform = buildPlatform: outAttrs: nameSuffix:
         let
