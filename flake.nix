@@ -29,9 +29,9 @@
         rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
       };
       dream2nix = builtins.fetchGit {
-        url = "https://github.com/nix-community/dream2nix.git";
-        ref = "main";
-        rev = "dcdf2f27dfb94c9ab1e6fa7108f2da633f2466e2";
+        url = "https://github.com/yusdacra/dream2nix.git";
+        ref = "fix/rust-fix";
+        rev = "e7f489464fcb939c3680bd30ddfd4dc0c422866d";
       };
 
       libb = import "${nixpkgs}/lib/default.nix";
