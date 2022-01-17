@@ -78,9 +78,9 @@ let
         };
         notOldHook = pkg:
           pkg != pkgs.rustPkgs.rustPlatform.cargoBuildHook
-            || pkg != pkgs.rustPkgs.rustPlatform.cargoSetupHook
-            || pkg != pkgs.rustPkgs.rustPlatform.cargoCheckHook
-            || pkg != pkgs.rustPkgs.rustPlatform.cargoInstallHook;
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoSetupHook
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoCheckHook
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoInstallHook;
       in
       (lib.filter notOldHook prev.nativeBuildInputs) ++ [
         cargoHooks.cargoSetupHook
