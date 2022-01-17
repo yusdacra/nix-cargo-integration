@@ -63,7 +63,10 @@ let
       rustOverlay
       rustToolchainOverlay
       # Import the toolchain.
-      (_: prev: { nciRust = { inherit (prev) rustc rustfmt clippy cargo; }; })
+      (_: prev: {
+        nciRust = { inherit (prev) rustc rustfmt clippy cargo; };
+        rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; };
+      })
       # Overlay the build platform itself.
       (if lib.isNaersk buildPlatform
       then (_: prev: { naersk = prev.callPackage sources.naersk { }; })
@@ -77,8 +80,6 @@ let
             pkgs = if useCrate2NixFromPkgs then import sources.nixpkgs { inherit system; } else prev;
           };
         })
-      else if lib.isBuildRustPackage buildPlatform
-      then (_: prev: { rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; }; })
       else if lib.isDream2Nix buildPlatform
       then (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
       else throw "invalid build platform: ${buildPlatform}")
