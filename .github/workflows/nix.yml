@@ -6,15 +6,14 @@ on:
   push:
     branches: [ master, release-1.0 ]
 jobs:
-  tests:
+  brp-tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
     - name: Install nix
-      uses: cachix/install-nix-action@v13
+      uses: cachix/install-nix-action@v16
       with:
-        install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210604_8e6ee1b/install
         extra_nix_config: |
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
@@ -24,4 +23,61 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Tests
-      run: nix develop -c check
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.brp.x86_64-linux [ "preCommitChecks" ]'
+
+  naersk-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Install nix
+      uses: cachix/install-nix-action@v16
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Setup cachix
+      uses: cachix/cachix-action@v10
+      with:
+        name: nix-cargo-integration
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: Tests
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.naersk.x86_64-linux [ "preCommitChecks" ]'
+
+  crate2nix-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Install nix
+      uses: cachix/install-nix-action@v16
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Setup cachix
+      uses: cachix/cachix-action@v10
+      with:
+        name: nix-cargo-integration
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: Tests
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.crate2nix.x86_64-linux [ "preCommitChecks" ]'
+
+  dream2nix-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Install nix
+      uses: cachix/install-nix-action@v16
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Setup cachix
+      uses: cachix/cachix-action@v10
+      with:
+        name: nix-cargo-integration
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: Tests
+      run: nix build -L --show-trace --no-link --impure --expr 'builtins.removeAttrs (builtins.getFlake (toString ./.)).platformChecks.dream2nix.x86_64-linux [ "preCommitChecks" ]'

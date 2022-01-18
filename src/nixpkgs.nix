@@ -50,7 +50,7 @@ let
       rustc = toolchain;
       rustfmt = toolchain;
       clippy = toolchain;
-    } // lib.optionalAttrs (lib.isCrate2Nix buildPlatform || isNightly) {
+    } // lib.optionalAttrs (!(lib.isNaersk buildPlatform) || isNightly) {
       # Only use the toolchain's cargo if we are on crate2nix, or if it's nightly.
       # naersk *does not* work with stable cargo, so we just use the nixpkgs provided cargo.
       cargo = toolchain;
@@ -63,7 +63,10 @@ let
       rustOverlay
       rustToolchainOverlay
       # Import the toolchain.
-      (_: prev: { nciRust = { inherit (prev) rustc rustfmt clippy cargo; }; })
+      (_: prev: {
+        nciRust = { inherit (prev) rustc rustfmt clippy cargo; };
+        rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; };
+      })
       # Overlay the build platform itself.
       (if lib.isNaersk buildPlatform
       then (_: prev: { naersk = prev.callPackage sources.naersk { }; })
@@ -78,7 +81,9 @@ let
           };
         })
       else if lib.isBuildRustPackage buildPlatform
-      then (_: prev: { rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; }; })
+      then (_: _: { })
+      else if lib.isDream2Nix buildPlatform
+      then (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
       else throw "invalid build platform: ${buildPlatform}")
       # Import our utilities here so that they can be utilized.
       (_: prev: { nciUtils = import ./utils.nix { pkgs = prev; inherit lib; }; })

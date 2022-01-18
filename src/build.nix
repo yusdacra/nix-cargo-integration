@@ -40,13 +40,12 @@ let
     inherit (common) meta;
     dontFixup = !release;
     # Use no cc stdenv, since we supply our own cc
-    stdenv = pkgs.stdenvNoCC;
+    stdenv = pkgs.rustPkgs.stdenvNoCC;
   };
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
-    prev //
-    lib.optionalAttrs mkRuntimeLibsOv {
+    prev // {
       postFixup = ''
         ${prev.postFixup or ""}
         ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}
@@ -54,28 +53,74 @@ let
     };
   # Override that adds the desktop item for this package.
   desktopItemOv = prev:
-    prev //
-    lib.optionalAttrs mkDesktopFile {
+    prev // {
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
-  # Function to apply all overrides.
+  # Function to apply overrides for the main package.
   applyOverrides = prev:
     lib.pipe prev [
       (prev: prev // commonConfig)
-      desktopItemOv
-      runtimeLibsOv
+      (prev: if mkDesktopFile then desktopItemOv prev else prev)
+      (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
       common.mainBuildOverride
     ];
+  # Function that overrides cargoBuildHook of buildRustPackage with our toolchain
+  overrideBRPHook = prev: prev // {
+    nativeBuildInputs =
+      let
+        cargoHooks = pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
+          # Use our own rust and cargo, and our own C compiler.
+          inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
+          stdenv = prev.stdenv // {
+            cc = common.cCompiler;
+          };
+        };
+        notOldHook = pkg:
+          pkg != pkgs.rustPkgs.rustPlatform.cargoBuildHook
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoSetupHook
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoCheckHook
+            && pkg != pkgs.rustPkgs.rustPlatform.cargoInstallHook;
+      in
+      (lib.filter notOldHook prev.nativeBuildInputs) ++ [
+        cargoHooks.cargoSetupHook
+        cargoHooks.cargoBuildHook
+        cargoHooks.cargoCheckHook
+        cargoHooks.cargoInstallHook
+      ];
+  };
+  # Base config for dream2nix platform.
+  # Note: this only works for the buildRustPackage builder
+  # which is the default in dream2nix now. This should be updated
+  # to be able to work for either depending on which builder is chosen.
+  baseD2NConfig = {
+    inherit (common) root;
+
+    packageOverrides = {
+      ${cargoPkg.name} = {
+        nci-overrides-1 = {
+          inherit doCheck;
+          buildFlags = packageOption;
+          buildFeatures = features;
+          buildType = if release then "release" else "debug";
+        };
+        nci-overrides-2.overrideAttrs = prev:
+          lib.pipe prev [ common.crateOverridesCombined applyOverrides ]
+        ;
+        nci-overrides-3.overrideAttrs = overrideBRPHook;
+      };
+    };
+  };
 
   # Base config for buildRustPackage platform.
-  baseBRPConfig = common.crateOverridesCombined (applyOverrides rec {
+  baseBRPConfig = applyOverrides (common.crateOverridesCombined {
     pname = pkgName;
     inherit (cargoPkg) version;
     inherit (common) root cargoVendorHash;
     inherit doCheck memberPath;
-    buildFlags = releaseOption ++ packageOption ++ featuresOption;
-    checkFlags = releaseOption ++ packageOption ++ featuresOption;
+    buildFlags = packageOption;
+    buildFeatures = features;
+    buildType = if release then "release" else "debug";
   });
 
   # Base config for naersk platform.
@@ -91,7 +136,7 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = prev: common.crateOverridesCombined (commonConfig // prev);
+    override = prev: common.crateOverridesCombined (prev // commonConfig);
     overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
@@ -146,7 +191,7 @@ else if lib.isCrate2Nix buildPlatform then
         package = pkg.override { inherit (config) runTests; };
         mkJoin = package:
           let
-            joined = pkgs.symlinkJoin {
+            joined = pkgs.rustPkgs.symlinkJoin {
               inherit (common) meta;
               name = "${pkgName}-${cargoPkg.version}";
               paths = [ package ];
@@ -168,16 +213,12 @@ else if lib.isBuildRustPackage buildPlatform then
   let config = overrideConfig baseBRPConfig; in
   {
     inherit config;
-    package = (lib.buildCrate config).overrideAttrs (old: {
-      nativeBuildInputs = (lib.remove pkgs.rustPkgs.rustPlatform.cargoBuildHook old.nativeBuildInputs) ++ [
-        # Use our own rust and cargo, and our own C compiler.
-        (pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
-          inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
-          stdenv = config.stdenv // {
-            cc = common.cCompiler;
-          };
-        }).cargoBuildHook
-      ];
-    });
+    package = lib.buildCrate (overrideBRPHook config);
+  }
+else if lib.isDream2Nix buildPlatform then
+  let config = overrideConfig baseD2NConfig; in
+  {
+    inherit config;
+    package = lib.buildCrate config;
   }
 else throw "invalid build platform: ${buildPlatform}"

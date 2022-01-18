@@ -6,21 +6,23 @@ let
     isNaersk = platform: platform == "naersk";
     isCrate2Nix = platform: platform == "crate2nix";
     isBuildRustPackage = platform: platform == "buildRustPackage";
+    isDream2Nix = platform: platform == "dream2nix";
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
     # Tries to convert a cargo license to nixpkgs license.
     cargoLicenseToNixpkgs = license:
       let
         l = libb.toLower license;
+        licensesIds =
+          libb.mapAttrs'
+            (name: v:
+              libb.nameValuePair
+                (libb.toLower (v.spdxId or v.fullName or name))
+                name
+            )
+            libb.licenses;
       in
-        {
-          "gplv3" = "gpl3";
-          "gplv2" = "gpl2";
-          "gpl-3.0" = "gpl3";
-          "gpl-2.0" = "gpl2";
-          "mpl-2.0" = "mpl20";
-          "mpl-1.0" = "mpl10";
-        }."${l}" or l;
+        licensesIds.${l} or "unfree";
     putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
     dbg = msg: x:
       if (builtins.getEnv "NCI_DEBUG") == "1"

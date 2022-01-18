@@ -16,7 +16,7 @@
       naersk = builtins.fetchGit {
         url = "https://github.com/yusdacra/naersk.git";
         ref = "feat/cargolock-git-deps";
-        rev = "f411315a2954bd60bdcba2bc0cff7f4b0012a12a";
+        rev = "8616a0dc9f4f87f6cb8b55c91bc2bd69bc12ba03";
       };
       crate2nix = builtins.fetchGit {
         url = "https://github.com/yusdacra/crate2nix.git";
@@ -28,14 +28,20 @@
         ref = "master";
         rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
       };
+      dream2nix = builtins.fetchGit {
+        url = "https://github.com/yusdacra/dream2nix.git";
+        ref = "fix/rust-fix";
+        rev = "e7f489464fcb939c3680bd30ddfd4dc0c422866d";
+      };
 
       libb = import "${nixpkgs}/lib/default.nix";
       lib = import ./src/lib.nix {
-        sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix preCommitHooks; };
+        sources = { inherit rustOverlay devshell nixpkgs naersk crate2nix dream2nix preCommitHooks; };
       };
       hashes = {
         basic-bin = "sha256-LvziPSGSAtdUeM4NZcD9qQjyMJ+n7EmutJVc+vcF1tI=";
         basic-bin-clang = "sha256-EPfiuvJ5wy/coHSfD0JHiqaTrgU0mR8ONlQ/U9ba1t4=";
+        basic-nightly = "sha256-kFOjMab0vqL9qza1Is5Pctow2gsV6gl/4B1Yytn7pA8=";
       };
       mkPlatform = buildPlatform: outAttrs: nameSuffix:
         let
@@ -57,16 +63,19 @@
       crate2nixPlatform = mkPlatform "crate2nix" { } "";
       nixpkgsCrate2nixPlatform = mkPlatform "crate2nix" { useCrate2NixFromPkgs = true; } "-nixpkgs";
       brpPlatform = mkPlatform "buildRustPackage" { } "";
+      dream2nixPlatform = mkPlatform "dream2nix" { } "";
 
       cliOutputs = lib.makeOutputs {
         root = ./cli;
         overrides = {
-          build = _: _: { singleStep = true; };
-          mainBuild = _: _: {
-            NCI_SRC = builtins.toString inputs.self;
-            # Make sure the src doesnt get garbage collected
-            postInstall = "ln -s $NCI_SRC $out/nci_src";
+          crateOverrides = common: _: {
+            nci-cli = prev: {
+              NCI_SRC = builtins.toString inputs.self;
+              # Make sure the src doesnt get garbage collected
+              postInstall = "ln -s $NCI_SRC $out/nci_src";
+            };
           };
+          build = _: _: { singleStep = true; };
         };
       };
     in
@@ -74,7 +83,7 @@
       inherit lib;
       inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
-      checks = libb.foldAttrs libb.recursiveUpdate { } [ brpPlatform naerskPlatform crate2nixPlatform /*nixpkgsCrate2nixPlatform*/ ];
+      platformChecks = { brp = brpPlatform; naersk = naerskPlatform; crate2nix = crate2nixPlatform; dream2nix = dream2nixPlatform; };
       devShell = (lib.makeOutputs { root = ./tests/basic-bin; }).devShell;
     };
 }
