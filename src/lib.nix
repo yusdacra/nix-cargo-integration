@@ -22,7 +22,7 @@ let
             )
             libb.licenses;
       in
-      libb.licenses.${licensesIds.${l} or "unfree"};
+        licensesIds.${l} or "unfree";
     putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
     dbg = msg: x:
       if (builtins.getEnv "NCI_DEBUG") == "1"
