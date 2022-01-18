@@ -13,15 +13,16 @@ let
     cargoLicenseToNixpkgs = license:
       let
         l = libb.toLower license;
+        licensesIds =
+          libb.mapAttrs'
+            (name: v:
+              libb.nameValuePair
+                (libb.toLower (v.spdxId or v.fullName or name))
+                name
+            )
+            libb.licenses;
       in
-        {
-          "gplv3" = "gpl3";
-          "gplv2" = "gpl2";
-          "gpl-3.0" = "gpl3";
-          "gpl-2.0" = "gpl2";
-          "mpl-2.0" = "mpl20";
-          "mpl-1.0" = "mpl10";
-        }."${l}" or l;
+      libb.licenses.${licensesIds.${l} or "unfree"};
     putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
     dbg = msg: x:
       if (builtins.getEnv "NCI_DEBUG") == "1"

@@ -104,8 +104,9 @@ let
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
     platforms = [ system ];
-  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) { license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}"; })
-  // (lib.putIfHasAttr "description" cargoPkg)
+  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) {
+    license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}";
+  }) // (lib.putIfHasAttr "description" cargoPkg)
   // (lib.putIfHasAttr "homepage" cargoPkg)
   // (lib.putIfHasAttr "longDescription" packageMetadata);
 
