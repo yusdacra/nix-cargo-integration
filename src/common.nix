@@ -95,7 +95,11 @@ let
   crateOverridesCombined =
     let
       filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
-      func = prev: libb.pipe prev (builtins.map (ov: (prev: prev // (ov prev))) (libb.attrValues filteredOverrides));
+      func = prev: prev // (libb.pipe prev (
+        builtins.map
+          (ov: (old: old // (ov old)))
+          (libb.attrValues filteredOverrides)
+      ));
     in
     func;
   # The main crate override is taken here

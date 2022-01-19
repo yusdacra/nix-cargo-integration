@@ -40,7 +40,9 @@ let
     inherit (common) meta;
     dontFixup = !release;
     # Use no cc stdenv, since we supply our own cc
-    stdenv = pkgs.rustPkgs.stdenvNoCC;
+    stdenv = pkgs.rustPkgs.stdenvNoCC // {
+      cc = common.cCompiler;
+    };
   };
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
@@ -72,9 +74,7 @@ let
         cargoHooks = pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
           # Use our own rust and cargo, and our own C compiler.
           inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
-          stdenv = prev.stdenv // {
-            cc = common.cCompiler;
-          };
+          stdenv = prev.stdenv;
         };
         notOldHook = pkg:
           pkg != pkgs.rustPkgs.rustPlatform.cargoBuildHook
@@ -98,16 +98,18 @@ let
 
     packageOverrides = {
       ${cargoPkg.name} = {
-        nci-overrides-1 = {
-          inherit doCheck;
-          buildFlags = packageOption;
-          buildFeatures = features;
-          buildType = if release then "release" else "debug";
-        };
-        nci-overrides-2.overrideAttrs = prev:
-          lib.pipe prev [ common.crateOverridesCombined applyOverrides ]
-        ;
-        nci-overrides-3.overrideAttrs = overrideBRPHook;
+        nci-overrides.overrideAttrs = prev:
+          lib.pipe prev [
+            (prev: prev // {
+              inherit doCheck;
+              buildFlags = packageOption;
+              buildFeatures = features;
+              buildType = if release then "release" else "debug";
+            })
+            common.crateOverridesCombined
+            applyOverrides
+            overrideBRPHook
+          ];
       };
     };
   };
@@ -136,7 +138,9 @@ let
       def ++ [ "--tests" "--bins" "--examples" ]
       ++ lib.optional library "--lib"
       ++ packageOption ++ featuresOption;
-    override = prev: common.crateOverridesCombined (prev // commonConfig);
+    override = prev: common.crateOverridesCombined (
+      prev // (builtins.removeAttrs commonConfig [ "meta" ])
+    );
     overrideMain = applyOverrides;
     copyLibs = library;
     inherit release doCheck doDoc;
