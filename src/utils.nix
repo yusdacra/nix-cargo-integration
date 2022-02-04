@@ -23,7 +23,7 @@ in
     name = "${common.cargoPkg.name}.nix";
     text =
       let
-        inherit (common) root cargoPkg pkgs buildInputs nativeBuildInputs cargoVendorHash desktopFileMetadata;
+        inherit (common) root cargoPkg pkgs buildInputs nativeBuildInputs desktopFileMetadata;
         inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString stringLength elemAt;
         inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs unique hasPrefix splitString drop;
         has = i: any (oi: i == oi);
@@ -37,8 +37,8 @@ in
 
         bi = filterUnwanted ((mapToName buildInputs) ++ (mapToName common.runtimeLibs));
         nbi = (filterUnwanted (mapToName nativeBuildInputs))
-        ++ (optional common.mkRuntimeLibsOv "makeWrapper")
-        ++ (optional common.mkDesktopFile "copyDesktopItems");
+          ++ (optional common.mkRuntimeLibsOv "makeWrapper")
+          ++ (optional common.mkDesktopFile "copyDesktopItems");
         runtimeLibs = "\${lib.makeLibraryPath ([ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
         stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
         putIfStdenv = optionalString (stdenv != null);
@@ -127,7 +127,7 @@ in
           # Change to use whatever source you want
           ${concatMapStringsSep "\n" (line: "  ${line}") (lib.splitString "\n" fetcher.fetchCode)}
 
-          cargoSha256 = ${if cargoVendorHash == lib.fakeHash then "lib.fakeHash" else "${cargoVendorHash}"};${
+          cargoSha256 = lib.fakeHash;${
             optionalString
               ((length (attrNames common.env)) > 0)
               "\n\n${concatStringsSep "\n" (mapAttrsToList (n: v: "  ${n} = \"${envToString v}\";") common.env)}"
@@ -206,62 +206,7 @@ in
       (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (collectOverride acc el))
       pkgs.defaultCrateOverrides
       [ tomlOverrides extraOverrides mainOverride ];
-} // lib.optionalAttrs (builtins.hasAttr "rustPlatform" pkgs) {
-  # buildRustPackage build crate.
-  buildCrate =
-    { root
-    , memberPath ? null
-    , cargoVendorHash ? lib.fakeHash
-    , ... # pass everything else to buildRustPackage
-    }@args:
-    let
-      inherit (builtins) readFile fromTOML;
 
-      # Find the Cargo.toml of the package we are trying to build.
-      tomlPath =
-        if isNull memberPath
-        then root + "/Cargo.toml"
-        else root + "/${memberPath}/Cargo.toml";
-      lockFile = root + "/Cargo.lock";
-
-      cargoToml = fromTOML (readFile tomlPath);
-    in
-    pkgs.rustPlatform.buildRustPackage
-      {
-        cargoHash = cargoVendorHash;
-        pname = cargoToml.package.name;
-        version = cargoToml.package.version;
-        src = root;
-      } // (lib.optionalAttrs (isNull memberPath) {
-      # Set sourceRoot to member path if the package we are building is a member.
-      sourceRoot = memberPath;
-    }) // (builtins.removeAttrs args [ "root" "memberPath" "cargoVendorHash" ]);
-} // lib.optionalAttrs (builtins.hasAttr "crate2nixTools" pkgs) {
-  # crate2nix build crate.
-  buildCrate =
-    { root
-    , memberName ? null
-    , additionalCargoNixArgs ? [ ]
-    , ... # pass everything else to crate2nix
-    }@args:
-    let
-      generatedCargoNix = pkgs.crate2nixTools.generatedCargoNix {
-        name = lib.strings.sanitizeDerivationName (builtins.baseNameOf root);
-        src = root;
-        inherit additionalCargoNixArgs;
-      };
-      cargoNix = import generatedCargoNix (
-        (builtins.removeAttrs args [ "root" "additionalCargoNixArgs" "memberName" ])
-        // { inherit pkgs; }
-      );
-    in
-    if isNull memberName
-    then cargoNix.rootCrate.build
-    else cargoNix.workspaceMembers.${memberName}.build;
-} // lib.optionalAttrs (builtins.hasAttr "naersk" pkgs) {
-  # naersk build crate.
-  buildCrate = pkgs.naersk.buildPackage;
-} // lib.optionalAttrs (builtins.hasAttr "dream2nixTools" pkgs) {
   # dream2nix build crate.
   buildCrate =
     { root

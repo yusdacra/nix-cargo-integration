@@ -3,10 +3,6 @@ let
   libb = import "${sources.nixpkgs}/lib/default.nix";
 
   lib = libb // {
-    isNaersk = platform: platform == "naersk";
-    isCrate2Nix = platform: platform == "crate2nix";
-    isBuildRustPackage = platform: platform == "buildRustPackage";
-    isDream2Nix = platform: platform == "dream2nix";
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
     # Tries to convert a cargo license to nixpkgs license.
@@ -159,7 +155,6 @@ in
   makeEmptyCommon =
     { system
     , overrides ? { }
-    , buildPlatform ? "naersk"
     }:
     let
       # Craft a dummy cargo toml.
@@ -177,7 +172,7 @@ in
       }];
     in
     import ./common.nix {
-      inherit lib dependencies system sources cargoToml buildPlatform overrides;
+      inherit lib dependencies system sources cargoToml overrides;
     };
 
   # Creates flake outputs by searching the supplied root for a workspace / package and using
@@ -185,12 +180,9 @@ in
   makeOutputs =
     { root
     , overrides ? { }
-    , buildPlatform ? "naersk"
     , enablePreCommitHooks ? false
     , renameOutputs ? { }
     , defaultOutputs ? { }
-    , cargoVendorHash ? lib.fakeHash
-    , useCrate2NixFromPkgs ? false
     }:
     let
       # Helper function to import a Cargo.toml from a root.
@@ -249,9 +241,8 @@ in
       # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
       mkCommon = memberName: cargoToml: isRootMember: system: import ./common.nix {
         inherit
-          lib dependencies buildPlatform memberName cargoToml workspaceMetadata
-          system root overrides sources enablePreCommitHooks cargoVendorHash
-          isRootMember useCrate2NixFromPkgs;
+          lib dependencies memberName cargoToml workspaceMetadata
+          system root overrides sources enablePreCommitHooks isRootMember;
       };
 
       isRootMember = if (lib.length workspaceMembers) > 0 then true else false;

@@ -2,9 +2,7 @@
 , system
 , lib
 , overrideData
-, useCrate2NixFromPkgs ? false
 , toolchainChannel ? "stable"
-, buildPlatform ? "naersk"
 , override ? (_: _: { })
 }:
 let
@@ -50,13 +48,9 @@ let
       rustc = toolchain;
       rustfmt = toolchain;
       clippy = toolchain;
-    } // lib.optionalAttrs (!(lib.isNaersk buildPlatform) || isNightly) {
-      # Only use the toolchain's cargo if we are on crate2nix, or if it's nightly.
-      # naersk *does not* work with stable cargo, so we just use the nixpkgs provided cargo.
       cargo = toolchain;
     };
   # A package set with just our Rust toolchain overlayed.
-  # Build platforms (naersk and crate2nix) will use this, instead of the main package set.
   rustPkgs = import sources.nixpkgs {
     inherit system;
     overlays = [
@@ -68,23 +62,7 @@ let
         rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; };
       })
       # Overlay the build platform itself.
-      (if lib.isNaersk buildPlatform
-      then (_: prev: { naersk = prev.callPackage sources.naersk { }; })
-      else if lib.isCrate2Nix buildPlatform
-      then
-        (_: prev: {
-          # Use crate2nix source from nixpkgs and the original Rust toolchain from nixpkgs if
-          # the user wants to use crate2nix from nixpkgs
-          crate2nixTools = import "${sources.crate2nix}/tools.nix" {
-            inherit useCrate2NixFromPkgs;
-            pkgs = if useCrate2NixFromPkgs then import sources.nixpkgs { inherit system; } else prev;
-          };
-        })
-      else if lib.isBuildRustPackage buildPlatform
-      then (_: _: { })
-      else if lib.isDream2Nix buildPlatform
-      then (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
-      else throw "invalid build platform: ${buildPlatform}")
+      (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
       # Import our utilities here so that they can be utilized.
       (_: prev: { nciUtils = import ./utils.nix { pkgs = prev; inherit lib; }; })
     ];

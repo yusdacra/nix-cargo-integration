@@ -1,13 +1,10 @@
 { memberName ? null
 , isRootMember ? false
-, buildPlatform ? "naersk"
-, useCrate2NixFromPkgs ? false
 , enablePreCommitHooks ? false
 , cargoToml ? null
 , workspaceMetadata ? null
 , overrides ? { }
 , dependencies ? [ ]
-, cargoVendorHash ? lib.fakeHash
 , lib
 , sources
 , system
@@ -23,18 +20,16 @@ let
   # This is named "prevRoot" since we will override it later on.
   prevRoot = attrs.root or null;
 
-  overrideData = { inherit cargoPkg packageMetadata sources system memberName buildPlatform cargoToml lib; root = prevRoot; };
+  overrideData = { inherit cargoPkg packageMetadata sources system memberName cargoToml lib; root = prevRoot; };
 
   # Helper function to create a package set; might be useful for users
   makePkgs =
-    { platform ? buildPlatform
-    , toolchainChannel ? "stable"
+    { toolchainChannel ? "stable"
     , override ? (_: _: { })
     }:
     import ./nixpkgs.nix {
-      inherit system sources lib override toolchainChannel useCrate2NixFromPkgs;
+      inherit system sources lib override toolchainChannel;
       overrideData = overrideData // { inherit toolchainChannel; };
-      buildPlatform = platform;
     };
 
   # Create the package set we will use
@@ -134,7 +129,6 @@ let
       noPropagatedEnvOverrides
       cargoPkg
       cargoToml
-      buildPlatform
       sources
       system
       root
@@ -144,7 +138,6 @@ let
       packageMetadata
       desktopFileMetadata
       runtimeLibs
-      cargoVendorHash
       isRootMember
       meta
       mainBuildOverride;
