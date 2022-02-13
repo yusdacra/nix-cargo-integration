@@ -17,7 +17,7 @@ let
     in
     if builtins.isString desktopFileMetadata
     then
-      pkgs.runCommand "${pkgName}-desktopFileLink" { } ''
+      pkgs.runCommandLocal "${pkgName}-desktopFileLink" { } ''
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
