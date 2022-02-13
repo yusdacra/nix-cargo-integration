@@ -22,8 +22,12 @@ jobs:
       with:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - name: Tests
-      run: nix flake check
+    - name: Test checks
+      run: nix build -L --show-trace --impure --expr '(builtins.getFlake (toString ./.)).tests.checks.${builtins.currentSystem}'
+    - name: Test shells
+      run: nix build -L --show-trace --impure --expr '(builtins.getFlake (toString ./.)).tests.shells.${builtins.currentSystem}'
+    - name: Test packages
+      run: nix build -L --show-trace --impure --expr '(builtins.getFlake (toString ./.)).tests.packages.${builtins.currentSystem}'
   build-cli:
     runs-on: ubuntu-latest
     steps:
