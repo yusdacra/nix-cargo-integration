@@ -61,28 +61,6 @@ let
       (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
       common.mainBuildOverride
     ];
-  # Function that overrides cargoBuildHook of buildRustPackage with our toolchain
-  overrideBRPHook = prev: prev // {
-    nativeBuildInputs =
-      let
-        cargoHooks = pkgs.rustPkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
-          # Use our own rust and cargo, and our own C compiler.
-          inherit (pkgs.rustPkgs.rustPlatform.rust) rustc cargo;
-          stdenv = prev.stdenv;
-        };
-        notOldHook = pkg:
-          pkg != pkgs.rustPkgs.rustPlatform.cargoBuildHook
-            && pkg != pkgs.rustPkgs.rustPlatform.cargoSetupHook
-            && pkg != pkgs.rustPkgs.rustPlatform.cargoCheckHook
-            && pkg != pkgs.rustPkgs.rustPlatform.cargoInstallHook;
-      in
-      (lib.filter notOldHook prev.nativeBuildInputs) ++ [
-        cargoHooks.cargoSetupHook
-        cargoHooks.cargoBuildHook
-        cargoHooks.cargoCheckHook
-        cargoHooks.cargoInstallHook
-      ];
-  };
   # Note: this only works for the buildRustPackage builder
   # which is the default in dream2nix now. This should be updated
   # to be able to work for either depending on which builder is chosen.
@@ -94,16 +72,17 @@ let
       ${cargoPkg.name} = {
         nci-overrides.overrideAttrs = prev:
           lib.pipe prev [
-            (prev: prev // {
+            (prev: prev // commonConfig // {
               inherit doCheck;
               buildFlags = packageOption;
               buildFeatures = features;
               buildType = if release then "release" else "debug";
             })
             common.crateOverridesCombined
-            applyOverrides
-            overrideBRPHook
           ];
+      };
+      "${cargoPkg.name}-deps" = {
+        nci-overrides.overrideAttrs = applyOverrides;
       };
     };
   };

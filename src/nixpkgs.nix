@@ -62,7 +62,7 @@ let
         rustPlatform = prev.makeRustPlatform { inherit (prev) rustc cargo; };
       })
       # Overlay the build platform itself.
-      (_: prev: { dream2nixTools = import "${sources.dream2nix}/src/default.nix" { pkgs = prev; }; })
+      (_: prev: { dream2nixTools = sources.dream2nix.lib.init { pkgs = prev; }; })
       # Import our utilities here so that they can be utilized.
       (_: prev: { nciUtils = import ./utils.nix { pkgs = prev; inherit lib; }; })
     ];

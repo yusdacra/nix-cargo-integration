@@ -222,6 +222,6 @@ in
       outputs = pkgs.dream2nixTools.riseAndShine attrs;
     in
     if memberName != null
-    then outputs.packages.${memberName}
-    else outputs.defaultPackage;
+    then outputs.packages.${pkgs.system}.${memberName}
+    else outputs.defaultPackage.${pkgs.system};
 }

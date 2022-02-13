@@ -1,30 +1,32 @@
 {
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
       flake = false;
+    };
+
+    dream2nix = {
+      url = "github:yusdacra/dream2nix/rust/crane-builder";
+      inputs.gomod2nix.follows = "nixpkgs";
+      inputs.mach-nix.follows = "nixpkgs";
+      inputs.node2nix.follows = "nixpkgs";
+      inputs.poetry2nix.follows = "nixpkgs";
+      inputs.nix-parsec.follows = "nixpkgs";
     };
   };
 
   outputs = inputs: with inputs;
     let
-      # these are meant to be updated and checked manually; so they are not specified in flake inputs.
-      # specifying them here also makes flake.lock shorter, and allow for lazy eval, so if you dont use preCommitHooks
-      # or a buildPlatform, it won't be fetched.
       preCommitHooks = builtins.fetchGit {
         url = "https://github.com/cachix/pre-commit-hooks.nix.git";
         ref = "master";
         rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
-      };
-      dream2nix = builtins.fetchGit {
-        url = "https://github.com/nix-community/dream2nix.git";
-        ref = "main";
-        rev = "49416753cf42bd3383b7244ba49e1bee602605cb";
       };
 
       libb = import "${nixpkgs}/lib/default.nix";
