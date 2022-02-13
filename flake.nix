@@ -31,17 +31,17 @@
       lib = import ./src/lib.nix {
         sources = { inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks; };
       };
-      
-     checks =
-      let
-        testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
-        tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
-        flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "")))) v.${attrs}) tests;
-        checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
-        packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "packages");
-        shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
-      in
-      libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);
+
+      checks =
+        let
+          testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
+          tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
+          flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "")))) v.${attrs}) tests;
+          checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
+          packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "packages");
+          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
+        in
+        libb.foldAttrs libb.recursiveUpdate { } (shells ++ checks ++ packages);
 
       cliOutputs = lib.makeOutputs {
         root = ./cli;

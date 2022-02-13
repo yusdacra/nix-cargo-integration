@@ -100,14 +100,12 @@ let
       # "raw" packages that will be proccesed.
       # It's called so since `build.nix` generates an attrset containing the config and the package.
       packagesRaw = {
-        ${system} = {
-          "${name}" = mkBuild [ ] true true;
-          "${name}-debug" = mkBuild [ ] false false;
-        };
+        "${name}" = mkBuild [ ] true true;
+        "${name}-debug" = mkBuild [ ] false false;
       };
       # Packages set to be put in the outputs.
       packages = {
-        ${system} = (builtins.mapAttrs (_: v: v.package) packagesRaw.${system}) // {
+        ${system} = (builtins.mapAttrs (_: v: v.package) packagesRaw) // {
           "${name}-derivation" = lib.createNixpkgsDrv common;
         };
       };
@@ -124,7 +122,7 @@ let
           lib.foldAttrs lib.recursiveUpdate { }
             (
               builtins.map
-                (exe: lib.mapAttrs' (mkApp exe) packagesRaw.${system})
+                (exe: lib.mapAttrs' (mkApp exe) packagesRaw)
                 (lib.dbg "binaries for ${name}: ${lib.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
             );
       };
