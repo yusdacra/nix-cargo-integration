@@ -7,15 +7,17 @@
 let
   inherit (common) pkgs lib packageMetadata desktopFileMetadata cargoPkg mkDesktopFile mkRuntimeLibsOv;
 
+  l = lib // builtins;
+
   # Actual package name to use for the derivation.
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
 
   # Desktop file to put in the package derivation.
   desktopFile =
     let
-      desktopFilePath = common.root + "/${lib.removePrefix "./" desktopFileMetadata}";
+      desktopFilePath = common.root + "/${l.removePrefix "./" desktopFileMetadata}";
     in
-    if builtins.isString desktopFileMetadata
+    if l.isString desktopFileMetadata
     then
       pkgs.runCommandLocal "${pkgName}-desktopFileLink" { } ''
         mkdir -p $out/share/applications
@@ -24,9 +26,11 @@ let
     else pkgs.makeDesktopItem (common.mkDesktopItemConfig pkgName);
 
   # Specify --package if we are building in a workspace
-  packageOption = lib.optionals (! isNull common.memberName) [ "--package" cargoPkg.name ];
+  packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
   # Specify --features if we have enabled features other than the default ones
-  featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
+  featuresFlags = l.optional ((l.length features) > 0) "--features ${(l.concatStringsSep "," features)}";
+  # Specify --release if release profile is enabled
+  releaseFlag = l.optional release "--release";
   # Member name of the package. Defaults to the crate name in Cargo.toml.
   memberName = if isNull common.memberName then null else cargoPkg.name;
 
@@ -35,7 +39,7 @@ let
     prev // {
       postFixup = ''
         ${prev.postFixup or ""}
-        ${common.mkRuntimeLibsScript (lib.makeLibraryPath common.runtimeLibs)}
+        ${common.mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
       '';
     };
   # Override that adds the desktop item for this package.
@@ -44,31 +48,48 @@ let
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
-  # Function to apply overrides for the main package.
-  applyOverrides = prev:
-    lib.pipe prev [
-      (prev: prev // {
-        inherit doCheck;
-        dontFixup = !release;
-      })
-      (prev: if mkDesktopFile then desktopItemOv prev else prev)
-      (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
-      common.mainBuildOverride
-    ];
-  # Note: this only works for the buildRustPackage builder
-  # which is the default in dream2nix now. This should be updated
-  # to be able to work for either depending on which builder is chosen.
+  fixupCargoCommand = isTest:
+    let
+      cmd = l.concatStringsSep " " (
+        [ "cargo" (if isTest then "test" else "build") ]
+        ++ releaseFlag ++ packageFlag ++ featuresFlags
+      );
+    in
+    ''
+      runHook ${if isTest then "preCheck" else "preBuild"}
+      echo running: ${l.strings.escapeShellArg cmd}
+      ${cmd}
+      runHook ${if isTest then "postCheck" else "postBuild"}
+    '';
+
+  # TODO: support dream2nix builder switching
   baseConfig = {
     inherit memberName;
     inherit (common) root;
 
     packageOverrides = {
       "${cargoPkg.name}-deps" = {
-        nci-overrides.overrideAttrs = prev: let tracePkgs = prefix: x: builtins.trace (prefix + ": " + (builtins.concatStringsSep "," (builtins.map (p: p.name) (x.nativeBuildInputs or [])))) x; in
-          (tracePkgs "prev" prev) // (tracePkgs "overrided" (common.crateOverridesCombined prev));
+        nci-overrides.overrideAttrs = prev: l.pipe prev [
+          (prev: prev // {
+            doCheck = false;
+            buildPhase = fixupCargoCommand false;
+            checkPhase = fixupCargoCommand true;
+          })
+          common.crateOverridesCombined
+        ];
       };
       ${cargoPkg.name} = {
-        nci-overrides.overrideAttrs = prev: prev // applyOverrides prev;
+        nci-overrides.overrideAttrs = prev: l.pipe prev [
+          (prev: prev // {
+            inherit doCheck;
+            dontFixup = !release;
+            buildPhase = fixupCargoCommand false;
+            checkPhase = fixupCargoCommand true;
+          })
+          (prev: if mkDesktopFile then desktopItemOv prev else prev)
+          (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
+          common.mainBuildOverride
+        ];
       };
     };
   };
