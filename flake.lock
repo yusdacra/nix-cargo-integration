@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "crane": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1644785799,
-        "narHash": "sha256-VpAJO1L0XeBvtCuNGK4IDKp6ENHIpTrlaZT7yfBCvwo=",
-        "owner": "ipetkov",
-        "repo": "crane",
-        "rev": "fc7a94f841347c88f2cb44217b2a3faa93e2a0b2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ipetkov",
-        "repo": "crane",
-        "type": "github"
-      }
-    },
     "devshell": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -39,7 +23,9 @@
     },
     "dream2nix": {
       "inputs": {
-        "crane": "crane",
+        "crane": [
+          "nixpkgs"
+        ],
         "gomod2nix": [
           "nixpkgs"
         ],
@@ -49,7 +35,9 @@
         "nix-parsec": [
           "nixpkgs"
         ],
-        "nix-std": "nix-std",
+        "nix-std": [
+          "nixpkgs"
+        ],
         "nixpkgs": "nixpkgs",
         "node2nix": [
           "nixpkgs"
@@ -59,11 +47,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1644793760,
-        "narHash": "sha256-WcGtgnOkHfma8qoH3jIAh2Ljc2zUd4ejn9h2cg8Ul44=",
+        "lastModified": 1644948988,
+        "narHash": "sha256-m7nX+5yiKxggVHZM4MZMfvC2+b1FzwqoN2Djh/7HJHQ=",
         "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "6a9ee226405149bb3243aba24b2371018d5fc4d6",
+        "rev": "63a26fdb8033cd6befb8eff1ed2767bb8b7023d8",
         "type": "github"
       },
       "original": {
@@ -85,22 +73,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "nix-std": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1624642189,
-        "narHash": "sha256-tIt3p1k0PsYeIxK2xO9Z8k2Ggq2nH4auqj3RbVAiRrg=",
-        "owner": "chessai",
-        "repo": "nix-std",
-        "rev": "9ef1cf73948bfad05d370165c7f3011b82c4d679",
-        "type": "github"
-      },
-      "original": {
-        "owner": "chessai",
-        "repo": "nix-std",
         "type": "github"
       }
     },
