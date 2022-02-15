@@ -48,6 +48,7 @@ let
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
+  # Fixup a cargo command for crane
   fixupCargoCommand = isTest:
     let
       cmd = l.concatStringsSep " " (
