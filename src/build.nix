@@ -79,10 +79,8 @@ let
               buildType = if release then "release" else "debug";
             })
             common.crateOverridesCombined
+            applyOverrides
           ];
-      };
-      "${cargoPkg.name}-deps" = {
-        nci-overrides.overrideAttrs = applyOverrides;
       };
     };
   };
