@@ -67,7 +67,7 @@ let
         includes = common.buildInputs ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
       };
     };
-    packages = (with pkgs; [ nciRust.rustc fd ]) ++ common.nativeBuildInputs ++ common.buildInputs;
+    packages = [ pkgs.fd ] ++ common.nativeBuildInputs ++ common.buildInputs;
     commands = with pkgs; [
       {
         package = nciRust.rustc;

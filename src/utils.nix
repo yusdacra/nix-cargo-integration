@@ -170,24 +170,29 @@ in
     , crateName
     }:
     let
-      mainOverride = {
-        ${crateName} = prev: {
-          buildInputs = (prev.buildInputs or [ ]) ++ [ pkgs.zlib ];
-        };
-      };
       baseConf = prev: {
         # No CC since we provide our own compiler
         stdenv = pkgs.stdenvNoCC // {
           cc = cCompiler;
         };
-        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ [ cCompiler ] ++ (lib.optional useCCompilerBintools cCompiler.bintools));
+        nativeBuildInputs = lib.unique (
+          (prev.nativeBuildInputs or [ ])
+          ++ [ pkgs.rustc pkgs.cargo cCompiler ]
+          ++ (lib.optional useCCompilerBintools cCompiler.bintools)
+        );
         # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
         CC = "cc";
       };
       tomlOverrides = builtins.mapAttrs
         (_: crate: prev: {
-          nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ (resolveToPkgs (crate.nativeBuildInputs or [ ])));
-          buildInputs = lib.unique ((prev.buildInputs or [ ]) ++ (resolveToPkgs (crate.buildInputs or [ ])));
+          nativeBuildInputs = lib.unique (
+            (prev.nativeBuildInputs or [ ])
+              ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]))
+          );
+          buildInputs = lib.unique (
+            (prev.buildInputs or [ ])
+              ++ (resolveToPkgs (crate.buildInputs or [ ]))
+          );
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         rawTomlOverrides;
       extraOverrides = import ./extraCrateOverrides.nix pkgs;
@@ -205,9 +210,16 @@ in
         overrodedAcc // (elOverride overrodedAcc);
     in
     builtins.foldl'
-      (acc: el: lib.genAttrs (lib.unique ((builtins.attrNames acc) ++ (builtins.attrNames el))) (collectOverride acc el))
+      (acc: el: lib.genAttrs
+        (
+          lib.unique (
+            (builtins.attrNames acc)
+            ++ (builtins.attrNames el)
+          )
+        )
+        (collectOverride acc el))
       pkgs.defaultCrateOverrides
-      [ tomlOverrides extraOverrides mainOverride ];
+      [ tomlOverrides extraOverrides ];
 
   # dream2nix build crate.
   buildCrate =

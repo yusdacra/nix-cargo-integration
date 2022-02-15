@@ -253,9 +253,9 @@ in
 
       # Helper function used to "combine" two "commons".
       updateCommon = prev: final: prev // final // {
-        runtimeLibs = (prev.runtimeLibs or [ ]) ++ final.runtimeLibs;
-        buildInputs = (prev.buildInputs or [ ]) ++ final.buildInputs;
-        nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ final.nativeBuildInputs;
+        runtimeLibs = lib.unique ((prev.runtimeLibs or [ ]) ++ final.runtimeLibs);
+        buildInputs = lib.unique ((prev.buildInputs or [ ]) ++ final.buildInputs);
+        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ final.nativeBuildInputs);
         env = (prev.env or { }) // final.env;
 
         overrides = {
