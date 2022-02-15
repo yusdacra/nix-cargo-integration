@@ -49,7 +49,7 @@
 
       tests =
         let
-          testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then name else null) (builtins.readDir ./tests));
+          testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then if name != "broken" then name else null else null) (builtins.readDir ./tests));
           tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
           flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "")))) v.${attrs}) tests;
           checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
