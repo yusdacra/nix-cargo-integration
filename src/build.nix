@@ -29,15 +29,6 @@ let
   featuresOption = lib.optionals ((builtins.length features) > 0) ([ "--features" ] ++ features);
   # Member name of the package. Defaults to the crate name in Cargo.toml.
   memberName = if isNull common.memberName then null else cargoPkg.name;
-  # Common config.
-  commonConfig = common.env // {
-    inherit (common) meta;
-    dontFixup = !release;
-    # Use no cc stdenv, since we supply our own cc
-    stdenv = pkgs.rustPkgs.stdenvNoCC // {
-      cc = common.cCompiler;
-    };
-  };
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
@@ -56,7 +47,10 @@ let
   # Function to apply overrides for the main package.
   applyOverrides = prev:
     lib.pipe prev [
-      (prev: prev // commonConfig)
+      (prev: prev // {
+        inherit doCheck;
+        dontFixup = !release;
+      })
       (prev: if mkDesktopFile then desktopItemOv prev else prev)
       (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
       common.mainBuildOverride
@@ -69,18 +63,12 @@ let
     inherit (common) root;
 
     packageOverrides = {
+      "${cargoPkg.name}-deps" = {
+        nci-overrides.overrideAttrs = prev: let tracePkgs = prefix: x: builtins.trace (prefix + ": " + (builtins.concatStringsSep "," (builtins.map (p: p.name) (x.nativeBuildInputs or [])))) x; in
+          (tracePkgs "prev" prev) // (tracePkgs "overrided" (common.crateOverridesCombined prev));
+      };
       ${cargoPkg.name} = {
-        nci-overrides.overrideAttrs = prev:
-          lib.pipe prev [
-            (prev: prev // commonConfig // {
-              inherit doCheck;
-              buildFlags = packageOption;
-              buildFeatures = features;
-              buildType = if release then "release" else "debug";
-            })
-            common.crateOverridesCombined
-            applyOverrides
-          ];
+        nci-overrides.overrideAttrs = prev: prev // applyOverrides prev;
       };
     };
   };

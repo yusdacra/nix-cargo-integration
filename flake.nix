@@ -18,8 +18,6 @@
       inputs.node2nix.follows = "nixpkgs";
       inputs.poetry2nix.follows = "nixpkgs";
       inputs.nix-parsec.follows = "nixpkgs";
-      inputs.crane.follows = "nixpkgs";
-      inputs.nix-std.follows = "nixpkgs";
     };
   };
 
