@@ -31,9 +31,9 @@ let
   # Create an output (packages, apps, etc.) from a common.
   makeOutput = { common, renameOutputs ? { } }:
     let
-      inherit (common) cargoToml cargoPkg packageMetadata system memberName root lib;
+      inherit (common) cargoToml cargoPkg packageMetadata system memberName root;
 
-      l = lib // builtins;
+      l = common.internal.lib;
 
       # Metadata we will use later. Defaults should be the same as Cargo defaults.
       name = renameOutputs.${cargoPkg.name} or cargoPkg.name;
