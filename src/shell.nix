@@ -61,13 +61,25 @@ let
   # Create a base devshell config
   baseConfig = {
     language = {
-      c = {
-        compiler = common.cCompiler;
-        libraries = common.buildInputs ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
-        includes = common.buildInputs ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
-      };
+      c =
+        let
+          inputs =
+            common.buildInputs
+              ++ common.overrideBuildInputs
+              ++ (with pkgs; lib.optionals stdenv.isDarwin [ libiconv ]);
+        in
+        {
+          compiler = common.cCompiler;
+          libraries = inputs;
+          includes = inputs;
+        };
     };
-    packages = [ pkgs.fd ] ++ common.nativeBuildInputs ++ common.buildInputs;
+    packages =
+      [ pkgs.fd ]
+        ++ common.nativeBuildInputs
+        ++ common.buildInputs
+        ++ common.overrideNativeBuildInputs
+        ++ common.overrideBuildInputs;
     commands = with pkgs; [
       {
         package = nciRust.rustc;
@@ -77,7 +89,7 @@ let
         help = "The Rust compiler";
       }
       {
-        package = nciRust.rustc;
+        package = nciRust.cargo;
         name = "cargo";
         category = "rust";
         command = "cargo $@";
@@ -147,7 +159,7 @@ let
           substituters = https://cache.nixos.org https://${cachixName}.cachix.org
           trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
         '')
-    ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) common.env);
+    ) ++ (mapAttrsToList (n: v: { name = n; eval = v; }) (common.env // common.overrideEnv));
     startup.setupPreCommitHooks.text = ''
       echo "pre-commit hooks are disabled."
     '';

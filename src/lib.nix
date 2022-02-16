@@ -283,7 +283,7 @@ in
       # This also creates the devshell, puts in pre commit checks if the user has enabled it,
       # and changes default outputs according to `defaultOutputs`.
       finalOutputs = combinedOutputs // {
-        devShell = lib.mapAttrs (_: import ./devShell.nix) commonsCombined;
+        devShell = lib.mapAttrs (_: import ./shell.nix) commonsCombined;
         checks = lib.recursiveUpdate (combinedOutputs.checks or { }) (
           lib.mapAttrs
             (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {

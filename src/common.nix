@@ -49,16 +49,18 @@ let
   libb = lib // pkgs.nciUtils;
   overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };
 
+  l = libb // builtins;
+
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
   root = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
-  cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
+  cCompiler = l.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
   useCCompilerBintools = workspaceMetadata.useCCompilerBintools or packageMetadata.useCCompilerBintools or true;
 
   # Libraries that will be put in $LD_LIBRARY_PATH
-  runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+  runtimeLibs = l.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
 
   overrideDataCrates = overrideDataPkgs // { inherit cCompiler useCCompilerBintools runtimeLibs root; };
 
@@ -67,33 +69,33 @@ let
     let
       # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
       # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
-      depNames = builtins.map (dep: dep.name) dependencies;
-      baseRaw = libb.makeCrateOverrides {
+      depNames = l.map (dep: dep.name) dependencies;
+      baseRaw = l.makeCrateOverrides {
         inherit cCompiler useCCompilerBintools;
         crateName = cargoPkg.name;
         rawTomlOverrides =
-          libb.foldl'
-            libb.recursiveUpdate
-            (libb.genAttrs depNames (name: (_: { })))
+          l.foldl'
+            l.recursiveUpdate
+            (l.genAttrs depNames (name: (_: { })))
             [ (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }) ];
       };
       # Filter out unneeded overrides, using the dep names we got earlier.
-      base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
+      base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
     in
     base // ((overrides.crateOverrides or (_: _: { })) overrideDataCrates base);
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
-  crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
+  crateOverridesEmpty = l.mapAttrsToList (_: v: v { }) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them. Mainly used to collect (native) build inputs.
-  crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
-  noPropagatedEnvOverrides = libb.removePropagatedEnv crateOverrides;
+  crateOverridesGetFlattenLists = attrName: l.unique (l.flatten (l.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
+  noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined =
     let
-      filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
-      func = prev: prev // (libb.pipe prev (
-        builtins.map
+      filteredOverrides = l.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
+      func = prev: prev // (l.pipe prev (
+        l.map
           (ov: (old: old // (ov old)))
-          (libb.attrValues filteredOverrides)
+          (l.attrValues filteredOverrides)
       ));
     in
     func;
@@ -103,11 +105,11 @@ let
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
     platforms = [ system ];
-  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) {
-    license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}";
-  }) // (lib.putIfHasAttr "description" cargoPkg)
-  // (lib.putIfHasAttr "homepage" cargoPkg)
-  // (lib.putIfHasAttr "longDescription" packageMetadata);
+  } // (l.optionalAttrs (l.hasAttr "license" cargoPkg) {
+    license = l.licenses."${l.cargoLicenseToNixpkgs cargoPkg.license}";
+  }) // (l.putIfHasAttr "description" cargoPkg)
+  // (l.putIfHasAttr "homepage" cargoPkg)
+  // (l.putIfHasAttr "longDescription" packageMetadata);
 
   # Create the base config that will be overrided.
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
@@ -150,25 +152,25 @@ let
       comment = desktopFileMetadata.comment or meta.description or "";
       desktopName = desktopFileMetadata.name or pkgName;
     } // (
-      if builtins.hasAttr "icon" desktopFileMetadata
+      if l.hasAttr "icon" desktopFileMetadata
       then
         let
           # If icon path starts with relative path prefix, make it absolute using root as base
           # Otherwise treat it as an absolute path
           makeIcon = icon:
-            if lib.hasPrefix "./" icon
-            then root + "/${lib.removePrefix "./" icon}"
+            if l.hasPrefix "./" icon
+            then root + "/${l.removePrefix "./" icon}"
             else icon;
         in
         { icon = makeIcon desktopFileMetadata.icon; }
       else { }
     )
-    // (lib.putIfHasAttr "genericName" desktopFileMetadata)
-    // (lib.putIfHasAttr "categories" desktopFileMetadata);
+    // (l.putIfHasAttr "genericName" desktopFileMetadata)
+    // (l.putIfHasAttr "categories" desktopFileMetadata);
 
     # Whether the binaries should be patched with the libraries inside
     # `runtimeLibs`.
-    mkRuntimeLibsOv = (builtins.length runtimeLibs) > 0;
+    mkRuntimeLibsOv = (l.length runtimeLibs) > 0;
     # Utility for generating a script to patch binaries with libraries.
     mkRuntimeLibsScript = libs: ''
       for f in $out/bin/*; do
@@ -178,35 +180,32 @@ let
 
     # Collect build inputs.
     buildInputs =
-      libb.resolveToPkgs
+      l.resolveToPkgs
         ((workspaceMetadata.buildInputs or [ ])
-          ++ (packageMetadata.buildInputs or [ ]))
-      ++ (crateOverridesGetFlattenLists "buildInputs");
-
+          ++ (packageMetadata.buildInputs or [ ]));
     # Collect native build inputs.
     nativeBuildInputs =
-      libb.resolveToPkgs
+      l.resolveToPkgs
         ((workspaceMetadata.nativeBuildInputs or [ ])
-          ++ (packageMetadata.nativeBuildInputs or [ ]))
-      ++ (crateOverridesGetFlattenLists "nativeBuildInputs");
-
+          ++ (packageMetadata.nativeBuildInputs or [ ]));
     # Collect the env vars. The priority is as follows:
-    # crate overrides > package metadata > workspace metadata
-    env =
-      (workspaceMetadata.env or { })
-        // (packageMetadata.env or { })
-        // (builtins.foldl'
-        libb.recursiveUpdate
-        { }
-        (builtins.map (v: v.propagatedEnv or { }) crateOverridesEmpty)
-      );
+    # package metadata > workspace metadata
+    env = (workspaceMetadata.env or { }) // (packageMetadata.env or { });
 
-    # Put the overrides that other files may use (eg. build.nix, devShell.nix).
+    # Collect override environment vars and (native) build inputs.
+    # This is collected seperately because build will already use overrides,
+    # using these in build would cause problems because every drv would get a copy
+    # of these inputs.
+    overrideBuildInputs = crateOverridesGetFlattenLists "buildInputs";
+    overrideNativeBuildInputs = crateOverridesGetFlattenLists "nativeBuildInputs";
+    overrideEnv = l.foldl' l.recursiveUpdate { } (l.map (v: v.propagatedEnv or { }) crateOverridesEmpty);
+
+    # Put the overrides that other files may use (eg. build.nix, shell.nix).
     overrides = {
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
     };
-  } // libb.optionalAttrs
+  } // l.optionalAttrs
     (
       workspaceMetadata.preCommitHooks.enable
         or packageMetadata.preCommitHooks.enable

@@ -48,6 +48,12 @@ let
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
+  # Override that adds dependencies and env from common
+  commonDepsOv = prev:
+    prev // common.env // {
+      buildInputs = l.unique ((prev.buildInputs or [ ]) ++ common.buildInputs);
+      nativeBuildInputs = l.unique ((prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs);
+    };
   # Fixup a cargo command for crane
   fixupCargoCommand = isTest:
     let
@@ -76,19 +82,21 @@ let
             buildPhase = fixupCargoCommand false;
             checkPhase = fixupCargoCommand true;
           })
+          commonDepsOv
           common.crateOverridesCombined
         ];
       };
       ${cargoPkg.name} = {
         nci-overrides.overrideAttrs = prev: l.pipe prev [
           (prev: prev // {
-            inherit doCheck;
+            inherit doCheck meta;
             dontFixup = !release;
             buildPhase = fixupCargoCommand false;
             checkPhase = fixupCargoCommand true;
           })
           (prev: if mkDesktopFile then desktopItemOv prev else prev)
           (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
+          commonDepsOv
           common.mainBuildOverride
         ];
       };
