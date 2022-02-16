@@ -1,35 +1,39 @@
 { sources }:
 let
-  libb = import "${sources.nixpkgs}/lib/default.nix";
-
-  lib = libb // {
-    # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
-    defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
-    # Tries to convert a cargo license to nixpkgs license.
-    cargoLicenseToNixpkgs = license:
-      let
-        l = libb.toLower license;
-        licensesIds =
-          libb.mapAttrs'
-            (name: v:
-              libb.nameValuePair
-                (libb.toLower (v.spdxId or v.fullName or name))
-                name
-            )
-            libb.licenses;
-      in
-        licensesIds.${l} or "unfree";
-    putIfHasAttr = attr: set: libb.optionalAttrs (builtins.hasAttr attr set) { ${attr} = set.${attr}; };
-    dbg = msg: x:
-      if (builtins.getEnv "NCI_DEBUG") == "1"
-      then builtins.trace msg x
-      else x;
-  };
+  lib =
+    let
+      l = (import "${sources.nixpkgs}/lib/default.nix") // builtins;
+    in
+    l // {
+      # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
+      defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
+      # Tries to convert a cargo license to nixpkgs license.
+      cargoLicenseToNixpkgs = license:
+        let
+          l = l.toLower license;
+          licensesIds =
+            l.mapAttrs'
+              (name: v:
+                l.nameValuePair
+                  (l.toLower (v.spdxId or v.fullName or name))
+                  name
+              )
+              l.licenses;
+        in
+          licensesIds.${l} or "unfree";
+      putIfHasAttr = attr: set: l.optionalAttrs (l.hasAttr attr set) { ${attr} = set.${attr}; };
+      dbg = msg: x:
+        if (builtins.getEnv "NCI_DEBUG") == "1"
+        then builtins.trace msg x
+        else x;
+    };
 
   # Create an output (packages, apps, etc.) from a common.
   makeOutput = { common, renameOutputs ? { } }:
     let
       inherit (common) cargoToml cargoPkg packageMetadata system memberName root lib;
+
+      l = lib // builtins;
 
       # Metadata we will use later. Defaults should be the same as Cargo defaults.
       name = renameOutputs.${cargoPkg.name} or cargoPkg.name;
@@ -41,26 +45,26 @@ let
       pkgSrc =
         let
           src =
-            if isNull memberName
+            if memberName == null
             then root + "/src"
             else root + "/${memberName}" + "/src";
         in
-        lib.dbg "package source for ${name} at: ${src}" src;
+        l.dbg "package source for ${name} at: ${src}" src;
 
       # Emulate autobins behaviour, get all the binaries of this package.
       allBins =
-        lib.unique (
-          (lib.optional (builtins.pathExists (pkgSrc + "/main.rs")) {
+        l.unique (
+          (l.optional (l.pathExists (pkgSrc + "/main.rs")) {
             inherit name;
             exeName = cargoPkg.name;
           })
           ++ bins
-          ++ (lib.optionals
-            (autobins && (builtins.pathExists (pkgSrc + "/bin")))
-            (lib.genAttrs
-              (builtins.map
-                (lib.removeSuffix ".rs")
-                (builtins.attrNames (builtins.readDir (pkgSrc + "/bin")))
+          ++ (l.optionals
+            (autobins && (l.pathExists (pkgSrc + "/bin")))
+            (l.genAttrs
+              (l.map
+                (l.removeSuffix ".rs")
+                (l.attrNames (l.readDir (pkgSrc + "/bin")))
                 (name: { inherit name; })
               )
             )
@@ -84,7 +88,7 @@ let
             name = "${bin.name}${if v.config.release then "" else "-debug"}";
           };
           drv =
-            if (builtins.length (bin.required-features or [ ])) < 1
+            if (l.length (bin.required-features or [ ])) < 1
             then v.package
             else (mkBuild (bin.required-features or [ ]) v.config.release v.config.doCheck).package;
           exePath = "/bin/${ex.exeName}";
@@ -105,8 +109,8 @@ let
       };
       # Packages set to be put in the outputs.
       packages = {
-        ${system} = (builtins.mapAttrs (_: v: v.package) packagesRaw) // {
-          "${name}-derivation" = lib.createNixpkgsDrv common;
+        ${system} = (l.mapAttrs (_: v: v.package) packagesRaw) // {
+          "${name}-derivation" = l.createNixpkgsDrv common;
         };
       };
       # Checks to be put in outputs.
@@ -119,27 +123,27 @@ let
       apps = {
         ${system} =
           # Make apps for all binaries, and recursively combine them.
-          lib.foldAttrs lib.recursiveUpdate { }
+          l.foldAttrs l.recursiveUpdate { }
             (
-              builtins.map
-                (exe: lib.mapAttrs' (mkApp exe) packagesRaw)
-                (lib.dbg "binaries for ${name}: ${lib.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
+              l.map
+                (exe: l.mapAttrs' (mkApp exe) packagesRaw)
+                (l.dbg "binaries for ${name}: ${l.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
             );
       };
     in
-    lib.optionalAttrs (packageMetadata.build or false) ({
+    l.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
       defaultPackage = {
         ${system} = packages.${system}.${name};
       };
-    } // lib.optionalAttrs (packageMetadata.app or false) {
+    } // l.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
       defaultApp = {
         ${system} =
           let
             appName =
-              if (lib.length allBins) > 0
-              then (lib.head allBins).name
+              if (l.length allBins) > 0
+              then (l.head allBins).name
               else name;
           in
           apps.${system}.${appName};
@@ -184,16 +188,18 @@ in
     , ...
     }:
     let
+      l = lib // builtins;
+
       # Helper function to import a Cargo.toml from a root.
-      importCargoTOML = root: builtins.fromTOML (builtins.readFile (root + "/Cargo.toml"));
+      importCargoTOML = root: l.fromTOML (l.readFile (root + "/Cargo.toml"));
 
       # Import the "main" Cargo.toml we will use. This Cargo.toml can either be a workspace manifest, or a package manifest.
-      cargoToml = importCargoTOML (lib.dbg "root at: ${root}" root);
+      cargoToml = importCargoTOML (l.dbg "root at: ${root}" root);
       # Import the Cargo.lock file.
       cargoLockPath = root + "/Cargo.lock";
       cargoLock =
-        if builtins.pathExists cargoLockPath
-        then builtins.fromTOML (builtins.readFile cargoLockPath)
+        if l.pathExists cargoLockPath
+        then l.fromTOML (l.readFile cargoLockPath)
         else throw "A Cargo.lock file must be present, please make sure it's at least staged in git.";
 
       # This is the "root package" that might or might not exist.
@@ -204,26 +210,26 @@ in
       # Get the workspace members if they exist.
       workspaceMembers = workspaceToml.members or [ ];
       # Process any globs that might be in workspace members.
-      globbedWorkspaceMembers = lib.flatten (builtins.map
+      globbedWorkspaceMembers = l.flatten (l.map
         (memberName:
           let
-            components = lib.splitString "/" memberName;
-            parentDirRel = lib.concatStringsSep "/" (lib.init components);
+            components = l.splitString "/" memberName;
+            parentDirRel = l.concatStringsSep "/" (l.init components);
             parentDir = root + "/${parentDirRel}";
-            dirs = builtins.readDir parentDir;
+            dirs = l.readDir parentDir;
           in
-          if lib.last components == "*"
+          if l.last components == "*"
           then
-            lib.mapAttrsToList
+            l.mapAttrsToList
               (name: _: "${parentDirRel}/${name}")
-              (lib.filterAttrs (_: type: type == "directory") dirs)
+              (l.filterAttrs (_: type: type == "directory") dirs)
           else memberName
         )
         workspaceMembers);
       # Get and import the members' Cargo.toml files if we are in a workspace.
       members =
-        lib.genAttrs
-          (lib.dbg "workspace members: ${lib.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
+        l.genAttrs
+          (l.dbg "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
           (name: importCargoTOML (root + "/${name}"));
 
       # Get the metadata we will use from the root package attributes if it exists.
@@ -235,7 +241,7 @@ in
       dependencies = cargoLock.package;
       # Decide which systems we will generate outputs for. This can be overrided.
       systems = (overrides.systems or (x: x))
-        (workspaceMetadata.systems or packageMetadata.systems or lib.defaultSystems);
+        (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
 
       # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
       mkCommon = memberName: cargoToml: isRootMember: system: import ./common.nix {
@@ -244,60 +250,71 @@ in
           system root overrides sources enablePreCommitHooks isRootMember;
       };
 
-      isRootMember = if (lib.length workspaceMembers) > 0 then true else false;
+      isRootMember = if (l.length workspaceMembers) > 0 then true else false;
       # Generate "commons" for the "root package".
-      rootCommons = if ! isNull rootPkg then lib.genAttrs systems (mkCommon null cargoToml isRootMember) else null;
+      rootCommons = if rootPkg != null then l.genAttrs systems (mkCommon null cargoToml isRootMember) else null;
       # Generate "commons" for all members.
-      memberCommons' = lib.mapAttrsToList (name: value: lib.genAttrs systems (mkCommon name value false)) members;
+      memberCommons' = l.mapAttrsToList (name: value: l.genAttrs systems (mkCommon name value false)) members;
       # Combine the member "commons" and the "root package" "commons".
-      allCommons' = memberCommons' ++ (lib.optional (! isNull rootCommons) rootCommons);
+      allCommons' = memberCommons' ++ (l.optional (rootCommons != null) rootCommons);
 
       # Helper function used to "combine" two "commons".
-      updateCommon = prev: final: prev // final // {
-        runtimeLibs = lib.unique ((prev.runtimeLibs or [ ]) ++ final.runtimeLibs);
-        buildInputs = lib.unique ((prev.buildInputs or [ ]) ++ final.buildInputs);
-        nativeBuildInputs = lib.unique ((prev.nativeBuildInputs or [ ]) ++ final.nativeBuildInputs);
-        env = (prev.env or { }) // final.env;
-
-        overrides = {
-          shell = common: prevShell:
-            ((prev.overrides.shell or (_: _: { })) common prevShell) // (final.overrides.shell common prevShell);
+      updateCommon = prev: final:
+        let
+          combineLists = name: l.unique ((prev.${name} or [ ]) ++ final.${name});
+          combinedLists =
+            l.genAttrs
+              [
+                "runtimeLibs"
+                "buildInputs"
+                "nativeBuildInputs"
+                "overrideBuildInputs"
+                "overrideNativeBuildInputs"
+              ]
+              combineLists;
+        in
+        prev // final // combinedLists // {
+          env = (prev.env or { }) // final.env;
+          overrideEnv = (prev.overrideEnv or { }) // final.overrideEnv;
+          overrides = {
+            shell = common: prevShell:
+              ((prev.overrides.shell or (_: _: { })) common prevShell) // (final.overrides.shell common prevShell);
+          };
         };
-      };
       # Recursively go through each "commons", and "combine" them. We will use this for our devshell.
       commonsCombined =
-        lib.mapAttrs
-          (_: lib.foldl' updateCommon { })
+        l.mapAttrs
+          (_: l.foldl' updateCommon { })
           (
-            lib.foldl'
-              (acc: ele: lib.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
-              (lib.genAttrs systems (_: [ ]))
+            l.foldl'
+              (acc: ele: l.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
+              (l.genAttrs systems (_: [ ]))
               allCommons'
           );
 
       # Generate outputs from all "commons".
-      allOutputs' = lib.flatten (builtins.map (lib.mapAttrsToList (_: common: makeOutput { inherit common renameOutputs; })) allCommons');
+      allOutputs' = l.flatten (l.map (l.mapAttrsToList (_: common: makeOutput { inherit common renameOutputs; })) allCommons');
       # Recursively combine all outputs we have.
-      combinedOutputs = lib.foldAttrs lib.recursiveUpdate { } allOutputs';
+      combinedOutputs = l.foldAttrs lib.recursiveUpdate { } allOutputs';
       # Create the "final" output set.
       # This also creates the devshell, puts in pre commit checks if the user has enabled it,
       # and changes default outputs according to `defaultOutputs`.
       finalOutputs = combinedOutputs // {
-        devShell = lib.mapAttrs (_: import ./shell.nix) commonsCombined;
-        checks = lib.recursiveUpdate (combinedOutputs.checks or { }) (
-          lib.mapAttrs
-            (_: common: lib.optionalAttrs (builtins.hasAttr "preCommitChecks" common) {
+        devShell = l.mapAttrs (_: import ./shell.nix) commonsCombined;
+        checks = l.recursiveUpdate (combinedOutputs.checks or { }) (
+          l.mapAttrs
+            (_: common: l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
               "preCommitChecks" = common.preCommitChecks;
             })
             commonsCombined
         );
-      } // lib.optionalAttrs (builtins.hasAttr "package" defaultOutputs) {
+      } // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
         defaultPackage = lib.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
-      } // lib.optionalAttrs (builtins.hasAttr "app" defaultOutputs) {
-        defaultApp = lib.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
+      } // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
+        defaultApp = l.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
       };
-      checkedOutputs = lib.warnIf
-        (!(builtins.hasAttr "packages" finalOutputs) && !(builtins.hasAttr "apps" finalOutputs))
+      checkedOutputs = l.warnIf
+        (!(l.hasAttr "packages" finalOutputs) && !(l.hasAttr "apps" finalOutputs))
         "No packages found. Did you add the `package.metadata.nix` section to a `Cargo.toml` and added `build = true` under it?"
         finalOutputs;
     in
