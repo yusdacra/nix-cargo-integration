@@ -12,9 +12,9 @@
 **IMPORTANT** public API promises: Any API that is not documented here **IS NOT** counted
 as "public" and therefore can be changed without breaking SemVer. This does not mean that
 changes will be done without any notice. You are still welcome to create issues / discussions
-about them. Upstream projects such as [devshell], `nixpkgs` ([buildRustPackage]) etc. can have
-breaking changes, these breakages will be limited to `overrides`' `shell` and `build` in the
-public API, since these directly modify [devshell] / `buildPlatform` configs.
+about them. Upstream projects such as [devshell], [dream2nix] etc. can have breaking changes,
+these breakages will be limited to `overrides.shell` and `overrides.build` in the public API,
+since these directly modify [devshell] / [dream2nix] builder configs.
 
 ### The `common` attribute set
 
@@ -31,8 +31,7 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 #### Arguments
 
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
-- `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or pacakge manifest) is in (type: path)
-- `cargoVendorHash`: vendor hash feeded into [buildRustPackage]'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
+- `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or package manifest) is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
@@ -177,3 +176,4 @@ Add `--force` if your `Cargo.lock` is listed in `.gitignore`.
 
 [devshell]: https://github.com/numtide/devshell "devshell"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
+[dream2nix]: https://github.com/nix-community/dream2nix "dream2nix"
