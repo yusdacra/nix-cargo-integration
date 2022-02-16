@@ -49,7 +49,7 @@ let
   libb = lib // pkgs.nciUtils;
   overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };
 
-  l = libb // builtins;
+  l = libb;
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
@@ -114,69 +114,21 @@ let
   # Create the base config that will be overrided.
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
   baseConfig = {
-    # Library for users to utilize.
-    lib = libb;
-
     inherit
+      meta
       cCompiler
-      useCCompilerBintools
       pkgs
-      crateOverrides
-      crateOverridesEmpty
-      crateOverridesCombined
-      noPropagatedEnvOverrides
-      cargoPkg
-      cargoToml
-      sources
+      memberName
       system
       root
       prevRoot
-      memberName
+      sources
+      cargoPkg
+      cargoToml
       workspaceMetadata
       packageMetadata
       desktopFileMetadata
-      runtimeLibs
-      isRootMember
-      meta
-      mainBuildOverride
-      crateOverridesGetFlattenLists
-      makePkgs;
-
-    # Whether a desktop file should be added to the resulting package.
-    mkDesktopFile = desktopFileMetadata != null;
-    # Generate a desktop item config using provided package name
-    # and information from the package's `Cargo.toml`.
-    mkDesktopItemConfig = pkgName: {
-      name = pkgName;
-      exec = packageMetadata.executable or pkgName;
-      comment = desktopFileMetadata.comment or meta.description or "";
-      desktopName = desktopFileMetadata.name or pkgName;
-    } // (
-      if l.hasAttr "icon" desktopFileMetadata
-      then
-        let
-          # If icon path starts with relative path prefix, make it absolute using root as base
-          # Otherwise treat it as an absolute path
-          makeIcon = icon:
-            if l.hasPrefix "./" icon
-            then root + "/${l.removePrefix "./" icon}"
-            else icon;
-        in
-        { icon = makeIcon desktopFileMetadata.icon; }
-      else { }
-    )
-    // (l.putIfHasAttr "genericName" desktopFileMetadata)
-    // (l.putIfHasAttr "categories" desktopFileMetadata);
-
-    # Whether the binaries should be patched with the libraries inside
-    # `runtimeLibs`.
-    mkRuntimeLibsOv = (l.length runtimeLibs) > 0;
-    # Utility for generating a script to patch binaries with libraries.
-    mkRuntimeLibsScript = libs: ''
-      for f in $out/bin/*; do
-        patchelf --set-rpath "${libs}" "$f"
-      done
-    '';
+      runtimeLibs;
 
     # Collect build inputs.
     buildInputs =
@@ -205,20 +157,72 @@ let
       shell = overrides.shell or (_: _: { });
       build = overrides.build or (_: _: { });
     };
-  } // l.optionalAttrs
-    (
-      workspaceMetadata.preCommitHooks.enable
-        or packageMetadata.preCommitHooks.enable
-        or enablePreCommitHooks
-    )
-    {
-      preCommitChecks = pkgs.makePreCommitHooks {
-        src = root;
-        hooks = {
-          rustfmt.enable = true;
-          nixpkgs-fmt.enable = true;
+
+    # nci private attributes. can change at any time!
+    internal = {
+      lib = l;
+
+      inherit
+        useCCompilerBintools
+        crateOverrides
+        crateOverridesEmpty
+        crateOverridesCombined
+        noPropagatedEnvOverrides
+        isRootMember
+        mainBuildOverride
+        crateOverridesGetFlattenLists
+        makePkgs;
+
+      # Whether a desktop file should be added to the resulting package.
+      mkDesktopFile = desktopFileMetadata != null;
+      # Generate a desktop item config using provided package name
+      # and information from the package's `Cargo.toml`.
+      mkDesktopItemConfig = pkgName: {
+        name = pkgName;
+        exec = packageMetadata.executable or pkgName;
+        comment = desktopFileMetadata.comment or meta.description or "";
+        desktopName = desktopFileMetadata.name or pkgName;
+      } // (
+        if l.hasAttr "icon" desktopFileMetadata
+        then
+          let
+            # If icon path starts with relative path prefix, make it absolute using root as base
+            # Otherwise treat it as an absolute path
+            makeIcon = icon:
+              if l.hasPrefix "./" icon
+              then root + "/${l.removePrefix "./" icon}"
+              else icon;
+          in
+          { icon = makeIcon desktopFileMetadata.icon; }
+        else { }
+      )
+      // (l.putIfHasAttr "genericName" desktopFileMetadata)
+      // (l.putIfHasAttr "categories" desktopFileMetadata);
+
+      # Whether the binaries should be patched with the libraries inside
+      # `runtimeLibs`.
+      mkRuntimeLibsOv = (l.length runtimeLibs) > 0;
+      # Utility for generating a script to patch binaries with libraries.
+      mkRuntimeLibsScript = libs: ''
+        for f in $out/bin/*; do
+          patchelf --set-rpath "${libs}" "$f"
+        done
+      '';
+    } // l.optionalAttrs
+      (
+        workspaceMetadata.preCommitHooks.enable
+          or packageMetadata.preCommitHooks.enable
+          or enablePreCommitHooks
+      )
+      {
+        preCommitChecks = pkgs.makePreCommitHooks {
+          src = root;
+          hooks = {
+            rustfmt.enable = true;
+            nixpkgs-fmt.enable = true;
+          };
         };
       };
-    };
+  };
 in
 (baseConfig // ((overrides.common or (_: { })) baseConfig))

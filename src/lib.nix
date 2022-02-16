@@ -10,7 +10,7 @@ let
       # Tries to convert a cargo license to nixpkgs license.
       cargoLicenseToNixpkgs = license:
         let
-          l = l.toLower license;
+          license = l.toLower license;
           licensesIds =
             l.mapAttrs'
               (name: v:
@@ -20,7 +20,7 @@ let
               )
               l.licenses;
         in
-          licensesIds.${l} or "unfree";
+          licensesIds.${license} or "unfree";
       putIfHasAttr = attr: set: l.optionalAttrs (l.hasAttr attr set) { ${attr} = set.${attr}; };
       dbg = msg: x:
         if (builtins.getEnv "NCI_DEBUG") == "1"
@@ -151,32 +151,6 @@ let
     });
 in
 {
-  inherit makeOutput;
-
-  # Create an "empty" common with a dummy crate.
-  makeEmptyCommon =
-    { system
-    , overrides ? { }
-    }:
-    let
-      # Craft a dummy cargo toml.
-      cargoToml = {
-        package = {
-          name = "dummy";
-          version = "0.1.0";
-          edition = "2018";
-        };
-      };
-      # Craft dummy dependencies.
-      dependencies = [{
-        name = "dummy";
-        version = "0.1.0";
-      }];
-    in
-    import ./common.nix {
-      inherit lib dependencies system sources cargoToml overrides;
-    };
-
   # Creates flake outputs by searching the supplied root for a workspace / package and using
   # Cargo.toml's for configuration.
   makeOutputs =

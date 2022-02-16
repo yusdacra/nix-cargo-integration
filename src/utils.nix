@@ -37,8 +37,8 @@ in
 
         bi = filterUnwanted ((mapToName buildInputs) ++ (mapToName common.runtimeLibs));
         nbi = (filterUnwanted (mapToName nativeBuildInputs))
-          ++ (optional common.mkRuntimeLibsOv "makeWrapper")
-          ++ (optional common.mkDesktopFile "copyDesktopItems");
+          ++ (optional common.internal.mkRuntimeLibsOv "makeWrapper")
+          ++ (optional common.internal.mkDesktopFile "copyDesktopItems");
         runtimeLibs = "\${lib.makeLibraryPath ([ ${concatStringsSep " " (mapToName common.runtimeLibs)} ])}";
         stdenv = if any (n: has n clang) (mapToName nativeBuildInputs) then "clangStdenv" else null;
         putIfStdenv = optionalString (stdenv != null);
@@ -50,13 +50,13 @@ in
               (init (
                 filter
                   (list: if isList list then (length list) > 0 else true)
-                  (split "\n" (common.mkRuntimeLibsScript runtimeLibs))
+                  (split "\n" (common.internal.mkRuntimeLibsScript runtimeLibs))
               ))
           );
 
         desktopItemAttrs =
           let
-            desktopItem = common.mkDesktopItemConfig cargoPkg.name;
+            desktopItem = common.internal.mkDesktopItemConfig cargoPkg.name;
             filtered =
               filterAttrs
                 (_: v: !(lib.hasPrefix "/nix/store" v) && (toString v) != "")
@@ -136,11 +136,11 @@ in
           buildInputs = [ ${concatStringsSep " " bi} ];
           nativeBuildInputs = [ ${concatStringsSep " " nbi} ];${
             optionalString
-              common.mkRuntimeLibsOv
+              common.internal.mkRuntimeLibsOv
               "\n\n  postFixup = ''\n${runtimeLibsScript}\n  '';"
           }${
             optionalString
-              common.mkDesktopFile
+              common.internal.mkDesktopFile
               (
                 if isString desktopFileMetadata
                 then desktopLink

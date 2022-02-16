@@ -1,8 +1,8 @@
 common:
 let
-  inherit (common) pkgs workspaceMetadata packageMetadata lib;
+  inherit (common) pkgs workspaceMetadata packageMetadata;
 
-  l = lib // builtins;
+  l = common.internal.lib;
 
   # Extract cachix metadata
   cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
@@ -135,7 +135,7 @@ let
         help = "Alias for `nix flake lock --update-input input`";
         command = "nix flake lock --update-input $@";
       }
-    ] ++ l.optionals (! isNull cachixName) [
+    ] ++ l.optionals (cachixName != null) [
       {
         package = cachix;
         category = "tools";
@@ -146,7 +146,7 @@ let
         help = "Build the specified derivation and push results to cachix.";
         command = "cachix watch-exec ${cachixName} nix -- build .#$1";
       }
-    ] ++ l.optional (l.hasAttr "preCommitChecks" common) {
+    ] ++ l.optional (l.hasAttr "preCommitChecks" common.internal) {
       name = "check-pre-commit";
       category = "tools";
       help = "Runs the pre commit checks";
@@ -169,10 +169,10 @@ let
     startup.setupPreCommitHooks.text = ''
       echo "pre-commit hooks are disabled."
     '';
-  } // l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
+  } // l.optionalAttrs (l.hasAttr "preCommitChecks" common.internal) {
     startup.setupPreCommitHooks.text = ''
       echo "Setting up pre-commit hooks..."
-      ${common.preCommitChecks.shellHook}
+      ${common.internal.preCommitChecks.shellHook}
       echo "Successfully set up pre-commit-hooks!"
     '';
   };
@@ -191,7 +191,7 @@ let
   devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell =
     if (l.pathExists devshellFilePath)
-    then (pkgs.devshell.importTOML devshellFilePath { inherit lib; })
+    then (pkgs.devshell.importTOML devshellFilePath { lib = pkgs.lib; })
     else null;
 
   # Helper functions to combine devshell configs without loss

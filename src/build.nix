@@ -5,9 +5,10 @@
 , common
 }:
 let
-  inherit (common) pkgs lib packageMetadata desktopFileMetadata cargoPkg mkDesktopFile mkRuntimeLibsOv;
+  inherit (common) root pkgs packageMetadata desktopFileMetadata cargoPkg;
+  inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
 
-  l = lib // builtins;
+  l = common.internal.lib;
 
   # Actual package name to use for the derivation.
   pkgName = if isNull renamePkgTo then cargoPkg.name else renamePkgTo;
@@ -15,7 +16,7 @@ let
   # Desktop file to put in the package derivation.
   desktopFile =
     let
-      desktopFilePath = common.root + "/${l.removePrefix "./" desktopFileMetadata}";
+      desktopFilePath = root + "/${l.removePrefix "./" desktopFileMetadata}";
     in
     if l.isString desktopFileMetadata
     then
@@ -23,7 +24,7 @@ let
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else pkgs.makeDesktopItem (common.mkDesktopItemConfig pkgName);
+    else pkgs.makeDesktopItem (mkDesktopItemConfig pkgName);
 
   # Specify --package if we are building in a workspace
   packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
@@ -39,7 +40,7 @@ let
     prev // {
       postFixup = ''
         ${prev.postFixup or ""}
-        ${common.mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
+        ${mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
       '';
     };
   # Override that adds the desktop item for this package.
@@ -71,8 +72,7 @@ let
 
   # TODO: support dream2nix builder switching
   baseConfig = {
-    inherit memberName;
-    inherit (common) root;
+    inherit root memberName;
 
     packageOverrides = {
       "${cargoPkg.name}-deps" = {
@@ -83,13 +83,14 @@ let
             checkPhase = fixupCargoCommand true;
           })
           commonDepsOv
-          common.crateOverridesCombined
+          common.internal.crateOverridesCombined
         ];
       };
       ${cargoPkg.name} = {
         nci-overrides.overrideAttrs = prev: l.pipe prev [
           (prev: prev // {
-            inherit doCheck meta;
+            inherit doCheck;
+            meta = common.meta;
             dontFixup = !release;
             buildPhase = fixupCargoCommand false;
             checkPhase = fixupCargoCommand true;
@@ -97,7 +98,7 @@ let
           (prev: if mkDesktopFile then desktopItemOv prev else prev)
           (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
           commonDepsOv
-          common.mainBuildOverride
+          common.internal.mainBuildOverride
         ];
       };
     };
@@ -112,5 +113,5 @@ in
   config = config // {
     inherit release features doCheck;
   };
-  package = lib.buildCrate config;
+  package = l.buildCrate config;
 }
