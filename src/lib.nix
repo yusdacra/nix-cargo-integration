@@ -181,6 +181,7 @@ in
     , enablePreCommitHooks ? false
     , renameOutputs ? { }
     , defaultOutputs ? { }
+    , ...
     }:
     let
       # Helper function to import a Cargo.toml from a root.

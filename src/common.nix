@@ -113,11 +113,7 @@ let
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
   baseConfig = {
     # Library for users to utilize.
-    lib = {
-      inherit
-        crateOverridesGetFlattenLists
-        makePkgs;
-    } // libb;
+    lib = libb;
 
     inherit
       cCompiler
@@ -140,10 +136,12 @@ let
       runtimeLibs
       isRootMember
       meta
-      mainBuildOverride;
+      mainBuildOverride
+      crateOverridesGetFlattenLists
+      makePkgs;
 
     # Whether a desktop file should be added to the resulting package.
-    mkDesktopFile = ! isNull desktopFileMetadata;
+    mkDesktopFile = desktopFileMetadata != null;
     # Generate a desktop item config using provided package name
     # and information from the package's `Cargo.toml`.
     mkDesktopItemConfig = pkgName: {
