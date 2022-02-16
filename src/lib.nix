@@ -8,9 +8,9 @@ let
       # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
       defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
       # Tries to convert a cargo license to nixpkgs license.
-      cargoLicenseToNixpkgs = license:
+      cargoLicenseToNixpkgs = _license:
         let
-          license = l.toLower license;
+          license = l.toLower _license;
           licensesIds =
             l.mapAttrs'
               (name: v:
