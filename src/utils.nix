@@ -195,7 +195,7 @@ in
       extraOverrides = import ./extraCrateOverrides.nix pkgs;
       collectOverride = acc: el: name:
         let
-          getOverride = x: x.${name} or (o: o);
+          getOverride = x: x.${name} or (_: { });
           accOverride = getOverride acc;
           elOverride = getOverride el;
         in
