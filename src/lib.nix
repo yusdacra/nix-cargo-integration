@@ -3,8 +3,31 @@ let
   lib =
     let
       l = (import "${sources.nixpkgs}/lib/default.nix") // builtins;
+      dbgPrint = value:
+        if l.isFunction value
+        then "<function>"
+        else if l.isAttrs value
+        then "{ " + (
+          l.concatStringsSep "; " (
+            l.mapAttrsToList (n: v: "${n} = ${dbgPrint v}") value)
+        ) + " }"
+        else if l.isList value
+        then "[ " + (
+          l.concatStringsSep " " (l.map (v: "(${dbgPrint v})") value)
+        ) + " ]"
+        else l.toJSON value;
+      mkDbg = msgPrefix:
+        rec {
+          dbg = msg: x:
+            if (l.getEnv "NCI_DEBUG") == "1"
+            then l.trace "${msgPrefix}${msg}" x
+            else x;
+          dbgX = prefix: x:
+            dbg "${prefix}:\n${dbgPrint x}" x;
+        };
     in
-    l // {
+    l // (mkDbg "") // {
+      inherit mkDbg dbgPrint;
       # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
       defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
       # Tries to convert a cargo license to nixpkgs license.
@@ -22,10 +45,6 @@ let
         in
           licensesIds.${license} or "unfree";
       putIfHasAttr = attr: set: l.optionalAttrs (l.hasAttr attr set) { ${attr} = set.${attr}; };
-      dbg = msg: x:
-        if (builtins.getEnv "NCI_DEBUG") == "1"
-        then builtins.trace msg x
-        else x;
     };
 
   # Create an output (packages, apps, etc.) from a common.

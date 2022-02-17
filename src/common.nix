@@ -5,7 +5,6 @@
 , workspaceMetadata ? null
 , overrides ? { }
 , dependencies ? [ ]
-, lib
 , sources
 , system
 , ...
@@ -17,10 +16,14 @@ let
   packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: { })) _packageMetadata);
   desktopFileMetadata = packageMetadata.desktopFile or null;
 
-  # This is named "prevRoot" since we will override it later on.
-  prevRoot = attrs.root or null;
+  lib = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
-  overrideData = { inherit cargoPkg packageMetadata sources system memberName cargoToml lib; root = prevRoot; };
+  # This is named "prevRoot" since we will override it later on.
+  prevRoot =
+    let p = attrs.root or (throw "root must be specified"); in
+    lib.dbgX "prev root was" p;
+
+  overrideData = { inherit cargoPkg packageMetadata sources system memberName cargoToml; root = prevRoot; };
 
   # Helper function to create a package set; might be useful for users
   makePkgs =
@@ -46,14 +49,16 @@ let
       then rustTomlToolchain
       else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
-  libb = lib // pkgs.nciUtils;
-  overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };
+  _lib = lib // pkgs.nciUtils;
+  overrideDataPkgs = overrideData // { inherit pkgs; };
 
-  l = libb;
+  l = _lib;
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
-  root = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
+  root =
+    let p = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot; in
+    l.dbgX "root is" p;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
   cCompiler = l.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
@@ -62,7 +67,7 @@ let
   # Libraries that will be put in $LD_LIBRARY_PATH
   runtimeLibs = l.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
 
-  overrideDataCrates = overrideDataPkgs // { inherit cCompiler useCCompilerBintools runtimeLibs root; };
+  overrideDataCrates = overrideDataPkgs // { inherit cCompiler runtimeLibs root; };
 
   # Collect crate overrides
   crateOverrides =
@@ -92,15 +97,17 @@ let
   crateOverridesCombined =
     let
       filteredOverrides = l.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
-      func = prev: prev // (l.pipe prev (
+      ov = prev: prev // (l.pipe prev (
         l.map
           (ov: (old: old // (ov old)))
           (l.attrValues filteredOverrides)
       ));
     in
-    func;
+    l.dbg "combined overrides diff: ${l.dbgPrint (ov { })}" ov;
   # The main crate override is taken here
-  mainBuildOverride = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev);
+  mainBuildOverride =
+    let ov = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev); in
+    l.dbg "main override diff: ${l.dbgPrint (ov { })}" ov;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {

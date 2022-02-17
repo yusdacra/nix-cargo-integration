@@ -1,22 +1,20 @@
-attrs:
+{ pkgs, lib }:
 let
-  pkgs = if builtins.isAttrs attrs then attrs.pkgs else attrs;
-  lib = if builtins.isAttrs attrs then attrs.lib or pkgs.lib else pkgs.lib;
-
+  l = lib;
   # courtesy of devshell
   resolveToPkg = key:
     let
-      attrs = builtins.filter builtins.isString (builtins.split "\\." key);
+      attrs = l.filter l.isString (l.split "\\." key);
       op = sum: attr: sum.${attr} or (throw "package \"${key}\" not found");
     in
-    builtins.foldl' op pkgs attrs;
-  resolveToPkgs = builtins.map resolveToPkg;
+    l.foldl' op pkgs attrs;
+  resolveToPkgs = l.map resolveToPkg;
 in
 {
   inherit resolveToPkg resolveToPkgs;
 
   # Removes `propagatedEnv` attributes from some `crateOverride`s.
-  removePropagatedEnv = builtins.mapAttrs (_: v: (prev: builtins.removeAttrs (v prev) [ "propagatedEnv" ]));
+  removePropagatedEnv = l.mapAttrs (_: v: (prev: l.removeAttrs (v prev) [ "propagatedEnv" ]));
 
   # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
   createNixpkgsDrv = common: pkgs.writeTextFile {
@@ -175,25 +173,25 @@ in
         stdenv = pkgs.stdenvNoCC // {
           cc = cCompiler;
         };
-        nativeBuildInputs = lib.unique (
+        nativeBuildInputs = l.unique (
           (prev.nativeBuildInputs or [ ]) ++ [ cCompiler ]
-          ++ (lib.optional useCCompilerBintools cCompiler.bintools)
+          ++ (l.optional useCCompilerBintools cCompiler.bintools)
         );
         # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
         CC = "cc";
       };
-      tomlOverrides = builtins.mapAttrs
+      tomlOverrides = l.mapAttrs
         (_: crate: prev: {
-          nativeBuildInputs = lib.unique (
+          nativeBuildInputs = l.unique (
             (prev.nativeBuildInputs or [ ])
               ++ (resolveToPkgs (crate.nativeBuildInputs or [ ]))
           );
-          buildInputs = lib.unique (
+          buildInputs = l.unique (
             (prev.buildInputs or [ ])
               ++ (resolveToPkgs (crate.buildInputs or [ ]))
           );
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
-        rawTomlOverrides;
+        (l.dbgX "rawTomlOverrides" rawTomlOverrides);
       extraOverrides = import ./extraCrateOverrides.nix pkgs;
       collectOverride = acc: el: name:
         let
@@ -207,18 +205,23 @@ in
           overrodedAcc = overrodedAccBase // (baseConf overrodedAccBase);
         in
         overrodedAcc // (elOverride overrodedAcc);
+      finalOverrides =
+        l.foldl'
+          (acc: el: l.genAttrs
+            (
+              l.unique (
+                (l.attrNames acc)
+                ++ (l.attrNames el)
+              )
+            )
+            (collectOverride acc el))
+          pkgs.defaultCrateOverrides
+          [
+            (l.dbgX "tomlOverrides" tomlOverrides)
+            extraOverrides
+          ];
     in
-    builtins.foldl'
-      (acc: el: lib.genAttrs
-        (
-          lib.unique (
-            (builtins.attrNames acc)
-            ++ (builtins.attrNames el)
-          )
-        )
-        (collectOverride acc el))
-      pkgs.defaultCrateOverrides
-      [ tomlOverrides extraOverrides ];
+    finalOverrides;
 
   # dream2nix build crate.
   buildCrate =
@@ -229,7 +232,7 @@ in
     let
       attrs = {
         source = root;
-      } // (builtins.removeAttrs args [ "root" "memberName" ]);
+      } // (l.removeAttrs args [ "root" "memberName" ]);
       outputs = pkgs.dream2nixTools.riseAndShine attrs;
     in
     if memberName != null
