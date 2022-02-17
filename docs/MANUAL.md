@@ -1,7 +1,6 @@
 # Index
 
 - [Library documentation](#library-documentation)
-- [Build platform specific usage](#build-platform-specific-usage)
 - [Generating a nixpkgs-compatible package expression](#generating-a-nixpkgs-compatible-package-expression)
 - [Using the `nci` CLI](#using-the-nci-cli)
 - [Enabling trace](#enabling-trace)
