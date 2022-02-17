@@ -3,31 +3,28 @@ let
   lib =
     let
       l = (import "${sources.nixpkgs}/lib/default.nix") // builtins;
-      dbgPrint = value:
-        if l.isFunction value
-        then "<function>"
-        else if l.isAttrs value
-        then "{ " + (
-          l.concatStringsSep " " (
-            l.mapAttrsToList (n: v: "${n} = ${dbgPrint v};") value)
-        ) + " }"
-        else if l.isList value
-        then "[ " + (
-          l.concatStringsSep " " (l.map dbgPrint value)
-        ) + " ]"
-        else l.toJSON value;
       mkDbg = msgPrefix:
         rec {
+          doDbg = (l.getEnv "NCI_DEBUG") == "1";
           dbg = msg: x:
-            if (l.getEnv "NCI_DEBUG") == "1"
+            if doDbg
             then l.trace "${msgPrefix}${msg}" x
             else x;
-          dbgX = prefix: x:
-            dbg "${prefix}:\n${dbgPrint x}" x;
+          dbgX = msg: x: dbgXY msg x x;
+          dbgXY = msg: x: y:
+            if doDbg
+            then
+              l.debug.traceSeqN 5
+                {
+                  message = "${msgPrefix}${msg}";
+                  value = x;
+                }
+                y
+            else y;
         };
     in
     l // (mkDbg "") // {
-      inherit mkDbg dbgPrint;
+      inherit mkDbg;
       # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
       defaultSystems = [ "aarch64-linux" "x86_64-darwin" "x86_64-linux" "i686-linux" "aarch64-darwin" ];
       # Tries to convert a cargo license to nixpkgs license.

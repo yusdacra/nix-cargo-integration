@@ -103,11 +103,11 @@ let
           (l.attrValues filteredOverrides)
       ));
     in
-    l.dbg "combined overrides diff: ${l.dbgPrint (func { })}" func;
+    l.dbgXY "combined overrides diff" (func { }) func;
   # The main crate override is taken here
   mainBuildOverride =
     let ov = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev); in
-    l.dbg "main override diff: ${l.dbgPrint (ov { })}" ov;
+    l.dbgXY "main override diff" (ov { }) ov;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta = {
