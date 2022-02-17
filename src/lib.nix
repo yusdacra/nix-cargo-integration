@@ -13,7 +13,7 @@ let
         ) + " }"
         else if l.isList value
         then "[ " + (
-          l.concatStringsSep " " (l.map (v: "(${dbgPrint v})") value)
+          l.concatStringsSep " " (l.map dbgPrint value)
         ) + " ]"
         else l.toJSON value;
       mkDbg = msgPrefix:

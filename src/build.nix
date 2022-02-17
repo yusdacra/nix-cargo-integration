@@ -69,6 +69,32 @@ let
       ${cmd}
       runHook ${if isTest then "postCheck" else "postBuild"}
     '';
+  buildPhase =
+    let p = fixupCargoCommand false; in
+    l.dbgX "buildPhase" p;
+  checkPhase =
+    let p = fixupCargoCommand true; in
+    l.dbgX "checkPhase" p;
+
+  depsOverride = prev: l.pipe prev [
+    (prev: prev // {
+      inherit buildPhase checkPhase;
+      doCheck = false;
+    })
+    commonDepsOv
+    common.internal.crateOverridesCombined
+  ];
+  mainOverride = prev: l.pipe prev [
+    (prev: prev // {
+      inherit doCheck buildPhase checkPhase;
+      meta = common.meta;
+      dontFixup = !release;
+    })
+    (prev: if mkDesktopFile then desktopItemOv prev else prev)
+    (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
+    commonDepsOv
+    common.internal.mainBuildOverride
+  ];
 
   # TODO: support dream2nix builder switching
   baseConfig = {
@@ -76,30 +102,14 @@ let
 
     packageOverrides = {
       "${cargoPkg.name}-deps" = {
-        nci-overrides.overrideAttrs = prev: l.pipe prev [
-          (prev: prev // {
-            doCheck = false;
-            buildPhase = fixupCargoCommand false;
-            checkPhase = fixupCargoCommand true;
-          })
-          commonDepsOv
-          common.internal.crateOverridesCombined
-        ];
+        nci-overrides.overrideAttrs = prev:
+          let data = depsOverride prev; in
+          l.dbg "deps override diff: ${l.toJSON data}" data;
       };
       ${cargoPkg.name} = {
-        nci-overrides.overrideAttrs = prev: l.pipe prev [
-          (prev: prev // {
-            inherit doCheck;
-            meta = common.meta;
-            dontFixup = !release;
-            buildPhase = fixupCargoCommand false;
-            checkPhase = fixupCargoCommand true;
-          })
-          (prev: if mkDesktopFile then desktopItemOv prev else prev)
-          (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
-          commonDepsOv
-          common.internal.mainBuildOverride
-        ];
+        nci-overrides.overrideAttrs = prev:
+          let data = mainOverride prev; in
+          l.dbg "main override diff: ${l.toJSON data}" data;
       };
     };
   };
