@@ -55,52 +55,56 @@ let
       buildInputs = l.unique ((prev.buildInputs or [ ]) ++ common.buildInputs);
       nativeBuildInputs = l.unique ((prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs);
     };
-  # Fixup a cargo command for crane
-  fixupCargoCommand = isTest:
+
+  # Overrides for the crane builder
+  craneOverrides =
     let
-      cmd = l.concatStringsSep " " (
-        [ "cargo" (if isTest then "test" else "build") ]
-        ++ releaseFlag ++ packageFlag ++ featuresFlags
-      );
+      # Fixup a cargo command for crane
+      fixupCargoCommand = isTest:
+        let
+          cmd = l.concatStringsSep " " (
+            [ "cargo" (if isTest then "test" else "build") ]
+            ++ releaseFlag ++ packageFlag ++ featuresFlags
+          );
+        in
+        ''
+          runHook ${if isTest then "preCheck" else "preBuild"}
+          echo running: ${l.strings.escapeShellArg cmd}
+          ${cmd}
+          runHook ${if isTest then "postCheck" else "postBuild"}
+        '';
+      # Build phase for crane drvs
+      buildPhase =
+        let p = fixupCargoCommand false; in
+        l.dbgX "buildPhase" p;
+      # Check phase for crane drvs
+      checkPhase =
+        let p = fixupCargoCommand true; in
+        l.dbgX "checkPhase" p;
+
+      # Overrides for the dependency only drv
+      depsOverride = prev: l.applyOverrides prev [
+        (prev: {
+          inherit buildPhase checkPhase;
+          doCheck = false;
+        })
+        commonDepsOv
+        common.internal.crateOverridesCombined
+      ];
+      # Overrides for the main drv
+      mainOverride = prev: l.applyOverrides prev [
+        (prev: {
+          inherit doCheck buildPhase checkPhase;
+          meta = common.meta;
+          dontFixup = !release;
+        })
+        desktopItemOv
+        runtimeLibsOv
+        commonDepsOv
+        common.internal.mainBuildOverride
+      ];
     in
-    ''
-      runHook ${if isTest then "preCheck" else "preBuild"}
-      echo running: ${l.strings.escapeShellArg cmd}
-      ${cmd}
-      runHook ${if isTest then "postCheck" else "postBuild"}
-    '';
-  buildPhase =
-    let p = fixupCargoCommand false; in
-    l.dbgX "buildPhase" p;
-  checkPhase =
-    let p = fixupCargoCommand true; in
-    l.dbgX "checkPhase" p;
-
-  depsOverride = prev: l.applyOverrides prev [
-    (prev: {
-      inherit buildPhase checkPhase;
-      doCheck = false;
-    })
-    commonDepsOv
-    common.internal.crateOverridesCombined
-  ];
-  mainOverride = prev: l.applyOverrides prev [
-    (prev: {
-      inherit doCheck buildPhase checkPhase;
-      meta = common.meta;
-      dontFixup = !release;
-    })
-    desktopItemOv
-    runtimeLibsOv
-    commonDepsOv
-    common.internal.mainBuildOverride
-  ];
-
-  # TODO: support dream2nix builder switching
-  baseConfig = {
-    inherit root memberName;
-
-    packageOverrides = {
+    {
       "${cargoPkg.name}-deps" = {
         nci-overrides.overrideAttrs = prev:
           let data = depsOverride prev; in
@@ -112,6 +116,12 @@ let
           l.dbgX "main override diff" data;
       };
     };
+
+  # TODO: support dream2nix builder switching
+  baseConfig = {
+    inherit root memberName;
+
+    packageOverrides = craneOverrides;
   };
 
   overrideConfig = config:
