@@ -97,13 +97,13 @@ let
   crateOverridesCombined =
     let
       filteredOverrides = l.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
-      ov = prev: prev // (l.pipe prev (
+      func = prev: prev // (l.pipe prev (
         l.map
           (ov: (old: old // (ov old)))
           (l.attrValues filteredOverrides)
       ));
     in
-    l.dbg "combined overrides diff: ${l.dbgPrint (ov { })}" ov;
+    l.dbg "combined overrides diff: ${l.dbgPrint (func { })}" func;
   # The main crate override is taken here
   mainBuildOverride =
     let ov = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev); in
