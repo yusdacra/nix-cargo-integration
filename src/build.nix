@@ -37,7 +37,7 @@ let
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable. 
   runtimeLibsOv = prev:
-    prev // {
+    l.optionalAttrs mkRuntimeLibsOv {
       postFixup = ''
         ${prev.postFixup or ""}
         ${mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
@@ -45,13 +45,13 @@ let
     };
   # Override that adds the desktop item for this package.
   desktopItemOv = prev:
-    prev // {
+    l.optionalAttrs mkDesktopFile {
       nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [ pkgs.copyDesktopItems ];
       desktopItems = (prev.desktopItems or [ ]) ++ [ desktopFile ];
     };
   # Override that adds dependencies and env from common
   commonDepsOv = prev:
-    prev // common.env // {
+    common.env // {
       buildInputs = l.unique ((prev.buildInputs or [ ]) ++ common.buildInputs);
       nativeBuildInputs = l.unique ((prev.nativeBuildInputs or [ ]) ++ common.nativeBuildInputs);
     };
@@ -76,22 +76,22 @@ let
     let p = fixupCargoCommand true; in
     l.dbgX "checkPhase" p;
 
-  depsOverride = prev: l.pipe prev [
-    (prev: prev // {
+  depsOverride = prev: l.applyOverrides prev [
+    (prev: {
       inherit buildPhase checkPhase;
       doCheck = false;
     })
     commonDepsOv
     common.internal.crateOverridesCombined
   ];
-  mainOverride = prev: l.pipe prev [
-    (prev: prev // {
+  mainOverride = prev: l.applyOverrides prev [
+    (prev: {
       inherit doCheck buildPhase checkPhase;
       meta = common.meta;
       dontFixup = !release;
     })
-    (prev: if mkDesktopFile then desktopItemOv prev else prev)
-    (prev: if mkRuntimeLibsOv then runtimeLibsOv prev else prev)
+    desktopItemOv
+    runtimeLibsOv
     commonDepsOv
     common.internal.mainBuildOverride
   ];

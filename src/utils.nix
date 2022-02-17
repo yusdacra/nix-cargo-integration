@@ -199,21 +199,11 @@ in
           accOverride = getOverride acc;
           elOverride = getOverride el;
         in
-        attrs:
-        let
-          overrodedAccBase = attrs // accOverride attrs;
-          overrodedAcc = overrodedAccBase // (baseConf overrodedAccBase);
-        in
-        overrodedAcc // (elOverride overrodedAcc);
+        attrs: l.applyOverrides attrs [ baseConf accOverride elOverride ];
       finalOverrides =
         l.foldl'
           (acc: el: l.genAttrs
-            (
-              l.unique (
-                (l.attrNames acc)
-                ++ (l.attrNames el)
-              )
-            )
+            (l.unique ((l.attrNames acc) ++ (l.attrNames el)))
             (collectOverride acc el))
           pkgs.defaultCrateOverrides
           [

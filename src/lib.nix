@@ -42,6 +42,7 @@ let
         in
           licensesIds.${license} or "unfree";
       putIfHasAttr = attr: set: l.optionalAttrs (l.hasAttr attr set) { ${attr} = set.${attr}; };
+      applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: prev // (ov prev))) overrides);
     };
 
   # Create an output (packages, apps, etc.) from a common.
