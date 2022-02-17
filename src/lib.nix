@@ -8,8 +8,8 @@ let
         then "<function>"
         else if l.isAttrs value
         then "{ " + (
-          l.concatStringsSep "; " (
-            l.mapAttrsToList (n: v: "${n} = ${dbgPrint v}") value)
+          l.concatStringsSep " " (
+            l.mapAttrsToList (n: v: "${n} = ${dbgPrint v};") value)
         ) + " }"
         else if l.isList value
         then "[ " + (
