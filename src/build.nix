@@ -104,12 +104,12 @@ let
       "${cargoPkg.name}-deps" = {
         nci-overrides.overrideAttrs = prev:
           let data = depsOverride prev; in
-          l.dbg "deps override diff: ${l.toJSON data}" data;
+          l.dbgX "deps override diff" data;
       };
       ${cargoPkg.name} = {
         nci-overrides.overrideAttrs = prev:
           let data = mainOverride prev; in
-          l.dbg "main override diff: ${l.toJSON data}" data;
+          l.dbgX "main override diff" data;
       };
     };
   };
