@@ -4,4 +4,4 @@ let
     sha256 = "sha256:0x2jn3vrawwv9xp15674wjz9pixwjyj3j771izayl962zziivbx2";
   };
 in
-(import compat { src = ./.; }).defaultNix.lib
+  (import compat { src = ./.; }).defaultNix.lib

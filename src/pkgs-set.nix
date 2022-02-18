@@ -1,9 +1,10 @@
-{ sources
-, system
-, lib
-, overrideData
-, toolchainChannel ? "stable"
-, override ? (_: _: { })
+{
+  sources,
+  system,
+  lib,
+  overrideData,
+  toolchainChannel ? "stable",
+  override ? (_: _: {}),
 }:
 rec {
   # pkgs set we will use.
@@ -30,22 +31,21 @@ rec {
             content = readFile toolchainChannel;
             legacy = match "([^\r\n]+)\r?\n?" content;
           in
-          if legacy != null
-          then null
-          else (fromTOML content).toolchain
+            if legacy != null
+            then null
+            else (fromTOML content).toolchain
         else null;
       # Whether the toolchain is nightly or not.
       isNightly =
         hasInfix "nightly"
-          (if hasRustToolchainFile
-          then rustToolchainFile.channel or ""
-          else toolchainChannel);
+        (if hasRustToolchainFile
+        then rustToolchainFile.channel or ""
+        else toolchainChannel);
       # Override the base toolchain and add some default components.
       toolchain = baseRustToolchain.override {
-        extensions = unique ((rustToolchainFile.components or [ ]) ++ [ "rust-src" "rustfmt" "clippy" ]);
+        extensions = unique ((rustToolchainFile.components or []) ++ ["rust-src" "rustfmt" "clippy"]);
       };
-    in
-    {
+    in {
       rustc = toolchain;
       rustfmt = toolchain;
       clippy = toolchain;
@@ -60,15 +60,15 @@ rec {
     let
       pkgs = pkgs // rustToolchain;
       tools =
-        lib.filterAttrs (k: v: !(lib.any (a: k == a) [ "override" "overrideDerivation" ]))
-          (pkgs.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
-            hindent = null;
-            cabal-fmt = null;
-          });
+        lib.filterAttrs (k: v: !(lib.any (a: k == a) ["override" "overrideDerivation"]))
+        (pkgs.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+          hindent = null;
+          cabal-fmt = null;
+        });
     in
-    pkgs.callPackage "${sources.preCommitHooks}/nix/run.nix" {
-      inherit tools pkgs;
-      gitignore-nix-src = null;
-      isFlakes = true;
-    };
+      pkgs.callPackage "${sources.preCommitHooks}/nix/run.nix" {
+        inherit tools pkgs;
+        gitignore-nix-src = null;
+        isFlakes = true;
+      };
 }

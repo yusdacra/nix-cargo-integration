@@ -21,55 +21,67 @@
     };
   };
 
-  outputs = inputs: with inputs;
-    let
-      preCommitHooks = builtins.fetchGit {
-        url = "https://github.com/cachix/pre-commit-hooks.nix.git";
-        ref = "master";
-        rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
-      };
+  outputs = inputs: with inputs; let
+    preCommitHooks = builtins.fetchGit {
+      url = "https://github.com/cachix/pre-commit-hooks.nix.git";
+      ref = "master";
+      rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
+    };
 
-      sources = { inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks; };
-      lib = import ./src/lib.nix {
-        lib = import "${nixpkgs}/lib";
-      };
-      l = lib;
+    sources = { inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks; };
+    lib = import ./src/lib.nix {
+      lib = import "${nixpkgs}/lib";
+    };
+    l = lib;
 
-      makeOutputs = import ./src/makeOutputs.nix { inherit sources lib; };
+    makeOutputs = import ./src/makeOutputs.nix { inherit sources lib; };
 
-      cliOutputs = makeOutputs {
-        root = ./cli;
-        overrides = {
-          crateOverrides = common: _: {
-            nci-cli = prev: {
-              NCI_SRC = builtins.toString inputs.self;
-              # Make sure the src doesnt get garbage collected
-              postInstall = "ln -s $NCI_SRC $out/nci_src";
-            };
+    cliOutputs = makeOutputs {
+      root = ./cli;
+      overrides = {
+        crateOverrides = common: _: {
+          nci-cli = prev: {
+            NCI_SRC = builtins.toString inputs.self;
+            # Make sure the src doesnt get garbage collected
+            postInstall = "ln -s $NCI_SRC $out/nci_src";
           };
         };
       };
-
-      tests =
-        let
-          testNames = libb.remove null (libb.mapAttrsToList (name: type: if type == "directory" then if name != "broken" then name else null else null) (builtins.readDir ./tests));
-          tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
-          flattenAttrs = attrs: libb.mapAttrsToList (n: v: libb.mapAttrs (_: libb.mapAttrs' (n: libb.nameValuePair (n + (if libb.hasInfix "workspace" n then "-${n}" else "")))) v.${attrs}) tests;
-          checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "checks");
-          packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [ ])) (flattenAttrs "packages");
-          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
-        in
-        {
-          checks = libb.foldAttrs libb.recursiveUpdate { } checks;
-          packages = libb.foldAttrs libb.recursiveUpdate { } packages;
-          shells = libb.foldAttrs libb.recursiveUpdate { } shells;
-        };
-    in
-    {
-      lib = {
-        inherit makeOutputs;
-      };
-      inherit tests;
-      inherit (cliOutputs) apps packages defaultApp defaultPackage checks;
     };
+
+    tests =
+      let
+        testNames = libb.remove null (libb.mapAttrsToList (name: type:
+          if type == "directory"
+          then
+            if name != "broken"
+            then name
+            else null
+          else null) (builtins.readDir ./tests));
+        tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
+        flattenAttrs = attrs:
+          libb.mapAttrsToList (n: v:
+            libb.mapAttrs (_:
+              libb.mapAttrs' (n:
+                libb.nameValuePair (n
+                + (if libb.hasInfix "workspace" n
+                then "-${n}"
+                else ""))))
+            v.${attrs})
+          tests;
+        checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");
+        packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "packages");
+        shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
+      in {
+        checks = libb.foldAttrs libb.recursiveUpdate {} checks;
+        packages = libb.foldAttrs libb.recursiveUpdate {} packages;
+        shells = libb.foldAttrs libb.recursiveUpdate {} shells;
+      };
+  in {
+    lib = {
+      inherit makeOutputs;
+    };
+    inherit tests;
+    inherit (cliOutputs) apps packages defaultApp defaultPackage checks;
+  };
 }

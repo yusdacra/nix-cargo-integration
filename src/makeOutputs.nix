@@ -1,19 +1,18 @@
 {
   # an NCI library
-  lib
-, # NCI flake sources
-  sources
-,
+  lib,
+  # NCI flake sources
+  sources,
 }:
-
 # Creates flake outputs by searching the supplied root for a
 # workspace / package and using `Cargo.toml`s for configuration.
-{ root
-, overrides ? { }
-, enablePreCommitHooks ? false
-, renameOutputs ? { }
-, defaultOutputs ? { }
-, ...
+{
+  root,
+  overrides ? {},
+  enablePreCommitHooks ? false,
+  renameOutputs ? {},
+  defaultOutputs ? {},
+  ...
 }:
 let
   l = lib // builtins;
@@ -36,29 +35,29 @@ let
   # Get the workspace attributes if it exists.
   workspaceToml = cargoToml.workspace or null;
   # Get the workspace members if they exist.
-  workspaceMembers = workspaceToml.members or [ ];
+  workspaceMembers = workspaceToml.members or [];
   # Process any globs that might be in workspace members.
   globbedWorkspaceMembers = l.flatten (l.map
-    (memberName:
-      let
-        components = l.splitString "/" memberName;
-        parentDirRel = l.concatStringsSep "/" (l.init components);
-        parentDir = root + "/${parentDirRel}";
-        dirs = l.readDir parentDir;
-      in
+  (
+    memberName: let
+      components = l.splitString "/" memberName;
+      parentDirRel = l.concatStringsSep "/" (l.init components);
+      parentDir = root + "/${parentDirRel}";
+      dirs = l.readDir parentDir;
+    in
       if l.last components == "*"
       then
         l.mapAttrsToList
-          (name: _: "${parentDirRel}/${name}")
-          (l.filterAttrs (_: type: type == "directory") dirs)
+        (name: _: "${parentDirRel}/${name}")
+        (l.filterAttrs (_: type: type == "directory") dirs)
       else memberName
-    )
-    workspaceMembers);
+  )
+  workspaceMembers);
   # Get and import the members' Cargo.toml files if we are in a workspace.
   members =
     l.genAttrs
-      (l.dbg "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
-      (name: importCargoTOML (root + "/${name}"));
+    (l.dbg "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
+    (name: importCargoTOML (root + "/${name}"));
 
   # Get the metadata we will use from the root package attributes if it exists.
   packageMetadata = rootPkg.metadata.nix or null;
@@ -69,86 +68,111 @@ let
   dependencies = cargoLock.package;
   # Decide which systems we will generate outputs for. This can be overrided.
   systems = (overrides.systems or (x: x))
-    (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
+  (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
 
   # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
-  mkCommon = memberName: cargoToml: isRootMember: system: import ./common.nix {
-    inherit
-      lib dependencies memberName cargoToml workspaceMetadata
-      system root overrides sources enablePreCommitHooks isRootMember;
-  };
+  mkCommon = memberName: cargoToml: isRootMember: system:
+    import ./common.nix {
+      inherit
+        lib
+        dependencies
+        memberName
+        cargoToml
+        workspaceMetadata
+        system
+        root
+        overrides
+        sources
+        enablePreCommitHooks
+        isRootMember
+        ;
+    };
 
-  isRootMember = if (l.length workspaceMembers) > 0 then true else false;
+  isRootMember =
+    if (l.length workspaceMembers) > 0
+    then true
+    else false;
   # Generate "commons" for the "root package".
-  rootCommons = if rootPkg != null then l.genAttrs systems (mkCommon null cargoToml isRootMember) else null;
+  rootCommons =
+    if rootPkg != null
+    then l.genAttrs systems (mkCommon null cargoToml isRootMember)
+    else null;
   # Generate "commons" for all members.
   memberCommons' = l.mapAttrsToList (name: value: l.genAttrs systems (mkCommon name value false)) members;
   # Combine the member "commons" and the "root package" "commons".
   allCommons' = memberCommons' ++ (l.optional (rootCommons != null) rootCommons);
 
   # Helper function used to "combine" two "commons".
-  updateCommon = prev: final:
-    let
-      combineLists = name: l.unique ((prev.${name} or [ ]) ++ final.${name});
-      combinedLists =
-        l.genAttrs
-          [
-            "runtimeLibs"
-            "buildInputs"
-            "nativeBuildInputs"
-            "overrideBuildInputs"
-            "overrideNativeBuildInputs"
-          ]
-          combineLists;
-    in
-    prev // final // combinedLists // {
-      env = (prev.env or { }) // final.env;
-      overrideEnv = (prev.overrideEnv or { }) // final.overrideEnv;
+  updateCommon = prev: final: let
+    combineLists = name: l.unique ((prev.${name} or []) ++ final.${name});
+    combinedLists =
+      l.genAttrs
+      [
+        "runtimeLibs"
+        "buildInputs"
+        "nativeBuildInputs"
+        "overrideBuildInputs"
+        "overrideNativeBuildInputs"
+      ]
+      combineLists;
+  in
+    prev
+    // final
+    // combinedLists
+    // {
+      env = (prev.env or {}) // final.env;
+      overrideEnv = (prev.overrideEnv or {}) // final.overrideEnv;
       overrides = {
         shell = common: prevShell:
-          ((prev.overrides.shell or (_: _: { })) common prevShell) // (final.overrides.shell common prevShell);
+          ((prev.overrides.shell or (_: _: {})) common prevShell) // (final.overrides.shell common prevShell);
       };
     };
   # Recursively go through each "commons", and "combine" them. We will use this for our devshell.
   commonsCombined =
     l.mapAttrs
-      (_: l.foldl' updateCommon { })
-      (
-        l.foldl'
-          (acc: ele: l.mapAttrs (n: v: acc.${n} ++ [ v ]) ele)
-          (l.genAttrs systems (_: [ ]))
-          allCommons'
-      );
+    (_: l.foldl' updateCommon {})
+    (
+      l.foldl'
+      (acc: ele: l.mapAttrs (n: v: acc.${n} ++ [v]) ele)
+      (l.genAttrs systems (_: []))
+      allCommons'
+    );
 
   # Generate outputs from all "commons".
   allOutputs' = l.flatten (l.map
-    (
-      l.mapAttrsToList
-        (_: common: import ./makeOutput.nix { inherit common renameOutputs; })
-    )
-    allCommons');
+  (
+    l.mapAttrsToList
+    (_: common: import ./makeOutput.nix { inherit common renameOutputs; })
+  )
+  allCommons');
   # Recursively combine all outputs we have.
-  combinedOutputs = l.foldAttrs lib.recursiveUpdate { } allOutputs';
+  combinedOutputs = l.foldAttrs lib.recursiveUpdate {} allOutputs';
   # Create the "final" output set.
   # This also creates the devshell, puts in pre commit checks if the user has enabled it,
   # and changes default outputs according to `defaultOutputs`.
-  finalOutputs = combinedOutputs // {
-    devShell = l.mapAttrs (_: import ./shell.nix) commonsCombined;
-    checks = l.recursiveUpdate (combinedOutputs.checks or { }) (
-      l.mapAttrs
-        (_: common: l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
-          "preCommitChecks" = common.preCommitChecks;
-        })
+  finalOutputs =
+    combinedOutputs
+    // {
+      devShell = l.mapAttrs (_: import ./shell.nix) commonsCombined;
+      checks = l.recursiveUpdate (combinedOutputs.checks or {}) (
+        l.mapAttrs
+        (_: common:
+          l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
+            "preCommitChecks" = common.preCommitChecks;
+          })
         commonsCombined
-    );
-  } // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-    defaultPackage = lib.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
-  } // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
-    defaultApp = l.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
-  };
-  checkedOutputs = l.warnIf
+      );
+    }
+    // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
+      defaultPackage = lib.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
+    }
+    // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
+      defaultApp = l.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
+    };
+  checkedOutputs =
+    l.warnIf
     (!(l.hasAttr "packages" finalOutputs) && !(l.hasAttr "apps" finalOutputs))
     "No packages found. Did you add the `package.metadata.nix` section to a `Cargo.toml` and added `build = true` under it?"
     finalOutputs;
 in
-checkedOutputs
+  checkedOutputs
