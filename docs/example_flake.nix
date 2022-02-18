@@ -6,8 +6,6 @@
   outputs = inputs:
     inputs.nixCargoIntegration.lib.makeOutputs {
       root = ./.;
-      # `cargoVendorHash` is only used for buildRustPackage platform.
-      # cargoVendorHash = "";
       # Which package outputs to rename to what.
       # This renames both their package names and the generated output names.
       # Applies to generated apps too.
@@ -45,35 +43,11 @@
           # dependencies in it's Cargo.lock.
           root = common: prev: prev;
           # Override crate overrides.
-          crateOverrides = common: prevv: {
-            # test = prev: {
-            #   buildInputs = (prev.buildInputs or []) ++ [ common.pkgs.hello ];
+          crateOverrides = common: prev: {
+            # test = old: {
+            #   buildInputs = (old.buildInputs or []) ++ [ common.pkgs.hello ];
             #   TEST_ENV = "test";
             # }
-          };
-          # Common attribute overrides.
-          common = prev: {
-            # Package set used can be overriden here; note that changing
-            # the package set here will not change the already set
-            # runtimeLibs, buildInputs and nativeBuildInputs.
-            pkgs = prev.pkgs;
-            # Packages put here will have their libraries exported in
-            # $LD_LIBRARY_PATH environment variable.
-            runtimeLibs = prev.runtimeLibs ++ [];
-            # Packages put here will be used as build inputs for build
-            # derivation and packages for development shell. For development
-            # shell, they will be exported to $LIBRARY_PATH and $PKG_CONFIG_PATH.
-            buildInputs = prev.buildInputs ++ [];
-            # Packages put here will be used as native build inputs
-            # for build derivation and packages for development shell.
-            nativeBuildInputs = prev.nativeBuildInputs ++ [];
-            # Key-value pairs put here will be exported as environment
-            # variables in build and development shell.
-            env =
-              prev.env
-              // {
-                # PROTOC_INCLUDE = "${prev.pkgs.protobuf}/include";
-              };
           };
           # Development shell overrides.
           shell = common: prev: {
