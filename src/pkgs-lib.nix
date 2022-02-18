@@ -24,8 +24,7 @@ in
 {
   inherit resolveToPkg resolveToPkgs;
 
-  # Creates crate overrides for crate2nix to use.
-  # The crate overrides will be "collected" in common.nix for naersk and devshell to use them.
+  # Creates crate overrides.
   makeCrateOverrides =
     { rawTomlOverrides ? { }
     , cCompiler ? pkgs.gcc
