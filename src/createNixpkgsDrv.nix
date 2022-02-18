@@ -1,6 +1,6 @@
 # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
 common:
-commom.pkgs.writeTextFile {
+common.pkgs.writeTextFile {
   name = "${common.cargoPkg.name}.nix";
   text =
     let
