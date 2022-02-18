@@ -121,7 +121,7 @@ let
   // (l.putIfHasAttr "longDescription" packageMetadata);
 
   # Create the base config that will be overrided.
-  # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
+  # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
   baseConfig = {
     inherit (nci-pkgs) pkgs rustToolchain;
     inherit
@@ -140,15 +140,18 @@ let
       runtimeLibs;
 
     # Collect build inputs.
-    buildInputs =
-      nci-pkgs.utils.resolveToPkgs
+    buildInputs = nci-pkgs.utils.resolveToPkgs (
+      l.unique
         ((workspaceMetadata.buildInputs or [ ])
-          ++ (packageMetadata.buildInputs or [ ]));
+          ++ (packageMetadata.buildInputs or [ ]))
+    );
     # Collect native build inputs.
-    nativeBuildInputs =
-      nci-pkgs.utils.resolveToPkgs
+    nativeBuildInputs = nci-pkgs.utils.resolveToPkgs (
+      l.unique
         ((workspaceMetadata.nativeBuildInputs or [ ])
-          ++ (packageMetadata.nativeBuildInputs or [ ]));
+          ++ (packageMetadata.nativeBuildInputs or [ ]))
+    );
+
     # Collect the env vars. The priority is as follows:
     # package metadata > workspace metadata
     env = (workspaceMetadata.env or { }) // (packageMetadata.env or { });
@@ -167,7 +170,7 @@ let
       build = overrides.build or (_: _: { });
     };
 
-    # nci private attributes. can change at any time!
+    # nci private attributes. can change at any time without warning!
     internal = {
       lib = l;
 
