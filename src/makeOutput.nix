@@ -92,7 +92,7 @@ let
     ${system} =
       (l.mapAttrs (_: v: v.package) packagesRaw)
       // {
-        "${name}-derivation" = import ./createNixpkgsDrv common;
+        "${name}-derivation" = import ./createNixpkgsDrv.nix common;
       };
   };
   # Checks to be put in outputs.
