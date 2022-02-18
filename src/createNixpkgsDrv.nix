@@ -5,8 +5,38 @@ common.pkgs.writeTextFile {
   text =
     let
       inherit (common) root cargoPkg pkgs buildInputs nativeBuildInputs desktopFileMetadata;
-      inherit (builtins) any map hasAttr baseNameOf concatStringsSep filter length attrNames attrValues split isList isString stringLength elemAt;
-      inherit (lib) optional optionalString cargoLicenseToNixpkgs concatMapStringsSep mapAttrsToList getName init filterAttrs unique hasPrefix splitString drop;
+      inherit
+        (common.internal.lib)
+        any
+        map
+        hasAttr
+        baseNameOf
+        concatStringsSep
+        filter
+        length
+        attrNames
+        attrValues
+        split
+        isList
+        isString
+        stringLength
+        elemAt
+        optional
+        optionalString
+        cargoLicenseToNixpkgs
+        concatMapStringsSep
+        mapAttrsToList
+        getName
+        init
+        filterAttrs
+        unique
+        splitString
+        drop
+        hasPrefix
+        removePrefix
+        strings
+        ;
+      inherit (strings) sanitizeDerivationName;
       has = i: any (oi: i == oi);
 
       clang = ["clang-wrapper" "clang"];
@@ -47,11 +77,11 @@ common.pkgs.writeTextFile {
           desktopItem = common.internal.mkDesktopItemConfig cargoPkg.name;
           filtered =
             filterAttrs
-            (_: v: !(lib.hasPrefix "/nix/store" v) && (toString v) != "")
+            (_: v: !(hasPrefix "/nix/store" v) && (toString v) != "")
             desktopItem;
           attrsWithIcon =
             if !(hasAttr "icon" filtered) && (hasAttr "icon" common.desktopFileMetadata)
-            then filtered // { icon = "\${src}/${lib.removePrefix "./" common.desktopFileMetadata.icon}"; }
+            then filtered // { icon = "\${src}/${removePrefix "./" common.desktopFileMetadata.icon}"; }
             else filtered;
           attrs = mapAttrsToList (n: v: "    ${n} = \"${v}\";") attrsWithIcon;
         in
@@ -97,7 +127,7 @@ common.pkgs.writeTextFile {
             hashName = elemAt pathSegments 2;
             nameSegments = drop 1 (splitString "-" hashName);
             name = concatStringsSep "-" nameSegments;
-            drvName = getName (lib.strings.sanitizeDerivationName name);
+            drvName = getName (sanitizeDerivationName name);
 
             relPathSegments = drop 3 pathSegments;
             relPath = concatStringsSep "/" relPathSegments;
@@ -114,7 +144,7 @@ common.pkgs.writeTextFile {
         version = "${cargoPkg.version}";${putIfStdenv "\n\n  stdenv = ${stdenv};"}
 
         # Change to use whatever source you want
-        ${concatMapStringsSep "\n" (line: "  ${line}") (lib.splitString "\n" fetcher.fetchCode)}
+        ${concatMapStringsSep "\n" (line: "  ${line}") (splitString "\n" fetcher.fetchCode)}
 
         cargoSha256 = lib.fakeHash;${
         optionalString
