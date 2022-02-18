@@ -8,21 +8,25 @@
 }:
 rec {
   # pkgs set we will use.
-  pkgs = sources.nixpkgs.legacyPackages.${system};
+  pkgs = import sources.nixpkgs {
+    inherit system;
+    overlays = [
+      (import sources.rustOverlay)
+    ];
+  };
   # Rust toolchain we will use.
   rustToolchain =
     let
       inherit (builtins) readFile fromTOML isPath pathExists match;
       inherit (lib) hasInfix unique head;
 
-      rust = import sources.rustOverlay pkgs pkgs;
       # Check if the passed toolchainChannel points to a toolchain file
       hasRustToolchainFile = (isPath toolchainChannel) && (pathExists toolchainChannel);
       # Create the base Rust toolchain that we will override to add other components.
       baseRustToolchain =
         if hasRustToolchainFile
-        then rust.rust-bin.fromRustupToolchainFile toolchainChannel
-        else rust.rust-bin.${toolchainChannel}.latest.default;
+        then pkgs.rust-bin.fromRustupToolchainFile toolchainChannel
+        else pkgs.rust-bin.${toolchainChannel}.latest.default;
       # Read and import the toolchain channel file, if we can
       rustToolchainFile =
         if hasRustToolchainFile
