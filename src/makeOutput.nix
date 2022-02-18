@@ -81,7 +81,7 @@ let
   # Packages set to be put in the outputs.
   packages = {
     ${system} = (l.mapAttrs (_: v: v.package) packagesRaw) // {
-      "${name}-derivation" = nci-pkgs.utils.createNixpkgsDrv common;
+      "${name}-derivation" = import ./createNixpkgsDrv common;
     };
   };
   # Checks to be put in outputs.
