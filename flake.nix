@@ -29,12 +29,15 @@
         rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
       };
 
-      libb = import "${nixpkgs}/lib/default.nix";
+      sources = { inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks; };
       lib = import ./src/lib.nix {
-        sources = { inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks; };
+        lib = import "${nixpkgs}/lib";
       };
+      l = lib;
 
-      cliOutputs = lib.makeOutputs {
+      makeOutputs = import ./src/makeOutputs.nix { inherit sources lib; };
+
+      cliOutputs = makeOutputs {
         root = ./cli;
         overrides = {
           crateOverrides = common: _: {
@@ -63,7 +66,10 @@
         };
     in
     {
-      inherit lib tests;
+      lib = {
+        inherit makeOutputs;
+      };
+      inherit tests;
       inherit (cliOutputs) apps packages defaultApp defaultPackage checks;
     };
 }

@@ -1,6 +1,7 @@
 common:
 let
-  inherit (common) pkgs workspaceMetadata packageMetadata;
+  inherit (common) workspaceMetadata packageMetadata;
+  inherit (common.internal.nci-pkgs) pkgs rustToolchain;
 
   l = common.internal.lib;
 
@@ -84,14 +85,14 @@ let
         ++ common.overrideBuildInputs;
     commands = with pkgs; [
       {
-        package = nciRust.rustc;
+        package = rustToolchain.rustc;
         name = "rustc";
         category = "rust";
         command = "rustc $@";
         help = "The Rust compiler";
       }
       {
-        package = nciRust.cargo;
+        package = rustToolchain.cargo;
         name = "cargo";
         category = "rust";
         command = "cargo $@";

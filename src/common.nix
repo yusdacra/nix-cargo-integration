@@ -16,43 +16,34 @@ let
   packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: { })) _packageMetadata);
   desktopFileMetadata = packageMetadata.desktopFile or null;
 
-  lib = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
+  l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
   # This is named "prevRoot" since we will override it later on.
   prevRoot =
     let p = attrs.root or (throw "root must be specified"); in
-    lib.dbgX "prev root was" p;
+    l.dbgX "prev root was" p;
 
   overrideData = { inherit cargoPkg packageMetadata sources system memberName cargoToml; root = prevRoot; };
 
-  # Helper function to create a package set; might be useful for users
-  makePkgs =
-    { toolchainChannel ? "stable"
-    , override ? (_: _: { })
-    }:
-    import ./nixpkgs.nix {
-      inherit system sources lib override toolchainChannel;
-      overrideData = overrideData // { inherit toolchainChannel; };
-    };
+  toolchainChannel =
+    let
+      rustToolchain = root + "/rust-toolchain";
+      rustTomlToolchain = root + "/rust-toolchain.toml";
+    in
+    if l.pathExists rustToolchain
+    then rustToolchain
+    else if l.pathExists rustTomlToolchain
+    then rustTomlToolchain
+    else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
 
   # Create the package set we will use
-  pkgs = makePkgs {
+  nci-pkgs = import ./pkgs-set.nix {
+    inherit system sources toolchainChannel overrideData;
+    lib = l;
     override = overrides.pkgs or (_: _: { });
-    toolchainChannel =
-      let
-        rustToolchain = root + "/rust-toolchain";
-        rustTomlToolchain = root + "/rust-toolchain.toml";
-      in
-      if builtins.pathExists rustToolchain
-      then rustToolchain
-      else if builtins.pathExists rustTomlToolchain
-      then rustTomlToolchain
-      else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
   };
-  _lib = lib // pkgs.nciUtils;
-  overrideDataPkgs = overrideData // { inherit pkgs; };
 
-  l = _lib;
+  overrideDataPkgs = overrideData // { pkgs = nci-pkgs.pkgs; };
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
@@ -61,11 +52,19 @@ let
     l.dbgX "root is" p;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
-  cCompiler = l.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
-  useCCompilerBintools = workspaceMetadata.useCCompilerBintools or packageMetadata.useCCompilerBintools or true;
+  cCompiler = nci-pkgs.utils.resolveToPkg (
+    workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc"
+  );
+  useCCompilerBintools =
+    workspaceMetadata.useCCompilerBintools
+      or packageMetadata.useCCompilerBintools
+      or true;
 
   # Libraries that will be put in $LD_LIBRARY_PATH
-  runtimeLibs = l.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+  runtimeLibs = nci-pkgs.utils.resolveToPkgs (
+    (workspaceMetadata.runtimeLibs or [ ])
+    ++ (packageMetadata.runtimeLibs or [ ])
+  );
 
   overrideDataCrates = overrideDataPkgs // { inherit cCompiler runtimeLibs root; };
 
@@ -75,7 +74,7 @@ let
       # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
       # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
       depNames = l.map (dep: dep.name) dependencies;
-      baseRaw = l.makeCrateOverrides {
+      baseRaw = nci-pkgs.utils.makeCrateOverrides {
         inherit cCompiler useCCompilerBintools;
         crateName = cargoPkg.name;
         rawTomlOverrides =
@@ -90,8 +89,11 @@ let
     base // ((overrides.crateOverrides or (_: _: { })) overrideDataCrates base);
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
   crateOverridesEmpty = l.mapAttrsToList (_: v: v { }) crateOverrides;
-  # Get a field from all overrides in "empty" crate overrides and flatten them. Mainly used to collect (native) build inputs.
-  crateOverridesGetFlattenLists = attrName: l.unique (l.flatten (l.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
+  # Get a field from all overrides in "empty" crate overrides and flatten them. 
+  # Mainly used to collect (native) build inputs.
+  crateOverridesGetFlattenLists = attrName: l.unique (
+    l.flatten (l.map (v: v.${attrName} or [ ]) crateOverridesEmpty)
+  );
   noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined =
@@ -121,30 +123,30 @@ let
   # Create the base config that will be overrided.
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
   baseConfig = {
+    inherit (nci-pkgs) pkgs rustToolchain;
     inherit
-      meta
-      cCompiler
-      pkgs
-      memberName
-      system
       root
       prevRoot
       sources
+      system
+      memberName
       cargoPkg
       cargoToml
       workspaceMetadata
       packageMetadata
       desktopFileMetadata
+      meta
+      cCompiler
       runtimeLibs;
 
     # Collect build inputs.
     buildInputs =
-      l.resolveToPkgs
+      nci-pkgs.utils.resolveToPkgs
         ((workspaceMetadata.buildInputs or [ ])
           ++ (packageMetadata.buildInputs or [ ]));
     # Collect native build inputs.
     nativeBuildInputs =
-      l.resolveToPkgs
+      nci-pkgs.utils.resolveToPkgs
         ((workspaceMetadata.nativeBuildInputs or [ ])
           ++ (packageMetadata.nativeBuildInputs or [ ]));
     # Collect the env vars. The priority is as follows:
@@ -170,6 +172,7 @@ let
       lib = l;
 
       inherit
+        nci-pkgs
         useCCompilerBintools
         crateOverrides
         crateOverridesEmpty
@@ -177,8 +180,7 @@ let
         noPropagatedEnvOverrides
         isRootMember
         mainBuildOverride
-        crateOverridesGetFlattenLists
-        makePkgs;
+        crateOverridesGetFlattenLists;
 
       # Whether a desktop file should be added to the resulting package.
       mkDesktopFile = desktopFileMetadata != null;
@@ -222,7 +224,7 @@ let
           or enablePreCommitHooks
       )
       {
-        preCommitChecks = pkgs.makePreCommitHooks {
+        preCommitChecks = nci-pkgs.makePreCommitHooks {
           src = root;
           hooks = {
             rustfmt.enable = true;

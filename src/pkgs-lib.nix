@@ -1,20 +1,28 @@
-{ pkgs, lib }:
+# Library utilities that depend on a package set.
+{
+  # an imported nixpkgs package set
+  pkgs
+, # an NCI library
+  lib
+, # dream2nix tools
+  dream2nix
+,
+}:
 let
   l = lib;
-  # courtesy of devshell
+
+  # Resolves some string key to a package.
   resolveToPkg = key:
     let
       attrs = l.filter l.isString (l.split "\\." key);
       op = sum: attr: sum.${attr} or (throw "package \"${key}\" not found");
     in
     l.foldl' op pkgs attrs;
+  # Resolves a list of string keys to packages.
   resolveToPkgs = l.map resolveToPkg;
 in
 {
   inherit resolveToPkg resolveToPkgs;
-
-  # Removes `propagatedEnv` attributes from some `crateOverride`s.
-  removePropagatedEnv = l.mapAttrs (_: v: (prev: l.removeAttrs (v prev) [ "propagatedEnv" ]));
 
   # Creates a nixpkgs-compatible nix expression that uses `buildRustPackage`.
   createNixpkgsDrv = common: pkgs.writeTextFile {
@@ -192,7 +200,7 @@ in
           );
         } // (crate.env or { }) // { propagatedEnv = crate.env or { }; })
         (l.dbgX "rawTomlOverrides" rawTomlOverrides);
-      extraOverrides = import ./extraCrateOverrides.nix pkgs;
+      extraOverrides = import ./extra-crate-overrides.nix pkgs;
       collectOverride = acc: el: name:
         let
           getOverride = x: x.${name} or (_: { });
@@ -223,7 +231,7 @@ in
       attrs = {
         source = root;
       } // (l.removeAttrs args [ "root" "memberName" ]);
-      outputs = pkgs.dream2nixTools.riseAndShine attrs;
+      outputs = dream2nix.riseAndShine attrs;
     in
     if memberName != null
     then outputs.packages.${pkgs.system}.${memberName}

@@ -5,8 +5,9 @@
 , common
 }:
 let
-  inherit (common) root pkgs packageMetadata desktopFileMetadata cargoPkg;
+  inherit (common) root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
+  inherit (common.internal.nci-pkgs) pkgs utils;
 
   l = common.internal.lib;
 
@@ -120,7 +121,6 @@ let
   # TODO: support dream2nix builder switching
   baseConfig = {
     inherit root memberName;
-
     packageOverrides = craneOverrides;
   };
 
@@ -133,5 +133,5 @@ in
   config = config // {
     inherit release features doCheck;
   };
-  package = l.buildCrate config;
+  package = utils.buildCrate config;
 }
