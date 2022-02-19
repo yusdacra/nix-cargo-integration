@@ -69,57 +69,56 @@ let
   craneOverrides =
     let
       # Fixup a cargo command for crane
-      fixupCargoCommand = isTest: let
+      fixupCargoCommand = isDeps: isTest: let
+        subcmd =
+          if isTest
+          then "test"
+          else "build";
+        hook =
+          if isTest
+          then "Check"
+          else "Build";
+
         cmd = l.concatStringsSep " " (
-          [
-            "cargo"
-            (if isTest
-            then "test"
-            else "build")
-          ]
+          ["cargo" subcmd]
           ++ releaseFlag
           ++ packageFlag
           ++ featuresFlags
-          ++ (l.optionals (!isTest) [
+          ++ (l.optionals (!isTest && !isDeps) [
             "--message-format"
             "json-render-diagnostics"
             ">\"$cargoBuildLog\""
           ])
         );
       in ''
-        runHook ${
-          if isTest
-          then "preCheck"
-          else "preBuild"
-        }
+        runHook pre${hook}
         echo running: ${l.strings.escapeShellArg cmd}
-        ${l.optionalString (!isTest) "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"}
-        ${cmd}
-        runHook ${
-          if isTest
-          then "postCheck"
-          else "postBuild"
+        ${
+          l.optionalString
+          (!isTest && !isDeps)
+          "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"
         }
+        ${cmd}
+        runHook post${hook}
       '';
       # Build phase for crane drvs
-      buildPhase =
-        let
-          p = fixupCargoCommand false;
-        in
-          l.dbgX "buildPhase" p;
+      buildPhase = isDeps: let
+        p = fixupCargoCommand false isDeps;
+      in
+        l.dbgX "${l.optionalString isDeps "deps-"}buildPhase" p;
       # Check phase for crane drvs
-      checkPhase =
-        let
-          p = fixupCargoCommand true;
-        in
-          l.dbgX "checkPhase" p;
+      checkPhase = isDeps: let
+        p = fixupCargoCommand true isDeps;
+      in
+        l.dbgX "${l.optionalString isDeps "deps-"}checkPhase" p;
 
       # Overrides for the dependency only drv
       depsOverride = prev:
         l.applyOverrides prev [
           (prev: {
-            inherit buildPhase checkPhase;
             doCheck = false;
+            buildPhase = buildPhase true;
+            checkPhase = checkPhase true;
           })
           commonDepsOv
           common.internal.crateOverridesCombined
@@ -128,9 +127,11 @@ let
       mainOverride = prev:
         l.applyOverrides prev [
           (prev: {
-            inherit doCheck buildPhase checkPhase;
+            inherit doCheck;
             meta = common.meta;
             dontFixup = !release;
+            buildPhase = buildPhase false;
+            checkPhase = checkPhase false;
           })
           desktopItemOv
           runtimeLibsOv
