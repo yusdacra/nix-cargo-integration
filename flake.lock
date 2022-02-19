@@ -49,7 +49,6 @@
         "nix-parsec": [
           "nixpkgs"
         ],
-        "nix-std": "nix-std",
         "nixpkgs": "nixpkgs",
         "node2nix": [
           "nixpkgs"
@@ -59,11 +58,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1645035976,
-        "narHash": "sha256-Yl3I4KnHXM/mmcyPE+KAGF+n00WvqjDmEPZhLaMtoxQ=",
+        "lastModified": 1645228970,
+        "narHash": "sha256-I95yCCCCI5AUxEWrMSeAfcBHs8Eqjh8shs028UYTUig=",
         "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "3a3cfd7b3d098491b3a3e741461f2191bb81e81b",
+        "rev": "afde8d7f6e4e761324c1fcf02aa15b0e2f4659a1",
         "type": "github"
       },
       "original": {
@@ -85,22 +84,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "nix-std": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1624642189,
-        "narHash": "sha256-tIt3p1k0PsYeIxK2xO9Z8k2Ggq2nH4auqj3RbVAiRrg=",
-        "owner": "chessai",
-        "repo": "nix-std",
-        "rev": "9ef1cf73948bfad05d370165c7f3011b82c4d679",
-        "type": "github"
-      },
-      "original": {
-        "owner": "chessai",
-        "repo": "nix-std",
         "type": "github"
       }
     },
