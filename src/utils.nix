@@ -197,7 +197,7 @@ in
         in
         attrs:
         let
-          overrodedAccBase = accOverride attrs;
+          overrodedAccBase = attrs // accOverride attrs;
           overrodedAcc = overrodedAccBase // (baseConf overrodedAccBase);
         in
         overrodedAcc // (elOverride overrodedAcc);
