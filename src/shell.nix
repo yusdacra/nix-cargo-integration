@@ -262,7 +262,7 @@ common: let
         c
         // {
           config = c.config // (common.overrides.shell common c.config);
-          imports = c.imports ++ ["${pkgs.devshell.extraModulesDir}/language/c.nix"];
+          imports = c.imports ++ ["${common.sources.devshell}/extra/language/c.nix"];
         };
   };
 in
