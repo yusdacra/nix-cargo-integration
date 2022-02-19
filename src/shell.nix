@@ -14,7 +14,7 @@ common: let
   devshellOptions =
     l.filterAttrs
     (_: l.isType "option")
-    (pkgs.devshell.eval { configuration = {}; }).options.devshell;
+    (makeDevshell { configuration = {}; }).options.devshell;
 
   # A helper function moving all options defined in the root of the config
   # (which name matches ones in `devshellOptions`) under a `devshell` attribute
