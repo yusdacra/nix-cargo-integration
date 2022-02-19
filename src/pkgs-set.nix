@@ -57,6 +57,8 @@ rec {
     };
   # dream2nix tools
   dream2nix = sources.dream2nix.lib.init { pkgs = pkgs // rustToolchain; };
+  # devshell
+  makeDevshell = import "${sources.devshell}/modules" pkgs;
   # nci library utilities
   utils = import ./pkgs-lib.nix { inherit pkgs lib dream2nix; };
   # pre commit hooks

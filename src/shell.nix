@@ -1,6 +1,6 @@
 common: let
   inherit (common) workspaceMetadata packageMetadata;
-  inherit (common.internal.nci-pkgs) pkgs rustToolchain;
+  inherit (common.internal.nci-pkgs) pkgs rustToolchain makeDevshell;
 
   l = common.internal.lib;
 
@@ -266,4 +266,4 @@ common: let
         };
   };
 in
-  (pkgs.devshell.eval resultConfig).shell
+  (makeDevshell resultConfig).shell
