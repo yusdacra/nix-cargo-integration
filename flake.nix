@@ -52,31 +52,31 @@
 
       tests =
         let
-          testNames = libb.remove null (libb.mapAttrsToList (name: type:
+          testNames = l.remove null (l.mapAttrsToList (name: type:
             if type == "directory"
             then
               if name != "broken"
               then name
               else null
             else null) (builtins.readDir ./tests));
-          tests = libb.genAttrs testNames (test: lib.makeOutputs { root = ./tests + "/${test}"; });
+          tests = l.genAttrs testNames (test: makeOutputs { root = ./tests + "/${test}"; });
           flattenAttrs = attrs:
-            libb.mapAttrsToList (n: v:
-              libb.mapAttrs (_:
-                libb.mapAttrs' (n:
-                  libb.nameValuePair (n
-                  + (if libb.hasInfix "workspace" n
+            l.mapAttrsToList (n: v:
+              l.mapAttrs (_:
+                l.mapAttrs' (n:
+                  l.nameValuePair (n
+                  + (if l.hasInfix "workspace" n
                   then "-${n}"
                   else ""))))
               v.${attrs})
             tests;
-          checks = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");
-          packages = builtins.map (libb.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "packages");
-          shells = libb.mapAttrsToList (name: test: libb.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
+          checks = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");
+          packages = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "packages");
+          shells = l.mapAttrsToList (name: test: l.mapAttrs (_: drv: { "${name}-shell" = drv; }) test.devShell) tests;
         in {
-          checks = libb.foldAttrs libb.recursiveUpdate {} checks;
-          packages = libb.foldAttrs libb.recursiveUpdate {} packages;
-          shells = libb.foldAttrs libb.recursiveUpdate {} shells;
+          checks = l.foldAttrs l.recursiveUpdate {} checks;
+          packages = l.foldAttrs l.recursiveUpdate {} packages;
+          shells = l.foldAttrs l.recursiveUpdate {} shells;
         };
     in {
       lib = {
