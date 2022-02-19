@@ -27,7 +27,6 @@ in {
       rawTomlOverrides ? {},
       cCompiler ? pkgs.gcc,
       useCCompilerBintools ? true,
-      crateName,
     }:
     let
       baseConf = prev: {

@@ -82,10 +82,9 @@ let
     let
       # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
       # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
-      depNames = l.map (dep: dep.name) dependencies;
+      depNames = (l.map (dep: dep.name) dependencies) ++ ["${cargoPkg.name}-deps"];
       baseRaw = nci-pkgs.utils.makeCrateOverrides {
         inherit cCompiler useCCompilerBintools;
-        crateName = cargoPkg.name;
         rawTomlOverrides =
           l.foldl'
           l.recursiveUpdate
