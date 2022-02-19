@@ -80,6 +80,11 @@ let
           ++ releaseFlag
           ++ packageFlag
           ++ featuresFlags
+          ++ (l.optionals (!isTest) [
+            "--message-format"
+            "json-render-diagnostics"
+            ">\"$cargoBuildLog\""
+          ])
         );
       in ''
         runHook ${
@@ -88,6 +93,7 @@ let
           else "preBuild"
         }
         echo running: ${l.strings.escapeShellArg cmd}
+        ${l.optionalString (!isTest) "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"}
         ${cmd}
         runHook ${
           if isTest
