@@ -209,7 +209,7 @@ common: let
   devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell =
     if (l.pathExists devshellFilePath)
-    then (pkgs.devshell.importTOML devshellFilePath { lib = pkgs.lib; })
+    then (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath { lib = pkgs.lib; })
     else null;
 
   # Helper functions to combine devshell configs without loss
