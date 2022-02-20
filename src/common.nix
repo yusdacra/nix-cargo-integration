@@ -107,22 +107,9 @@ let
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined =
     let
-      filteredOverrides = l.removeAttrs noPropagatedEnvOverrides [cargoPkg.name];
-      func = prev:
-        prev
-        // (l.pipe prev (
-          l.map
-          (ov: (old: old // (ov old)))
-          (l.attrValues filteredOverrides)
-        ));
+      func = prev: l.applyOverrides prev (l.attrValues noPropagatedEnvOverrides);
     in
       l.dbgXY "combined overrides diff" (func {}) func;
-  # The main crate override is taken here
-  mainBuildOverride =
-    let
-      ov = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: {})) prev);
-    in
-      l.dbgXY "main override diff" (ov {}) ov;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =
@@ -200,7 +187,6 @@ let
           crateOverridesCombined
           noPropagatedEnvOverrides
           isRootMember
-          mainBuildOverride
           crateOverridesGetFlattenLists
           ;
 

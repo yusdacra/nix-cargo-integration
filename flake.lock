@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "crane": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1644785799,
-        "narHash": "sha256-VpAJO1L0XeBvtCuNGK4IDKp6ENHIpTrlaZT7yfBCvwo=",
-        "owner": "ipetkov",
-        "repo": "crane",
-        "rev": "fc7a94f841347c88f2cb44217b2a3faa93e2a0b2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ipetkov",
-        "repo": "crane",
-        "type": "github"
-      }
-    },
     "devshell": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -39,7 +23,6 @@
     },
     "dream2nix": {
       "inputs": {
-        "crane": "crane",
         "gomod2nix": [
           "nixpkgs"
         ],
@@ -58,16 +41,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1645295688,
-        "narHash": "sha256-whkaLWXnyj9I/3TavRkFUvFDmCNXtLDcZeq69GdRyzU=",
+        "lastModified": 1645348569,
+        "narHash": "sha256-STA82ogixW639Kidg5u3339jvAPBrBI6FzHrX/VSWAU=",
         "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "cea574f8a0b97db5fc953f19526a8cdf591895ea",
+        "rev": "129134fcd375776824d0a26d2e092aa105c58c56",
         "type": "github"
       },
       "original": {
         "owner": "yusdacra",
-        "ref": "rust/crane-builder",
+        "ref": "rust/improvements",
         "repo": "dream2nix",
         "type": "github"
       }

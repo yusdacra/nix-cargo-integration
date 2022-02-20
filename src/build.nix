@@ -35,8 +35,6 @@ let
   packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
   # Specify --features if we have enabled features other than the default ones
   featuresFlags = l.optional ((l.length features) > 0) "--features ${(l.concatStringsSep "," features)}";
-  # Specify --release if release profile is enabled
-  releaseFlag = l.optional release "--release";
   # Member name of the package. Defaults to the crate name in Cargo.toml.
   memberName =
     if isNull common.memberName
@@ -65,98 +63,44 @@ let
       nativeBuildInputs = l.unique ((prev.nativeBuildInputs or []) ++ common.nativeBuildInputs);
     };
 
-  # Overrides for the crane builder
-  craneOverrides =
+  # Overrides for the build rust package builder
+  brpOverrides =
     let
-      # Fixup a cargo command for crane
-      fixupCargoCommand = isDeps: isTest: let
-        subcmd =
-          if isTest
-          then "test"
-          else "build";
-        hook =
-          if isTest
-          then "Check"
-          else "Build";
-
-        cmd = l.concatStringsSep " " (
-          ["cargo" subcmd]
-          ++ releaseFlag
-          ++ packageFlag
-          ++ featuresFlags
-          ++ (l.optionals (!isTest && !isDeps) [
-            "--message-format"
-            "json-render-diagnostics"
-            ">\"$cargoBuildLog\""
-          ])
-        );
-      in ''
-        runHook pre${hook}
-        echo running: ${l.strings.escapeShellArg cmd}
-        ${
-          l.optionalString
-          (!isTest && !isDeps)
-          "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"
-        }
-        ${cmd}
-        runHook post${hook}
-      '';
-      # Build phase for crane drvs
-      buildPhase = isDeps: let
-        p = fixupCargoCommand false isDeps;
-      in
-        l.dbgX "${l.optionalString isDeps "deps-"}buildPhase" p;
-      # Check phase for crane drvs
-      checkPhase = isDeps: let
-        p = fixupCargoCommand true isDeps;
-      in
-        l.dbgX "${l.optionalString isDeps "deps-"}checkPhase" p;
-
-      # Overrides for the dependency only drv
-      depsOverride = prev:
-        l.applyOverrides prev [
-          (prev: {
-            doCheck = false;
-            buildPhase = buildPhase true;
-            checkPhase = checkPhase true;
-          })
-          commonDepsOv
-          common.internal.crateOverridesCombined
-        ];
-      # Overrides for the main drv
-      mainOverride = prev:
+      flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
+      profile =
+        if release
+        then "release"
+        else "debug";
+      # Overrides for the drv
+      overrides = prev:
         l.applyOverrides prev [
           (prev: {
             inherit doCheck;
             meta = common.meta;
             dontFixup = !release;
-            buildPhase = buildPhase false;
-            checkPhase = checkPhase false;
+            cargoBuildFlags = flags;
+            cargoCheckFlags = flags;
+            cargoBuildType = profile;
+            cargoCheckType = profile;
           })
           desktopItemOv
           runtimeLibsOv
           commonDepsOv
-          common.internal.mainBuildOverride
+          common.internal.crateOverridesCombined
         ];
     in {
-      "${cargoPkg.name}-deps" = {
-        nci-overrides.overrideAttrs = prev: let
-          data = depsOverride prev;
-        in
-          l.dbgX "deps override diff" data;
-      };
       ${cargoPkg.name} = {
         nci-overrides.overrideAttrs = prev: let
-          data = mainOverride prev;
+          data = overrides prev;
         in
-          l.dbgX "main override diff" data;
+          l.dbgX "overrided drv" data;
       };
     };
 
   # TODO: support dream2nix builder switching
   baseConfig = {
     inherit root memberName;
-    packageOverrides = craneOverrides;
+    packageOverrides = brpOverrides;
   };
 
   overrideConfig = config:

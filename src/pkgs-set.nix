@@ -56,7 +56,16 @@ rec {
       cargo = toolchain;
     };
   # dream2nix tools
-  dream2nix = sources.dream2nix.lib.init { pkgs = pkgs // rustToolchain; };
+  dream2nix = sources.dream2nix.lib.init {
+    pkgs =
+      pkgs
+      // rustToolchain
+      // {
+        rustPlatform = pkgs.makeRustPlatform {
+          inherit (rustToolchain) rustc cargo;
+        };
+      };
+  };
   # devshell
   makeDevshell = import "${sources.devshell}/modules" pkgs;
   # nci library utilities
