@@ -161,7 +161,7 @@
     overrideBRPHook = prev: {
       nativeBuildInputs = let
         pkgs = pkgsWithRust;
-        cargoHooks = pkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
+        cargoHooks = pkgs.callPackage "${sources.nixpkgs}/pkgs/build-support/rust/hooks" {
           # Use our own rust and cargo, and our own C compiler.
           inherit (pkgs.rustPlatform.rust) rustc cargo;
           stdenv = prev.stdenv;
