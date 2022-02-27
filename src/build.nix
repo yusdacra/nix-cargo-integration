@@ -185,6 +185,7 @@
 
   baseConfig = {
     inherit root memberName;
+    pname = cargoPkg.name;
     packageOverrides = brpOverrides;
   };
 

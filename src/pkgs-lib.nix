@@ -85,9 +85,7 @@ in {
     # pass everything else to dream2nix
   } @ args: let
     attrs =
-      {
-        source = root;
-      }
+      {source = root;}
       // (l.removeAttrs args ["root" "memberName"]);
     outputs = dream2nix.makeFlakeOutputs attrs;
   in
