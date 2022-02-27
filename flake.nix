@@ -50,7 +50,7 @@
         };
       };
 
-      tests = let
+      mkTests = builder: let
         testNames = l.remove null (l.mapAttrsToList (name: type:
           if type == "directory"
           then
@@ -58,7 +58,10 @@
             then name
             else null
           else null) (builtins.readDir ./tests));
-        tests = l.genAttrs testNames (test: makeOutputs {root = ./tests + "/${test}";});
+        tests = l.genAttrs testNames (test: makeOutputs {
+          inherit builder;
+          root = ./tests + "/${test}";
+        });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
             l.mapAttrs (_:
@@ -77,11 +80,14 @@
         packages = l.foldAttrs l.recursiveUpdate {} packages;
         shells = l.foldAttrs l.recursiveUpdate {} shells;
       };
+
+      craneTests = mkTests "crane";
+      brpTests = mkTests "buildRustPackage";
     in {
       lib = {
         inherit makeOutputs;
       };
-      inherit tests;
-      inherit (cliOutputs) apps packages defaultApp defaultPackage checks;
+      inherit craneTests brpTests;
+      inherit (cliOutputs) apps packages defaultApp defaultPackage;
     };
 }
