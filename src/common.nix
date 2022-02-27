@@ -18,15 +18,13 @@
 
   l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
-  # This is named "prevRoot" since we will override it later on.
-  prevRoot = let
+  root = let
     p = attrs.root or (throw "root must be specified");
   in
-    l.dbgX "prev root was" p;
+    l.dbgX "root is" p;
 
   overrideData = {
-    inherit cargoPkg packageMetadata sources system memberName cargoToml;
-    root = prevRoot;
+    inherit cargoPkg packageMetadata sources system memberName cargoToml root;
   };
 
   toolchainChannel = let
@@ -41,19 +39,12 @@
 
   # Create the package set we will use
   nci-pkgs = import ./pkgs-set.nix {
-    inherit system sources toolchainChannel overrideData;
+    inherit root system sources toolchainChannel overrideData;
     lib = l;
     override = overrides.pkgs or (_: _: {});
   };
 
   overrideDataPkgs = overrideData // {pkgs = nci-pkgs.pkgs;};
-
-  # Override the root here. This is usually useless, but better to provide a way to do it anyways.
-  # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
-  root = let
-    p = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
-  in
-    l.dbgX "root is" p;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
   cCompiler = nci-pkgs.utils.resolveToPkg (
@@ -122,7 +113,6 @@
     inherit (nci-pkgs) pkgs rustToolchain;
     inherit
       root
-      prevRoot
       sources
       system
       memberName
