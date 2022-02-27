@@ -57,11 +57,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1645976259,
-        "narHash": "sha256-pVHCap+xcyfl58AY8HAa6ON/Wh011bfZgPFA+1OGQZU=",
+        "lastModified": 1645981067,
+        "narHash": "sha256-dNEQ39Ac80t8BC70P+PczdwyWm6l4mgCTXi1ULfxttA=",
         "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "8bc6966a546c306fccd01939a9130c493a3d6c0a",
+        "rev": "df109c61291f0193811f488e003cf3a70aa2f515",
         "type": "github"
       },
       "original": {
