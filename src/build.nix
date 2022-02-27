@@ -7,7 +7,7 @@
 }: let
   inherit (common) root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
-  inherit (common.internal.nci-pkgs) pkgs utils;
+  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils;
 
   l = common.internal.lib;
 
@@ -157,6 +157,30 @@
       if release
       then "release"
       else "debug";
+    # Function that overrides cargoBuildHook of buildRustPackage with our toolchain
+    overrideBRPHook = prev: {
+      nativeBuildInputs = let
+        pkgs = pkgsWithRust;
+        cargoHooks = pkgs.callPackage "${common.sources.nixpkgs}/pkgs/build-support/rust/hooks" {
+          # Use our own rust and cargo, and our own C compiler.
+          inherit (pkgs.rustPlatform.rust) rustc cargo;
+          stdenv = prev.stdenv;
+        };
+        notOldHook = pkg:
+          pkg
+          != pkgs.rustPlatform.cargoBuildHook
+          && pkg != pkgs.rustPlatform.cargoSetupHook
+          && pkg != pkgs.rustPlatform.cargoCheckHook
+          && pkg != pkgs.rustPlatform.cargoInstallHook;
+      in
+        (l.filter notOldHook prev.nativeBuildInputs)
+        ++ [
+          cargoHooks.cargoSetupHook
+          cargoHooks.cargoBuildHook
+          cargoHooks.cargoCheckHook
+          cargoHooks.cargoInstallHook
+        ];
+    };
     # Overrides for the drv
     overrides = prev:
       l.applyOverrides prev [
@@ -173,6 +197,7 @@
         runtimeLibsOv
         commonDepsOv
         common.internal.crateOverridesCombined
+        overrideBRPHook
       ];
   in {
     ${cargoPkg.name} = {

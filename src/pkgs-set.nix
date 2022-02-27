@@ -14,6 +14,15 @@
       (import sources.rustOverlay)
     ];
   };
+  # pkgs set with rust toolchain overlaid.
+  pkgsWithRust =
+    pkgs
+    // rustToolchain
+    // {
+      rustPlatform = pkgs.makeRustPlatform {
+        inherit (rustToolchain) rustc cargo;
+      };
+    };
   # Rust toolchain we will use.
   rustToolchain = let
     inherit (builtins) readFile fromTOML isPath pathExists match;
@@ -56,14 +65,7 @@
   # dream2nix tools
   dream2nix = sources.dream2nix.lib.init {
     config.projectRoot = root;
-    pkgs =
-      pkgs
-      // rustToolchain
-      // {
-        rustPlatform = pkgs.makeRustPlatform {
-          inherit (rustToolchain) rustc cargo;
-        };
-      };
+    pkgs = pkgsWithRust;
   };
   # devshell
   makeDevshell = import "${sources.devshell}/modules" pkgs;
