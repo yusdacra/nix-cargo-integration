@@ -12,6 +12,7 @@
   enablePreCommitHooks ? false,
   renameOutputs ? {},
   defaultOutputs ? {},
+  builder ? "crane",
   ...
 }: let
   l = lib // builtins;
@@ -84,6 +85,7 @@
         sources
         enablePreCommitHooks
         isRootMember
+        builder
         ;
     };
 

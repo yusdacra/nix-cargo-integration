@@ -5,7 +5,7 @@
   renamePkgTo ? null,
   common,
 }: let
-  inherit (common) root packageMetadata desktopFileMetadata cargoPkg;
+  inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
   inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils;
 
@@ -133,7 +133,7 @@
         desktopItemOv
         runtimeLibsOv
         commonDepsOv
-        common.internal.mainBuildOverride
+        common.internal.mainOverrides
       ];
   in {
     "${cargoPkg.name}-deps" = {
@@ -197,6 +197,7 @@
         runtimeLibsOv
         commonDepsOv
         common.internal.crateOverridesCombined
+        common.internal.mainOverrides
         overrideBRPHook
       ];
   in {
@@ -211,7 +212,14 @@
   baseConfig = {
     inherit root memberName;
     pname = cargoPkg.name;
-    packageOverrides = brpOverrides;
+
+    builder = sources.dream2nix.lib.${system}.builders.rust.${builder};
+    packageOverrides =
+      if builder == "crane"
+      then craneOverrides
+      else if builder == "buildRustPackage"
+      then brpOverrides
+      else throw "unsupported builder";
   };
 
   overrideConfig = config:

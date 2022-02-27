@@ -18,6 +18,8 @@
 
   l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
+  builder = l.dbgX "using builder" attrs.builder;
+
   root = let
     p = attrs.root or (throw "root must be specified");
   in
@@ -89,11 +91,19 @@
       l.flatten (l.map (v: v.${attrName} or []) crateOverridesEmpty)
     );
   noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
+  mainNames = [cargoPkg.name];
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined = let
-    func = prev: l.applyOverrides prev (l.attrValues noPropagatedEnvOverrides);
+    # TODO: also remove workspace dependency overrides here
+    noMainOverrides = l.removeAttrs noPropagatedEnvOverrides mainNames;
+    func = prev: l.applyOverrides prev (l.attrValues noMainOverrides);
   in
     l.dbgXY "combined overrides diff" (func {}) func;
+  # Combine all main dep overrides
+  mainOverrides = let
+    ovs = l.filterAttrs (n: _: l.any (on: n == on) mainNames) noPropagatedEnvOverrides;
+  in
+    prev: l.applyOverrides prev (l.attrValues ovs);
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =
@@ -112,6 +122,7 @@
   baseConfig = {
     inherit (nci-pkgs) pkgs rustToolchain;
     inherit
+      builder
       root
       sources
       system
@@ -168,6 +179,7 @@
           crateOverrides
           crateOverridesEmpty
           crateOverridesCombined
+          mainOverrides
           noPropagatedEnvOverrides
           isRootMember
           crateOverridesGetFlattenLists
