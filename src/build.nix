@@ -7,7 +7,7 @@
 }: let
   inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
-  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils;
+  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils dream2nix;
 
   l = common.internal.lib;
 
@@ -213,7 +213,7 @@
     inherit root memberName;
     pname = cargoPkg.name;
 
-    builder = sources.dream2nix.lib.${system}.builders.rust.${builder};
+    builder = dream2nix.builders.${system}.rust.${builder};
     packageOverrides =
       if builder == "crane"
       then craneOverrides

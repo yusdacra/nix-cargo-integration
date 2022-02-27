@@ -58,10 +58,11 @@
             then name
             else null
           else null) (builtins.readDir ./tests));
-        tests = l.genAttrs testNames (test: makeOutputs {
-          inherit builder;
-          root = ./tests + "/${test}";
-        });
+        tests = l.genAttrs testNames (test:
+          makeOutputs {
+            inherit builder;
+            root = ./tests + "/${test}";
+          });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
             l.mapAttrs (_:
