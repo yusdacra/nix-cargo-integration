@@ -46,7 +46,9 @@
         "mach-nix": [
           "nixpkgs"
         ],
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "node2nix": [
           "nixpkgs"
         ],
@@ -94,21 +96,6 @@
         "type": "github"
       },
       "original": {
-        "id": "nixpkgs",
-        "ref": "nixos-unstable",
-        "type": "indirect"
-      }
-    },
-    "nixpkgs_2": {
-      "locked": {
-        "lastModified": 1645433236,
-        "narHash": "sha256-4va4MvJ076XyPp5h8sm5eMQvCrJ6yZAbBmyw95dGyw4=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "7f9b6e2babf232412682c09e57ed666d8f84ac2d",
-        "type": "github"
-      },
-      "original": {
         "owner": "NixOS",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
@@ -119,7 +106,7 @@
       "inputs": {
         "devshell": "devshell",
         "dream2nix": "dream2nix",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs",
         "rustOverlay": "rustOverlay"
       }
     },

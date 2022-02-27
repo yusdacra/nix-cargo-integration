@@ -13,6 +13,7 @@
 
     dream2nix = {
       url = "github:yusdacra/dream2nix/rust/crane-builder";
+      inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";
       inputs.node2nix.follows = "nixpkgs";
