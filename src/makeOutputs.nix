@@ -13,8 +13,7 @@
   renameOutputs ? {},
   defaultOutputs ? {},
   ...
-}:
-let
+}: let
   l = lib // builtins;
 
   # Helper function to import a Cargo.toml from a root.
@@ -142,7 +141,7 @@ let
   allOutputs' = l.flatten (l.map
   (
     l.mapAttrsToList
-    (_: common: import ./makeOutput.nix { inherit common renameOutputs; })
+    (_: common: import ./makeOutput.nix {inherit common renameOutputs;})
   )
   allCommons');
   # Recursively combine all outputs we have.

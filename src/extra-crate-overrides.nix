@@ -57,11 +57,11 @@ in {
       TEMPLATER_CARGO_BIN = "${rustc}/bin/cargo";
     };
   in
-    { propagatedEnv = env; } // env;
+    {propagatedEnv = env;} // env;
   shaderc-sys = _: let
-    env = { SHADERC_LIB_DIR = "${pkgs.shaderc.lib}/lib"; };
+    env = {SHADERC_LIB_DIR = "${pkgs.shaderc.lib}/lib";};
   in
-    { propagatedEnv = env; } // env;
+    {propagatedEnv = env;} // env;
   prost-build = prev: let
     env = {
       PROTOC = "${protobuf}/bin/protoc";

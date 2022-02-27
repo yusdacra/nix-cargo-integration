@@ -2,8 +2,7 @@
 {
   common,
   renameOutputs ? {},
-}:
-let
+}: let
   inherit (common) cargoToml cargoPkg packageMetadata system memberName root;
   inherit (common.internal) nci-pkgs;
 
@@ -16,14 +15,13 @@ let
   autobins = cargoPkg.autobins or (edition == "2018");
 
   # Find the package source.
-  pkgSrc =
-    let
-      src =
-        if memberName == null
-        then root + "/src"
-        else root + "/${memberName}" + "/src";
-    in
-      l.dbg "package source for ${name} at: ${src}" src;
+  pkgSrc = let
+    src =
+      if memberName == null
+      then root + "/src"
+      else root + "/${memberName}" + "/src";
+  in
+    l.dbg "package source for ${name} at: ${src}" src;
 
   # Emulate autobins behaviour, get all the binaries of this package.
   allBins =
@@ -42,7 +40,7 @@ let
             l.map
             (l.removeSuffix ".rs")
             (l.attrNames (l.readDir (pkgSrc + "/bin")))
-            (name: { inherit name; })
+            (name: {inherit name;})
           )
         )
       )
@@ -122,13 +120,12 @@ in
   // l.optionalAttrs (packageMetadata.app or false) {
     inherit apps;
     defaultApp = {
-      ${system} =
-        let
-          appName =
-            if (l.length allBins) > 0
-            then (l.head allBins).name
-            else name;
-        in
-          apps.${system}.${appName};
+      ${system} = let
+        appName =
+          if (l.length allBins) > 0
+          then (l.head allBins).name
+          else name;
+      in
+        apps.${system}.${appName};
     };
   })

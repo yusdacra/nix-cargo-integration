@@ -9,9 +9,7 @@
   sources,
   system,
   ...
-}
-@ attrs:
-let
+} @ attrs: let
   # Extract the metadata we will need.
   cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
   _packageMetadata = cargoPkg.metadata.nix or {};
@@ -21,27 +19,25 @@ let
   l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
   # This is named "prevRoot" since we will override it later on.
-  prevRoot =
-    let
-      p = attrs.root or (throw "root must be specified");
-    in
-      l.dbgX "prev root was" p;
+  prevRoot = let
+    p = attrs.root or (throw "root must be specified");
+  in
+    l.dbgX "prev root was" p;
 
   overrideData = {
     inherit cargoPkg packageMetadata sources system memberName cargoToml;
     root = prevRoot;
   };
 
-  toolchainChannel =
-    let
-      rustToolchain = root + "/rust-toolchain";
-      rustTomlToolchain = root + "/rust-toolchain.toml";
-    in
-      if l.pathExists rustToolchain
-      then rustToolchain
-      else if l.pathExists rustTomlToolchain
-      then rustTomlToolchain
-      else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
+  toolchainChannel = let
+    rustToolchain = root + "/rust-toolchain";
+    rustTomlToolchain = root + "/rust-toolchain.toml";
+  in
+    if l.pathExists rustToolchain
+    then rustToolchain
+    else if l.pathExists rustTomlToolchain
+    then rustTomlToolchain
+    else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
 
   # Create the package set we will use
   nci-pkgs = import ./pkgs-set.nix {
@@ -50,15 +46,14 @@ let
     override = overrides.pkgs or (_: _: {});
   };
 
-  overrideDataPkgs = overrideData // { pkgs = nci-pkgs.pkgs; };
+  overrideDataPkgs = overrideData // {pkgs = nci-pkgs.pkgs;};
 
   # Override the root here. This is usually useless, but better to provide a way to do it anyways.
   # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
-  root =
-    let
-      p = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
-    in
-      l.dbgX "root is" p;
+  root = let
+    p = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
+  in
+    l.dbgX "root is" p;
 
   # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
   cCompiler = nci-pkgs.utils.resolveToPkg (
@@ -75,26 +70,25 @@ let
     ++ (packageMetadata.runtimeLibs or [])
   );
 
-  overrideDataCrates = overrideDataPkgs // { inherit cCompiler runtimeLibs root; };
+  overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
 
   # Collect crate overrides
-  crateOverrides =
-    let
-      # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
-      # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
-      depNames = (l.map (dep: dep.name) dependencies) ++ ["${cargoPkg.name}-deps"];
-      baseRaw = nci-pkgs.utils.makeCrateOverrides {
-        inherit cCompiler useCCompilerBintools;
-        rawTomlOverrides =
-          l.foldl'
-          l.recursiveUpdate
-          (l.genAttrs depNames (name: (_: {})))
-          [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
-      };
-      # Filter out unneeded overrides, using the dep names we got earlier.
-      base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
-    in
-      base // ((overrides.crateOverrides or (_: _: {})) overrideDataCrates base);
+  crateOverrides = let
+    # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
+    # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
+    depNames = (l.map (dep: dep.name) dependencies) ++ ["${cargoPkg.name}-deps"];
+    baseRaw = nci-pkgs.utils.makeCrateOverrides {
+      inherit cCompiler useCCompilerBintools;
+      rawTomlOverrides =
+        l.foldl'
+        l.recursiveUpdate
+        (l.genAttrs depNames (name: (_: {})))
+        [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
+    };
+    # Filter out unneeded overrides, using the dep names we got earlier.
+    base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
+  in
+    base // ((overrides.crateOverrides or (_: _: {})) overrideDataCrates base);
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
   crateOverridesEmpty = l.mapAttrsToList (_: v: v {}) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them.
@@ -105,11 +99,10 @@ let
     );
   noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
   # Combine all crate overrides into one big override function, except the main crate override
-  crateOverridesCombined =
-    let
-      func = prev: l.applyOverrides prev (l.attrValues noPropagatedEnvOverrides);
-    in
-      l.dbgXY "combined overrides diff" (func {}) func;
+  crateOverridesCombined = let
+    func = prev: l.applyOverrides prev (l.attrValues noPropagatedEnvOverrides);
+  in
+    l.dbgXY "combined overrides diff" (func {}) func;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =
@@ -203,15 +196,14 @@ let
           }
           // (
             if l.hasAttr "icon" desktopFileMetadata
-            then
-              let
-                # If icon path starts with relative path prefix, make it absolute using root as base
-                # Otherwise treat it as an absolute path
-                makeIcon = icon:
-                  if l.hasPrefix "./" icon
-                  then root + "/${l.removePrefix "./" icon}"
-                  else icon;
-              in { icon = makeIcon desktopFileMetadata.icon; }
+            then let
+              # If icon path starts with relative path prefix, make it absolute using root as base
+              # Otherwise treat it as an absolute path
+              makeIcon = icon:
+                if l.hasPrefix "./" icon
+                then root + "/${l.removePrefix "./" icon}"
+                else icon;
+            in {icon = makeIcon desktopFileMetadata.icon;}
             else {}
           )
           // (l.putIfHasAttr "genericName" desktopFileMetadata)

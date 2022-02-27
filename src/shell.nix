@@ -14,7 +14,7 @@ common: let
   devshellOptions =
     l.filterAttrs
     (_: l.isType "option")
-    (makeDevshell { configuration = {}; }).options.devshell;
+    (makeDevshell {configuration = {};}).options.devshell;
 
   # A helper function moving all options defined in the root of the config
   # (which name matches ones in `devshellOptions`) under a `devshell` attribute
@@ -59,23 +59,22 @@ common: let
   in
     l.recursiveUpdate
     (l.removeAttrs config (l.attrNames movedOpts))
-    { devshell = movedOpts; };
+    {devshell = movedOpts;};
 
   # Create a base devshell config
   baseConfig =
     {
       language = {
-        c =
-          let
-            inputs =
-              common.buildInputs
-              ++ common.overrideBuildInputs
-              ++ (with pkgs; l.optionals stdenv.isDarwin [libiconv]);
-          in {
-            compiler = common.cCompiler;
-            libraries = inputs;
-            includes = inputs;
-          };
+        c = let
+          inputs =
+            common.buildInputs
+            ++ common.overrideBuildInputs
+            ++ (with pkgs; l.optionals stdenv.isDarwin [libiconv]);
+        in {
+          compiler = common.cCompiler;
+          libraries = inputs;
+          includes = inputs;
+        };
       };
       packages =
         [pkgs.fd]
@@ -83,8 +82,7 @@ common: let
         ++ common.buildInputs
         ++ common.overrideNativeBuildInputs
         ++ common.overrideBuildInputs;
-      commands =
-        with pkgs;
+      commands = with pkgs;
         [
           {
             package = rustToolchain.rustc;
@@ -209,7 +207,7 @@ common: let
   devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell =
     if (l.pathExists devshellFilePath)
-    then (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath { lib = pkgs.lib; })
+    then (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;})
     else null;
 
   # Helper functions to combine devshell configs without loss
@@ -242,28 +240,25 @@ common: let
 
   # Collect final config
   resultConfig = {
-    configuration =
-      let
-        c =
-          if importedDevshell == null
-          then
-            {
-              config = combineWithBase devshellConfig;
-              imports = [];
-            }
-          # Add values from the imported devshell if it exists
-          else
-            {
-              config = combineWithBase importedDevshell.config;
-              inherit (importedDevshell) _file imports;
-            };
-      in
-        # Override the config with user provided override
-        c
-        // {
-          config = c.config // (common.overrides.shell common c.config);
-          imports = c.imports ++ ["${common.sources.devshell}/extra/language/c.nix"];
+    configuration = let
+      c =
+        if importedDevshell == null
+        then {
+          config = combineWithBase devshellConfig;
+          imports = [];
+        }
+        # Add values from the imported devshell if it exists
+        else {
+          config = combineWithBase importedDevshell.config;
+          inherit (importedDevshell) _file imports;
         };
+    in
+      # Override the config with user provided override
+      c
+      // {
+        config = c.config // (common.overrides.shell common c.config);
+        imports = c.imports ++ ["${common.sources.devshell}/extra/language/c.nix"];
+      };
   };
 in
   (makeDevshell resultConfig).shell

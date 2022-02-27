@@ -1,8 +1,7 @@
 {
   # an imported nixpkgs library
   lib,
-}:
-let
+}: let
   l = lib // builtins;
   mkDbg = msgPrefix: rec {
     doDbg = (l.getEnv "NCI_DEBUG") == "1";
@@ -50,7 +49,7 @@ in
     in
       licensesIds.${license} or "unfree";
     # Get an attrset containing the specified attr from the set if it exists.
-    putIfHasAttr = name: attrs: l.optionalAttrs (l.hasAttr name attrs) { ${name} = attrs.${name}; };
+    putIfHasAttr = name: attrs: l.optionalAttrs (l.hasAttr name attrs) {${name} = attrs.${name};};
     # Apply some overrides in a way nci expects them to be applied.
     applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: prev // (ov prev))) overrides);
     # Removes `propagatedEnv` attributes from some `crateOverride`s.

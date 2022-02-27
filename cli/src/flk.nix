@@ -7,20 +7,18 @@
     nci.url = "path:nci_source";
   };
 
-  outputs =
-    {
-      source,
-      nci,
-      ...
-    }
-    @ inputs:
-      nci.lib.makeOutputs {
-        root = source;
-        overrides = {
-          packageMetadata = _: {
-            build = true;
-            app = true;
-          };
+  outputs = {
+    source,
+    nci,
+    ...
+  } @ inputs:
+    nci.lib.makeOutputs {
+      root = source;
+      overrides = {
+        packageMetadata = _: {
+          build = true;
+          app = true;
         };
       };
+    };
 }
