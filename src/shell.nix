@@ -77,8 +77,7 @@ common: let
         };
       };
       packages =
-        [pkgs.fd]
-        ++ common.nativeBuildInputs
+        common.nativeBuildInputs
         ++ common.buildInputs
         ++ common.overrideNativeBuildInputs
         ++ common.overrideBuildInputs;
@@ -103,7 +102,7 @@ common: let
             category = "vcs";
           }
           {
-            package = nixpkgs-fmt;
+            package = alejandra;
             category = "tools";
           }
           {
@@ -127,13 +126,13 @@ common: let
           {
             name = "fmt";
             category = "flake tools";
-            help = "Format all Rust and Nix files";
-            command = "rustfmt --edition 2018 $(fd --glob '*.rs') && nixpkgs-fmt $(fd --glob '*.nix')";
+            help = "Format all Nix files";
+            command = "alejandra $(pwd)";
           }
           {
             name = "update-input";
             category = "flake tools";
-            help = "Alias for `nix flake lock --update-input input`";
+            help = "Alias for `nix flake lock --update-input`";
             command = "nix flake lock --update-input $@";
           }
         ]

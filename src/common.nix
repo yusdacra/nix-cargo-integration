@@ -241,7 +241,7 @@
           src = root;
           hooks = {
             rustfmt.enable = true;
-            nixpkgs-fmt.enable = true;
+            alejandra.enable = true;
           };
         };
       };

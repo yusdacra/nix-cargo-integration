@@ -26,7 +26,7 @@
       preCommitHooks = builtins.fetchGit {
         url = "https://github.com/cachix/pre-commit-hooks.nix.git";
         ref = "master";
-        rev = "0398f0649e0a741660ac5e8216760bae5cc78579";
+        rev = "b6bc0b21e1617e2b07d8205e7fae7224036dfa4b";
       };
 
       sources = {inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks;};
