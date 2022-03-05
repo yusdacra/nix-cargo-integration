@@ -120,7 +120,7 @@
         "overrideBuildInputs"
         "overrideNativeBuildInputs"
       ]
-      (name: l.concatAttrsList prev final name);
+      (name: l.concatAttrLists prev final name);
   in
     prev
     // final
