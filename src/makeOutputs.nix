@@ -98,15 +98,12 @@
     };
 
   # Whether the package is declared in the same `Cargo.toml` as the workspace.
-  isRootMember =
-    if (l.length workspaceMembers) > 0
-    then true
-    else false;
+  isRootMember = (l.length workspaceMembers) > 0;
   # Generate "commons" for the "root package".
   rootCommons =
-    if rootPkg != null
-    then l.genAttrs systems (mkCommon null cargoToml isRootMember)
-    else null;
+    l.thenOrNull
+    (rootPkg != null)
+    (l.genAttrs systems (mkCommon null cargoToml isRootMember));
   # Generate "commons" for all members.
   memberCommons' = l.mapAttrsToList (name: value: l.genAttrs systems (mkCommon name value false)) members;
   # Combine the member "commons" and the "root package" "commons".

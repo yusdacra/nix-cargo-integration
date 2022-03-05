@@ -58,4 +58,13 @@ in
     concatAttrLists = attrs: oattrs: name: concatLists (attrs.${name} or []) (oattrs.${name} or []);
     # Removes `propagatedEnv` attributes from some `crateOverride`s.
     removePropagatedEnv = l.mapAttrs (_: v: (prev: l.removeAttrs (v prev) ["propagatedEnv"]));
+    # If the condition is true, evaluates to ifTrue,
+    # otherwise evalutes to ifFalse.
+    thenOr = cond: ifTrue: ifFalse:
+      if cond
+      then ifTrue
+      else ifFalse;
+    # If the condition is true, evaluates to the
+    # passed value, otherwise evalutes to null.
+    thenOrNull = cond: ifTrue: thenOr cond ifTrue null;
   }

@@ -17,10 +17,7 @@
   l = common.internal.lib;
 
   # Actual package name to use for the derivation.
-  pkgName =
-    if isNull renamePkgTo
-    then cargoPkg.name
-    else renamePkgTo;
+  pkgName = l.thenOr (renamePkgTo == null) cargoPkg.name renamePkgTo;
 
   # Desktop file to put in the package derivation.
   desktopFile = let
@@ -41,10 +38,7 @@
   # Specify --release if release profile is enabled
   releaseFlag = l.optional release "--release";
   # Member name of the package. Defaults to the crate name in Cargo.toml.
-  memberName =
-    if common.memberName == null
-    then null
-    else cargoPkg.name;
+  memberName = l.thenOrNull (common.memberName != null) cargoPkg.name;
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
   runtimeLibsOv = prev:
@@ -72,14 +66,8 @@
   craneOverrides = let
     # Fixup a cargo command for crane
     fixupCargoCommand = isDeps: isTest: let
-      subcmd =
-        if isTest
-        then "test"
-        else "build";
-      hook =
-        if isTest
-        then "Check"
-        else "Build";
+      subcmd = l.thenOr isTest "test" "build";
+      hook = l.thenOr isTest "Check" "Build";
 
       cmd = l.concatStringsSep " " (
         ["cargo" subcmd]
@@ -158,10 +146,7 @@
   # Overrides for the build rust package builder
   brpOverrides = let
     flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
-    profile =
-      if release
-      then "release"
-      else "debug";
+    profile = l.thenOr release "release" "debug";
     # Function that overrides cargoBuildHook of buildRustPackage with our toolchain
     overrideBRPHook = prev: {
       nativeBuildInputs = let

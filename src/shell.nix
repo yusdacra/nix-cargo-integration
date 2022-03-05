@@ -195,9 +195,9 @@ common: let
 
   # Make devshell configs
   mkDevshellConfig = attrs:
-    if l.isAttrs attrs
-    then pushUpDevshellOptions (l.removeAttrs attrs ["imports"])
-    else {};
+    l.optionalAttrs
+    (l.isAttrs attrs)
+    (pushUpDevshellOptions (l.removeAttrs attrs ["imports"]));
 
   # Make configs work workspace and package
   workspaceConfig = mkDevshellConfig (workspaceMetadata.devshell or null);
@@ -206,9 +206,9 @@ common: let
   # Import the devshell specified in devshell.toml if it exists
   devshellFilePath = common.prevRoot + "/devshell.toml";
   importedDevshell =
-    if (l.pathExists devshellFilePath)
-    then (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;})
-    else null;
+    l.thenOrNull
+    (l.pathExists devshellFilePath)
+    (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;});
 
   # Helper functions to combine devshell configs without loss
   combineWith = base: config: let

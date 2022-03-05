@@ -31,7 +31,7 @@
   # Rust toolchain we will use.
   rustToolchain = let
     inherit (builtins) readFile fromTOML isPath pathExists match;
-    inherit (lib) hasInfix unique head;
+    inherit (lib) hasInfix unique head thenOrNull;
 
     # Check if the passed toolchainChannel points to a toolchain file
     hasRustToolchainFile = (isPath toolchainChannel) && (pathExists toolchainChannel);
@@ -42,15 +42,14 @@
       else pkgs.rust-bin.${toolchainChannel}.latest.default;
     # Read and import the toolchain channel file, if we can
     rustToolchainFile =
-      if hasRustToolchainFile
-      then let
-        content = readFile toolchainChannel;
-        legacy = match "([^\r\n]+)\r?\n?" content;
-      in
-        if legacy != null
-        then null
-        else (fromTOML content).toolchain
-      else null;
+      thenOrNull
+      hasRustToolchainFile
+      (
+        let
+          content = readFile toolchainChannel;
+          legacy = match "([^\r\n]+)\r?\n?" content;
+        in (thenOrNull (legacy == null) (fromTOML content).toolchain)
+      );
     # Whether the toolchain is nightly or not.
     isNightly =
       hasInfix "nightly"
