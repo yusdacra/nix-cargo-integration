@@ -151,6 +151,10 @@ let
     {
       inherit pkgs release;
       runTests = doCheck;
+      testCrateFlags = [];
+      testInputs = [];
+      testPreRun = "";
+      testPostRun = "";
       rootFeatures =
         # If we specified features, disable default feature, since it means this is an autobin
         let def = lib.optional (builtins.hasAttr "default" (common.cargoToml.features or { })) "default"; in
@@ -190,9 +194,9 @@ else if lib.isCrate2Nix buildPlatform then
                 lib.optionals
                   ((builtins.length config.rootFeatures) > 0)
                   [ "--no-default-features" "--features" (lib.concatStringsSep " " config.rootFeatures) ];
-            } // (builtins.removeAttrs config [ "runTests" ])
+            } // (builtins.removeAttrs config [ "runTests" "testCrateFlags" "testInputs" "testPreRun" "testPostRun" ])
           );
-        package = pkg.override { inherit (config) runTests; };
+        package = pkg.override { inherit (config) runTests testCrateFlags testInputs testPreRun testPostRun; };
         mkJoin = package:
           let
             joined = pkgs.rustPkgs.symlinkJoin {
