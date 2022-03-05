@@ -1,6 +1,8 @@
 # Create an output (packages, apps, etc.) from a common.
 {
+  # A common gotten from `./common.nix`
   common,
+  # Rename outputs in flake structure
   renameOutputs ? {},
 }: let
   inherit (common) cargoToml cargoPkg packageMetadata system memberName root;

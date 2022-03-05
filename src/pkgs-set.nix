@@ -1,18 +1,23 @@
 {
+  # The root of the Cargo workspace or package
   root,
+  # The NCI sources
   sources,
+  # The system we want to use
   system,
+  # The (nixpkgs) library with NCI specific utilities
   lib,
-  overrideData,
+  # The toolchain channel. This can be:
+  # - a string, "stable" / "nightly" / "beta"
+  # - a path to a `rust-toolchain.toml`.
   toolchainChannel ? "stable",
-  override ? (_: _: {}),
+  # Overlays to apply to the nixpkgs package set
+  overlays ? [],
 }: rec {
   # pkgs set we will use.
   pkgs = import sources.nixpkgs {
     inherit system;
-    overlays = [
-      (import sources.rustOverlay)
-    ];
+    overlays = [(import sources.rustOverlay)] ++ overlays;
   };
   # pkgs set with rust toolchain overlaid.
   pkgsWithRust =

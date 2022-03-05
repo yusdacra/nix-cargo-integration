@@ -1,12 +1,22 @@
 {
+  # The member name for this package, if it is in a workspace
   memberName ? null,
+  # Whether this package declared in the same
+  # `Cargo.toml` with the workspace declaration
   isRootMember ? false,
+  # Whether to enable pre commit hooks
   enablePreCommitHooks ? false,
+  # `Cargo.toml` of this package, as a Nix attribute set
   cargoToml ? null,
+  # Workspace metadata for this package, if it is in one, as a Nix attribute set
   workspaceMetadata ? null,
+  # Overrides to use
   overrides ? {},
+  # Dependency list taken directly from this package's `Cargo.lock`
   dependencies ? [],
+  # NCI sources
   sources,
+  # System we want to use
   system,
   ...
 } @ attrs: let
@@ -18,8 +28,10 @@
 
   l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
+  # The builder we will use
   builder = l.dbgX "using builder" attrs.builder;
 
+  # The root we will use
   root = let
     p = attrs.root or (throw "root must be specified");
   in
@@ -29,6 +41,7 @@
     inherit cargoPkg packageMetadata sources system memberName cargoToml root;
   };
 
+  # The toolchain channel we will use
   toolchainChannel = let
     rustToolchain = root + "/rust-toolchain";
     rustTomlToolchain = root + "/rust-toolchain.toml";
@@ -39,19 +52,20 @@
     then rustTomlToolchain
     else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
 
-  # Create the package set we will use
+  # The NCI package set we will use
   nci-pkgs = import ./pkgs-set.nix {
-    inherit root system sources toolchainChannel overrideData;
+    inherit root system sources toolchainChannel;
+    overlays = overrides.pkgsOverlays or [];
     lib = l;
-    override = overrides.pkgs or (_: _: {});
   };
 
   overrideDataPkgs = overrideData // {pkgs = nci-pkgs.pkgs;};
 
-  # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
+  # The C compiler that will be put in the env
   cCompiler = nci-pkgs.utils.resolveToPkg (
     workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc"
   );
+  # Whether or not to put the C compiler's bintools in the env
   useCCompilerBintools =
     workspaceMetadata.useCCompilerBintools
     or packageMetadata.useCCompilerBintools

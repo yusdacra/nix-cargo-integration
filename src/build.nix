@@ -1,8 +1,13 @@
 {
+  # Whether to build this package using a release profile
   release ? false,
+  # Whether to run package checks (eg. cargo tests)
   doCheck ? false,
+  # Features to enable for this package
   features ? [],
+  # If non null, this string will be used as the derivation name
   renamePkgTo ? null,
+  # The common we got from `./common.nix` for this package
   common,
 }: let
   inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;

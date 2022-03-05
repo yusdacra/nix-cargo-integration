@@ -7,12 +7,18 @@
 # Creates flake outputs by searching the supplied root for a
 # workspace / package and using `Cargo.toml`s for configuration.
 {
+  # Path to the root of a cargo workspace or crate
   root,
+  # All overrides
   overrides ? {},
-  enablePreCommitHooks ? false,
+  # Rename outputs in flake structure
   renameOutputs ? {},
+  # Default output for apps / packages
   defaultOutputs ? {},
+  # Any valid dream2nix builder for Rust
   builder ? "crane",
+  # Whether to enable pre commit hooks
+  enablePreCommitHooks ? false,
   ...
 }: let
   l = lib // builtins;

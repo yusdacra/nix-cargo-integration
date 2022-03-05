@@ -34,7 +34,7 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
-    - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
+    - `overrides.pkgsOverlays`: overlays to apply to the nixpkgs package set (type: list of nixpkgs overlays)
     - `overrides.crateOverrides`: override for crate overrides (type: `common: prev: { }`)
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./src/common.nix) for more information
