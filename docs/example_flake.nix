@@ -6,6 +6,10 @@
   outputs = inputs:
     inputs.nixCargoIntegration.lib.makeOutputs {
       root = ./.;
+      # Which dream2nix builder to use.
+      # Usually you don't need mess with this.
+      # The default is "crane".
+      builder = "crane";
       # Which package outputs to rename to what.
       # This renames both their package names and the generated output names.
       # Applies to generated apps too.

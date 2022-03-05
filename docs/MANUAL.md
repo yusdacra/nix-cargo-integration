@@ -28,6 +28,7 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 
 #### Arguments
 
+- `builder`: which dream2nix builder to use (type: string) (default: `"crane"`)
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
 - `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or package manifest) is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
