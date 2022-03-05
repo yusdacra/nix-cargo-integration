@@ -1,234 +1,249 @@
-{ memberName ? null
-, isRootMember ? false
-, buildPlatform ? "naersk"
-, useCrate2NixFromPkgs ? false
-, enablePreCommitHooks ? false
-, cargoToml ? null
-, workspaceMetadata ? null
-, overrides ? { }
-, dependencies ? [ ]
-, cargoVendorHash ? lib.fakeHash
-, lib
-, sources
-, system
-, ...
-}@attrs:
-let
+{
+  # The member name for this package, if it is in a workspace
+  memberName ? null,
+  # Whether this package declared in the same
+  # `Cargo.toml` with the workspace declaration
+  isRootMember ? false,
+  # Whether to enable pre commit hooks
+  enablePreCommitHooks ? false,
+  # `Cargo.toml` of this package, as a Nix attribute set
+  cargoToml ? null,
+  # Workspace metadata for this package, if it is in one, as a Nix attribute set
+  workspaceMetadata ? null,
+  # Overrides to use
+  overrides ? {},
+  # Dependency list taken directly from this package's `Cargo.lock`
+  dependencies ? [],
+  # NCI sources
+  sources,
+  # System we want to use
+  system,
+  ...
+} @ attrs: let
   # Extract the metadata we will need.
   cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
-  _packageMetadata = cargoPkg.metadata.nix or { };
-  packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: { })) _packageMetadata);
+  _packageMetadata = cargoPkg.metadata.nix or {};
+  packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: {})) _packageMetadata);
   desktopFileMetadata = packageMetadata.desktopFile or null;
 
-  # This is named "prevRoot" since we will override it later on.
-  prevRoot = attrs.root or null;
+  l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
-  overrideData = { inherit cargoPkg packageMetadata sources system memberName buildPlatform cargoToml lib; root = prevRoot; };
+  # The builder we will use
+  builder = l.dbgX "using builder" attrs.builder;
 
-  # Helper function to create a package set; might be useful for users
-  makePkgs =
-    { platform ? buildPlatform
-    , toolchainChannel ? "stable"
-    , override ? (_: _: { })
-    }:
-    import ./nixpkgs.nix {
-      inherit system sources lib override toolchainChannel useCrate2NixFromPkgs;
-      overrideData = overrideData // { inherit toolchainChannel; };
-      buildPlatform = platform;
-    };
+  # The root we will use
+  root = let
+    p = attrs.root or (throw "root must be specified");
+  in
+    l.dbgX "root is" p;
 
-  # Create the package set we will use
-  pkgs = makePkgs {
-    override = overrides.pkgs or (_: _: { });
-    toolchainChannel =
-      let
-        rustToolchain = root + "/rust-toolchain";
-        rustTomlToolchain = root + "/rust-toolchain.toml";
-      in
-      if builtins.pathExists rustToolchain
-      then rustToolchain
-      else if builtins.pathExists rustTomlToolchain
-      then rustTomlToolchain
-      else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
+  overrideData = {
+    inherit cargoPkg packageMetadata sources system memberName cargoToml root;
   };
-  libb = lib // pkgs.nciUtils;
-  overrideDataPkgs = overrideData // { lib = libb; inherit pkgs; };
 
-  # Override the root here. This is usually useless, but better to provide a way to do it anyways.
-  # This *can* causes inconsistencies related to overrides (eg. if a dep is in the new root and not in the old root).
-  root = (overrides.root or (_: root: root)) overrideDataPkgs prevRoot;
+  # The toolchain channel we will use
+  toolchainChannel = let
+    rustToolchain = root + "/rust-toolchain";
+    rustTomlToolchain = root + "/rust-toolchain.toml";
+  in
+    if l.pathExists rustToolchain
+    then rustToolchain
+    else if l.pathExists rustTomlToolchain
+    then rustTomlToolchain
+    else workspaceMetadata.toolchain or packageMetadata.toolchain or "stable";
 
-  # The C compiler that will be put in the env, and whether or not to put the C compiler's bintools in the env
-  cCompiler = libb.resolveToPkg (workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc");
-  useCCompilerBintools = workspaceMetadata.useCCompilerBintools or packageMetadata.useCCompilerBintools or true;
+  # The NCI package set we will use
+  nci-pkgs = import ./pkgs-set.nix {
+    inherit root system sources toolchainChannel;
+    overlays = overrides.pkgsOverlays or [];
+    lib = l;
+  };
+
+  overrideDataPkgs = overrideData // {pkgs = nci-pkgs.pkgs;};
+
+  # The C compiler that will be put in the env
+  cCompiler = nci-pkgs.utils.resolveToPkg (
+    workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc"
+  );
+  # Whether or not to put the C compiler's bintools in the env
+  useCCompilerBintools =
+    workspaceMetadata.useCCompilerBintools
+    or packageMetadata.useCCompilerBintools
+    or true;
 
   # Libraries that will be put in $LD_LIBRARY_PATH
-  runtimeLibs = libb.resolveToPkgs ((workspaceMetadata.runtimeLibs or [ ]) ++ (packageMetadata.runtimeLibs or [ ]));
+  runtimeLibs = nci-pkgs.utils.resolveToPkgs (
+    l.concatAttrLists workspaceMetadata packageMetadata "runtimeLibs"
+  );
 
-  overrideDataCrates = overrideDataPkgs // { inherit cCompiler useCCompilerBintools runtimeLibs root; };
+  overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
 
   # Collect crate overrides
-  crateOverrides =
-    let
-      # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
-      # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
-      depNames = builtins.map (dep: dep.name) dependencies;
-      baseRaw = libb.makeCrateOverrides {
-        inherit cCompiler useCCompilerBintools;
-        crateName = cargoPkg.name;
-        rawTomlOverrides =
-          libb.foldl'
-            libb.recursiveUpdate
-            (libb.genAttrs depNames (name: (_: { })))
-            [ (workspaceMetadata.crateOverride or { }) (packageMetadata.crateOverride or { }) ];
-      };
-      # Filter out unneeded overrides, using the dep names we got earlier.
-      base = libb.filterAttrs (n: _: libb.any (depName: n == depName) depNames) baseRaw;
-    in
-    base // ((overrides.crateOverrides or (_: _: { })) overrideDataCrates base);
+  crateOverrides = let
+    # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
+    # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
+    depNames = (l.map (dep: dep.name) dependencies) ++ ["${cargoPkg.name}-deps"];
+    baseRaw = nci-pkgs.utils.makeCrateOverrides {
+      inherit cCompiler useCCompilerBintools;
+      rawTomlOverrides =
+        l.foldl'
+        l.recursiveUpdate
+        (l.genAttrs depNames (name: (_: {})))
+        [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
+    };
+    # Filter out unneeded overrides, using the dep names we got earlier.
+    base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
+  in
+    base // ((overrides.crateOverrides or (_: _: {})) overrideDataCrates base);
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
-  crateOverridesEmpty = libb.mapAttrsToList (_: v: v { }) crateOverrides;
-  # Get a field from all overrides in "empty" crate overrides and flatten them. Mainly used to collect (native) build inputs.
-  crateOverridesGetFlattenLists = attrName: libb.unique (libb.flatten (builtins.map (v: v.${attrName} or [ ]) crateOverridesEmpty));
-  noPropagatedEnvOverrides = libb.removePropagatedEnv crateOverrides;
+  crateOverridesEmpty = l.mapAttrsToList (_: v: v {}) crateOverrides;
+  # Get a field from all overrides in "empty" crate overrides and flatten them.
+  # Mainly used to collect (native) build inputs.
+  crateOverridesGetFlattenLists = attrName:
+    l.unique (
+      l.flatten (l.map (v: v.${attrName} or []) crateOverridesEmpty)
+    );
+  noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
+  mainNames = [cargoPkg.name];
   # Combine all crate overrides into one big override function, except the main crate override
-  crateOverridesCombined =
-    let
-      filteredOverrides = builtins.removeAttrs noPropagatedEnvOverrides [ cargoPkg.name ];
-      func = prev: prev // (libb.pipe prev (
-        builtins.map
-          (ov: (old: old // (ov old)))
-          (libb.attrValues filteredOverrides)
-      ));
-    in
-    func;
-  # The main crate override is taken here
-  mainBuildOverride = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: { })) prev);
+  crateOverridesCombined = let
+    # TODO: also remove workspace dependency overrides here
+    noMainOverrides = l.removeAttrs noPropagatedEnvOverrides mainNames;
+    func = prev: l.applyOverrides prev (l.attrValues noMainOverrides);
+  in
+    l.dbgXY "combined overrides diff" (func {}) func;
+  # Combine all main dep overrides
+  mainOverrides = let
+    ovs = l.filterAttrs (n: _: l.any (on: n == on) mainNames) noPropagatedEnvOverrides;
+  in
+    prev: l.applyOverrides prev (l.attrValues ovs);
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
-  meta = {
-    platforms = [ system ];
-  } // (lib.optionalAttrs (builtins.hasAttr "license" cargoPkg) {
-    license = lib.licenses."${lib.cargoLicenseToNixpkgs cargoPkg.license}";
-  }) // (lib.putIfHasAttr "description" cargoPkg)
-  // (lib.putIfHasAttr "homepage" cargoPkg)
-  // (lib.putIfHasAttr "longDescription" packageMetadata);
+  meta =
+    {
+      platforms = [system];
+    }
+    // (l.optionalAttrs (l.hasAttr "license" cargoPkg) {
+      license = l.licenses."${l.cargoLicenseToNixpkgs cargoPkg.license}";
+    })
+    // (l.putIfHasAttr "description" cargoPkg)
+    // (l.putIfHasAttr "homepage" cargoPkg)
+    // (l.putIfHasAttr "longDescription" packageMetadata);
 
   # Create the base config that will be overrided.
-  # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in naersk and devshell.
+  # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
   baseConfig = {
-    # Library for users to utilize.
-    lib = {
-      inherit
-        crateOverridesGetFlattenLists
-        makePkgs;
-    } // libb;
-
+    inherit (nci-pkgs) pkgs pkgsWithRust;
     inherit
-      cCompiler
-      useCCompilerBintools
-      pkgs
-      crateOverrides
-      crateOverridesEmpty
-      crateOverridesCombined
-      noPropagatedEnvOverrides
-      cargoPkg
-      cargoToml
-      buildPlatform
+      builder
+      root
       sources
       system
-      root
-      prevRoot
       memberName
+      cargoPkg
+      cargoToml
       workspaceMetadata
       packageMetadata
       desktopFileMetadata
-      runtimeLibs
-      cargoVendorHash
-      isRootMember
       meta
-      mainBuildOverride;
-
-    # Whether a desktop file should be added to the resulting package.
-    mkDesktopFile = ! isNull desktopFileMetadata;
-    # Generate a desktop item config using provided package name
-    # and information from the package's `Cargo.toml`.
-    mkDesktopItemConfig = pkgName: {
-      name = pkgName;
-      exec = packageMetadata.executable or pkgName;
-      comment = desktopFileMetadata.comment or meta.description or "";
-      desktopName = desktopFileMetadata.name or pkgName;
-    } // (
-      if builtins.hasAttr "icon" desktopFileMetadata
-      then
-        let
-          # If icon path starts with relative path prefix, make it absolute using root as base
-          # Otherwise treat it as an absolute path
-          makeIcon = icon:
-            if lib.hasPrefix "./" icon
-            then root + "/${lib.removePrefix "./" icon}"
-            else icon;
-        in
-        { icon = makeIcon desktopFileMetadata.icon; }
-      else { }
-    )
-    // (lib.putIfHasAttr "genericName" desktopFileMetadata)
-    // (lib.putIfHasAttr "categories" desktopFileMetadata);
-
-    # Whether the binaries should be patched with the libraries inside
-    # `runtimeLibs`.
-    mkRuntimeLibsOv = (builtins.length runtimeLibs) > 0;
-    # Utility for generating a script to patch binaries with libraries.
-    mkRuntimeLibsScript = libs: ''
-      for f in $out/bin/*; do
-        patchelf --set-rpath "${libs}" "$f"
-      done
-    '';
+      cCompiler
+      runtimeLibs
+      ;
 
     # Collect build inputs.
-    buildInputs =
-      libb.resolveToPkgs
-        ((workspaceMetadata.buildInputs or [ ])
-          ++ (packageMetadata.buildInputs or [ ]))
-      ++ (crateOverridesGetFlattenLists "buildInputs");
-
+    buildInputs = nci-pkgs.utils.resolveToPkgs (
+      l.concatAttrLists workspaceMetadata packageMetadata "buildInputs"
+    );
     # Collect native build inputs.
-    nativeBuildInputs =
-      libb.resolveToPkgs
-        ((workspaceMetadata.nativeBuildInputs or [ ])
-          ++ (packageMetadata.nativeBuildInputs or [ ]))
-      ++ (crateOverridesGetFlattenLists "nativeBuildInputs");
+    nativeBuildInputs = nci-pkgs.utils.resolveToPkgs (
+      l.concatAttrLists workspaceMetadata packageMetadata "nativeBuildInputs"
+    );
 
     # Collect the env vars. The priority is as follows:
-    # crate overrides > package metadata > workspace metadata
-    env =
-      (workspaceMetadata.env or { })
-        // (packageMetadata.env or { })
-        // (builtins.foldl'
-        libb.recursiveUpdate
-        { }
-        (builtins.map (v: v.propagatedEnv or { }) crateOverridesEmpty)
-      );
+    # package metadata > workspace metadata
+    env = (workspaceMetadata.env or {}) // (packageMetadata.env or {});
 
-    # Put the overrides that other files may use (eg. build.nix, devShell.nix).
+    # Collect override environment vars and (native) build inputs.
+    # This is collected seperately because build will already use overrides,
+    # using these in build would cause problems because every drv would get a copy
+    # of these inputs.
+    overrideBuildInputs = crateOverridesGetFlattenLists "buildInputs";
+    overrideNativeBuildInputs = crateOverridesGetFlattenLists "nativeBuildInputs";
+    overrideEnv = l.foldl' l.recursiveUpdate {} (l.map (v: v.propagatedEnv or {}) crateOverridesEmpty);
+
+    # Put the overrides that other files may use (eg. build.nix, shell.nix).
     overrides = {
-      shell = overrides.shell or (_: _: { });
-      build = overrides.build or (_: _: { });
+      shell = overrides.shell or (_: _: {});
+      build = overrides.build or (_: _: {});
     };
-  } // libb.optionalAttrs
-    (
-      workspaceMetadata.preCommitHooks.enable
+
+    # nci private attributes. can change at any time without warning!
+    internal =
+      {
+        lib = l;
+
+        inherit
+          nci-pkgs
+          useCCompilerBintools
+          crateOverrides
+          crateOverridesEmpty
+          crateOverridesCombined
+          mainOverrides
+          noPropagatedEnvOverrides
+          isRootMember
+          crateOverridesGetFlattenLists
+          ;
+
+        # Whether a desktop file should be added to the resulting package.
+        mkDesktopFile = desktopFileMetadata != null;
+        # Generate a desktop item config using provided package name
+        # and information from the package's `Cargo.toml`.
+        mkDesktopItemConfig = pkgName:
+          {
+            name = pkgName;
+            exec = packageMetadata.executable or pkgName;
+            comment = desktopFileMetadata.comment or meta.description or "";
+            desktopName = desktopFileMetadata.name or pkgName;
+          }
+          // (
+            if l.hasAttr "icon" desktopFileMetadata
+            then let
+              # If icon path starts with relative path prefix, make it absolute using root as base
+              # Otherwise treat it as an absolute path
+              makeIcon = icon:
+                if l.hasPrefix "./" icon
+                then root + "/${l.removePrefix "./" icon}"
+                else icon;
+            in {icon = makeIcon desktopFileMetadata.icon;}
+            else {}
+          )
+          // (l.putIfHasAttr "genericName" desktopFileMetadata)
+          // (l.putIfHasAttr "categories" desktopFileMetadata);
+
+        # Whether the binaries should be patched with the libraries inside
+        # `runtimeLibs`.
+        mkRuntimeLibsOv = (l.length runtimeLibs) > 0;
+        # Utility for generating a script to patch binaries with libraries.
+        mkRuntimeLibsScript = libs: ''
+          for f in $out/bin/*; do
+            patchelf --set-rpath "${libs}" "$f"
+          done
+        '';
+      }
+      // l.optionalAttrs
+      (
+        workspaceMetadata.preCommitHooks.enable
         or packageMetadata.preCommitHooks.enable
         or enablePreCommitHooks
-    )
-    {
-      preCommitChecks = pkgs.makePreCommitHooks {
-        src = root;
-        hooks = {
-          rustfmt.enable = true;
-          nixpkgs-fmt.enable = true;
+      )
+      {
+        preCommitChecks = nci-pkgs.makePreCommitHooks {
+          src = root;
+          hooks = {
+            rustfmt.enable = true;
+            alejandra.enable = true;
+          };
         };
       };
-    };
-in
-(baseConfig // ((overrides.common or (_: { })) baseConfig))
+  };
+in (baseConfig // ((overrides.common or (_: {})) baseConfig))

@@ -1,7 +1,6 @@
 # Index
 
 - [Library documentation](#library-documentation)
-- [Build platform specific usage](#build-platform-specific-usage)
 - [Generating a nixpkgs-compatible package expression](#generating-a-nixpkgs-compatible-package-expression)
 - [Using the `nci` CLI](#using-the-nci-cli)
 - [Enabling trace](#enabling-trace)
@@ -12,20 +11,16 @@
 **IMPORTANT** public API promises: Any API that is not documented here **IS NOT** counted
 as "public" and therefore can be changed without breaking SemVer. This does not mean that
 changes will be done without any notice. You are still welcome to create issues / discussions
-about them. Upstream projects such as [devshell], `nixpkgs` ([buildRustPackage]) etc. can have
-breaking changes, these breakages will be limited to `overrides`' `shell` and `build` in the
-public API, since these directly modify [devshell] / `buildPlatform` configs.
-
-NOTE: `nix-cargo-integration` does not directly use upstream [naersk] / [crate2nix]. It uses
-forks of them which contain additional fixes and features that aren't upstream.
+about them. Upstream projects such as [devshell], [dream2nix] etc. can have breaking changes,
+these breakages will be limited to `overrides.shell` and `overrides.build` in the public API,
+since these directly modify [devshell] / [dream2nix] builder configs.
 
 ### The `common` attribute set
 
 This attribute set is passed to (almost) all overrides. It contains everything you may
-need for adding stuff, such as the nixpkgs package set (`common.pkgs`), library with
-`nix-cargo-integration` utilities (`common.lib`) and other shared data between build
-and development shell (`common.buildInputs`, `common.env` etc.). For more information
-on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
+need for adding stuff, such as the nixpkgs package set (`common.pkgs`) and other shared
+data between build and development shell (`common.buildInputs`, `common.env` etc.). For
+more information on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
 
 ### `makeOutputs`
 
@@ -33,28 +28,19 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
 
 #### Arguments
 
+- `builder`: which dream2nix builder to use (type: string) (default: `"crane"`)
 - `enablePreCommitHooks`: whether to enable pre-commit hooks (type: boolean) (default: `false`)
-- `buildPlatform`: platform to build crates with (type: `"naersk", "crate2nix" or "buildRustPackage"`) (default: `"naersk"`)
-- `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or pacakge manifest) is in (type: path)
-- `cargoVendorHash`: vendor hash feeded into [buildRustPackage]'s `cargoSha256` (type: string) (default: `lib.fakeHash`)
-- `useCrate2NixFromPkgs`: toggles using the `crate2nix` package from `nixpkgs` instead of the package in `crate2nix` source (type: boolean) (default: `false`)
-    - this can be helpful if you are facing frequent rebuilds of `crate2nix` (see https://github.com/yusdacra/nix-cargo-integration/issues/38)
+- `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or package manifest) is in (type: path)
 - `overrides`: overrides for devshell, build and common (type: attrset) (default: `{ }`)
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
-    - `overrides.pkgs`: override for the configuration while importing nixpkgs in common (type: `common: prev: { }`)
+    - `overrides.pkgsOverlays`: overlays to apply to the nixpkgs package set (type: list of nixpkgs overlays)
     - `overrides.crateOverrides`: override for crate overrides (type: `common: prev: { }`)
-        - with [crate2nix], this will allow you to override per-crate
-        - with [naersk], the overrides here will be collected and be used for
-        overriding the dependencies derivation / main derivation.
-        - with [buildRustPackage], the overrides here will be collected and
-        be used for overriding the resulting derivation.
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./src/common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
-        - this will override [naersk]/[crate2nix]/[buildRustPackage] build config, refer to [naersk]/[crate2nix]/[buildRustPackage] for more information
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
 - `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
     - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)
@@ -131,12 +117,6 @@ Refer to [devshell] documentation.
 
 NOTE: Attributes specified here **will not** be used if a top-level `devshell.toml` file exists.
 
-## Build platform specific usage
-
-- Disabling tests:
-    - for `crate2nix`: add `runTests = false;` to the `build` override.
-    - for `naersk` and `buildRustPackage`: add `doCheck = false;` to the `build` override.
-
 ## Generating a nixpkgs-compatible package expression
 
 `nix-cargo-integration` will generate outputs named `<packageOutputName>-derivation`.
@@ -172,12 +152,6 @@ variable to `1` and passing `--impure` to `nix`. Example:
 NCI_DEBUG=1 nix build --impure .
 ```
 
-[devshell]: https://github.com/numtide/devshell "devshell"
-[naersk]: https://github.com/nmattia/naersk "naersk"
-[crate2nix]: https://github.com/kolloch/crate2nix "crate2nix"
-[flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
-[buildRustPackage]: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/rust.section.md#compiling-rust-applications-with-cargo-compiling-rust-applications-with-cargo "buildRustPackage"
-
 ## Tips and tricks
 
 ### Ignoring `Cargo.lock` in Rust libraries
@@ -198,3 +172,7 @@ A neat fix for that is to track the path to `Cargo.lock` without staging it
 $ git add --intend-to-add Cargo.lock
 ```
 Add `--force` if your `Cargo.lock` is listed in `.gitignore`.
+
+[devshell]: https://github.com/numtide/devshell "devshell"
+[flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
+[dream2nix]: https://github.com/nix-community/dream2nix "dream2nix"

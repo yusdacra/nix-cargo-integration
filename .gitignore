@@ -3,5 +3,5 @@ tests/**/target
 .direnv
 .envrc
 cli/target
-shell.nix
+/shell.nix
 .vscode

@@ -7,7 +7,11 @@
     nci.url = "path:nci_source";
   };
 
-  outputs = { source, nci, ... }@inputs:
+  outputs = {
+    source,
+    nci,
+    ...
+  } @ inputs:
     nci.lib.makeOutputs {
       root = source;
       overrides = {
