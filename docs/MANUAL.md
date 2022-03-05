@@ -18,10 +18,9 @@ since these directly modify [devshell] / [dream2nix] builder configs.
 ### The `common` attribute set
 
 This attribute set is passed to (almost) all overrides. It contains everything you may
-need for adding stuff, such as the nixpkgs package set (`common.pkgs`), library with
-`nix-cargo-integration` utilities (`common.lib`) and other shared data between build
-and development shell (`common.buildInputs`, `common.env` etc.). For more information
-on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
+need for adding stuff, such as the nixpkgs package set (`common.pkgs`) and other shared
+data between build and development shell (`common.buildInputs`, `common.env` etc.). For
+more information on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
 
 ### `makeOutputs`
 

@@ -32,15 +32,8 @@
         sources = common: prev: {
           # rustOverlay = inputs.rustOverlay;
         };
-        # Override nixpkgs configuration in common. This can be used
-        # to add overlays for specific systems or crates.
-        pkgs = common: prev: {
-          # overlays = prev.overlays ++ [ inputs.someInput.someOverlay ];
-        };
-        # Override for the root that will be used.
-        # Note that it may cause inconsistency if the changed root includes different
-        # dependencies in it's Cargo.lock.
-        root = common: prev: prev;
+        # Overlays to use for the nixpkgs package set.
+        pkgsOverlays = [];
         # Override crate overrides.
         crateOverrides = common: prev: {
           # test = old: {
