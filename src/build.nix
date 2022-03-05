@@ -71,9 +71,8 @@
 
       cmd = l.concatStringsSep " " (
         ["cargo" subcmd]
-        ++ (l.optional isDeps "--workspace")
         ++ releaseFlag
-        ++ (l.optionals (!isDeps) packageFlag)
+        ++ packageFlag
         ++ featuresFlags
         ++ (l.optionals (!isTest && !isDeps) [
           "--message-format"
