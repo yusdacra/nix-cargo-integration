@@ -26,27 +26,26 @@
     l.dbg "package source for ${name} at: ${src}" src;
 
   # Emulate autobins behaviour, get all the binaries of this package.
-  allBins =
-    l.unique (
-      (l.optional (l.pathExists (pkgSrc + "/main.rs")) {
-        inherit name;
-        exeName = cargoPkg.name;
-      })
-      ++ bins
-      ++ (
-        l.optionals
-        (autobins && (l.pathExists (pkgSrc + "/bin")))
+  allBins = l.unique (
+    (l.optional (l.pathExists (pkgSrc + "/main.rs")) {
+      inherit name;
+      exeName = cargoPkg.name;
+    })
+    ++ bins
+    ++ (
+      l.optionals
+      (autobins && (l.pathExists (pkgSrc + "/bin")))
+      (
+        l.genAttrs
         (
-          l.genAttrs
-          (
-            l.map
-            (l.removeSuffix ".rs")
-            (l.attrNames (l.readDir (pkgSrc + "/bin")))
-            (name: {inherit name;})
-          )
+          l.map
+          (l.removeSuffix ".rs")
+          (l.attrNames (l.readDir (pkgSrc + "/bin")))
+          (name: {inherit name;})
         )
       )
-    );
+    )
+  );
 
   # Helper function to use build.nix
   mkBuild = f: r: c:
@@ -114,20 +113,20 @@
   };
 in
   l.optionalAttrs (packageMetadata.build or false) ({
-    inherit packages checks;
-    defaultPackage = {
-      ${system} = packages.${system}.${name};
-    };
-  }
-  // l.optionalAttrs (packageMetadata.app or false) {
-    inherit apps;
-    defaultApp = {
-      ${system} = let
-        appName =
-          if (l.length allBins) > 0
-          then (l.head allBins).name
-          else name;
-      in
-        apps.${system}.${appName};
-    };
-  })
+      inherit packages checks;
+      defaultPackage = {
+        ${system} = packages.${system}.${name};
+      };
+    }
+    // l.optionalAttrs (packageMetadata.app or false) {
+      inherit apps;
+      defaultApp = {
+        ${system} = let
+          appName =
+            if (l.length allBins) > 0
+            then (l.head allBins).name
+            else name;
+        in
+          apps.${system}.${appName};
+      };
+    })

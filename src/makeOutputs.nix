@@ -44,22 +44,22 @@
   workspaceMembers = workspaceToml.members or [];
   # Process any globs that might be in workspace members.
   globbedWorkspaceMembers = l.flatten (l.map
-  (
-    memberName: let
-      components = l.splitString "/" memberName;
-    in
-      if l.last components == "*"
-      then let
-        parentDirRel = l.concatStringsSep "/" (l.init components);
-        parentDir = root + "/${parentDirRel}";
-        dirs = l.readDir parentDir;
+    (
+      memberName: let
+        components = l.splitString "/" memberName;
       in
-        l.mapAttrsToList
-        (name: _: "${parentDirRel}/${name}")
-        (l.filterAttrs (_: type: type == "directory") dirs)
-      else memberName
-  )
-  workspaceMembers);
+        if l.last components == "*"
+        then let
+          parentDirRel = l.concatStringsSep "/" (l.init components);
+          parentDir = root + "/${parentDirRel}";
+          dirs = l.readDir parentDir;
+        in
+          l.mapAttrsToList
+          (name: _: "${parentDirRel}/${name}")
+          (l.filterAttrs (_: type: type == "directory") dirs)
+        else memberName
+    )
+    workspaceMembers);
   # Get and import the members' Cargo.toml files if we are in a workspace.
   members =
     l.genAttrs
@@ -74,8 +74,9 @@
   # Get all the dependencies in Cargo.lock.
   dependencies = cargoLock.package;
   # Decide which systems we will generate outputs for. This can be overrided.
-  systems = (overrides.systems or (x: x))
-  (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
+  systems =
+    (overrides.systems or (x: x))
+    (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
 
   # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
   mkCommon = memberName: cargoToml: isRootMember: system:
@@ -153,11 +154,11 @@
 
   # Generate outputs from all "commons".
   allOutputs' = l.flatten (l.map
-  (
-    l.mapAttrsToList
-    (_: common: import ./makeOutput.nix {inherit common renameOutputs;})
-  )
-  allCommons');
+    (
+      l.mapAttrsToList
+      (_: common: import ./makeOutput.nix {inherit common renameOutputs;})
+    )
+    allCommons');
   # Recursively combine all outputs we have.
   combinedOutputs = l.foldAttrs lib.recursiveUpdate {} allOutputs';
   # Create the "final" output set.

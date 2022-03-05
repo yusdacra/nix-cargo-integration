@@ -68,9 +68,11 @@
             l.mapAttrs (_:
               l.mapAttrs' (n:
                 l.nameValuePair (n
-                + (if l.hasInfix "workspace" n
-                then "-${n}"
-                else ""))))
+                  + (
+                    if l.hasInfix "workspace" n
+                    then "-${n}"
+                    else ""
+                  ))))
             v.${attrs})
           tests;
         checks = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");

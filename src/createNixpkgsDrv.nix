@@ -57,19 +57,18 @@ common.pkgs.writeTextFile {
       else null;
     putIfStdenv = optionalString (stdenv != null);
 
-    runtimeLibsScript =
-      concatStringsSep "\n" (
-        map
-        (line: "    ${line}")
-        (init (
-          filter
-          (list:
-            if isList list
-            then (length list) > 0
-            else true)
-          (split "\n" (common.internal.mkRuntimeLibsScript runtimeLibs))
-        ))
-      );
+    runtimeLibsScript = concatStringsSep "\n" (
+      map
+      (line: "    ${line}")
+      (init (
+        filter
+        (list:
+          if isList list
+          then (length list) > 0
+          else true)
+        (split "\n" (common.internal.mkRuntimeLibsScript runtimeLibs))
+      ))
+    );
 
     desktopItemAttrs = let
       desktopItem = common.internal.mkDesktopItemConfig cargoPkg.name;

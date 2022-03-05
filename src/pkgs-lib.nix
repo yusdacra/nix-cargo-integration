@@ -41,21 +41,22 @@ in {
       # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
       CC = "cc";
     };
-    tomlOverrides = l.mapAttrs
-    (_: crate: prev:
-      {
-        nativeBuildInputs = l.unique (
-          (prev.nativeBuildInputs or [])
-          ++ (resolveToPkgs (crate.nativeBuildInputs or []))
-        );
-        buildInputs = l.unique (
-          (prev.buildInputs or [])
-          ++ (resolveToPkgs (crate.buildInputs or []))
-        );
-      }
-      // (crate.env or {})
-      // {propagatedEnv = crate.env or {};})
-    (l.dbgX "rawTomlOverrides" rawTomlOverrides);
+    tomlOverrides =
+      l.mapAttrs
+      (_: crate: prev:
+        {
+          nativeBuildInputs = l.unique (
+            (prev.nativeBuildInputs or [])
+            ++ (resolveToPkgs (crate.nativeBuildInputs or []))
+          );
+          buildInputs = l.unique (
+            (prev.buildInputs or [])
+            ++ (resolveToPkgs (crate.buildInputs or []))
+          );
+        }
+        // (crate.env or {})
+        // {propagatedEnv = crate.env or {};})
+      (l.dbgX "rawTomlOverrides" rawTomlOverrides);
     extraOverrides = import ./extra-crate-overrides.nix pkgs;
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});

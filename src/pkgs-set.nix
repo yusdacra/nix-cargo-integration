@@ -54,9 +54,11 @@
     # Whether the toolchain is nightly or not.
     isNightly =
       hasInfix "nightly"
-      (if hasRustToolchainFile
-      then rustToolchainFile.channel or ""
-      else toolchainChannel);
+      (
+        if hasRustToolchainFile
+        then rustToolchainFile.channel or ""
+        else toolchainChannel
+      );
     # Override the base toolchain and add some default components.
     toolchain = baseRustToolchain.override {
       extensions = unique ((rustToolchainFile.components or []) ++ ["rust-src" "rustfmt" "clippy"]);
