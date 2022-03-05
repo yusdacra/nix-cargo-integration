@@ -133,7 +133,7 @@
   # Create the base config that will be overrided.
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
   baseConfig = {
-    inherit (nci-pkgs) pkgs rustToolchain;
+    inherit (nci-pkgs) pkgs pkgsWithRust;
     inherit
       builder
       root

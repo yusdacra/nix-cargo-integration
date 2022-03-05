@@ -147,30 +147,6 @@
   brpOverrides = let
     flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
     profile = l.thenOr release "release" "debug";
-    # Function that overrides cargoBuildHook of buildRustPackage with our toolchain
-    overrideBRPHook = prev: {
-      nativeBuildInputs = let
-        pkgs = pkgsWithRust;
-        cargoHooks = pkgs.callPackage "${sources.nixpkgs}/pkgs/build-support/rust/hooks" {
-          # Use our own rust and cargo, and our own C compiler.
-          inherit (pkgs) rustc cargo;
-          stdenv = prev.stdenv;
-        };
-        notOldHook = pkg:
-          pkg
-          != pkgs.rustPlatform.cargoBuildHook
-          && pkg != pkgs.rustPlatform.cargoSetupHook
-          && pkg != pkgs.rustPlatform.cargoCheckHook
-          && pkg != pkgs.rustPlatform.cargoInstallHook;
-      in
-        (l.filter notOldHook prev.nativeBuildInputs)
-        ++ [
-          cargoHooks.cargoSetupHook
-          cargoHooks.cargoBuildHook
-          cargoHooks.cargoCheckHook
-          cargoHooks.cargoInstallHook
-        ];
-    };
     # Overrides for the drv
     overrides = prev:
       l.applyOverrides prev [
@@ -188,7 +164,6 @@
         commonDepsOv
         common.internal.crateOverridesCombined
         common.internal.mainOverrides
-        overrideBRPHook
       ];
   in {
     ${cargoPkg.name} = {

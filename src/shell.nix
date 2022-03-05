@@ -1,6 +1,6 @@
 common: let
   inherit (common) workspaceMetadata packageMetadata;
-  inherit (common.internal.nci-pkgs) pkgs rustToolchain makeDevshell;
+  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust makeDevshell;
 
   l = common.internal.lib;
 
@@ -84,14 +84,14 @@ common: let
       commands = with pkgs;
         [
           {
-            package = rustToolchain.rustc;
+            package = pkgsWithRust.rustc;
             name = "rustc";
             category = "rust";
             command = "rustc $@";
             help = "The Rust compiler";
           }
           {
-            package = rustToolchain.cargo;
+            package = pkgsWithRust.cargo;
             name = "cargo";
             category = "rust";
             command = "cargo $@";

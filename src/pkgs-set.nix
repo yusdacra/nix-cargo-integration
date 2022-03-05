@@ -13,23 +13,9 @@
   toolchainChannel ? "stable",
   # Overlays to apply to the nixpkgs package set
   overlays ? [],
-}: rec {
-  # pkgs set we will use.
-  pkgs = import sources.nixpkgs {
-    inherit system;
-    overlays = [(import sources.rustOverlay)] ++ overlays;
-  };
-  # pkgs set with rust toolchain overlaid.
-  pkgsWithRust =
-    pkgs
-    // rustToolchain
-    // {
-      rustPlatform = pkgs.makeRustPlatform {
-        inherit (rustToolchain) rustc cargo;
-      };
-    };
+}: let
   # Rust toolchain we will use.
-  rustToolchain = let
+  rustToolchainOverlay = final: prev: let
     inherit (builtins) readFile fromTOML isPath pathExists match;
     inherit (lib) hasInfix unique head thenOrNull;
 
@@ -38,8 +24,8 @@
     # Create the base Rust toolchain that we will override to add other components.
     baseRustToolchain =
       if hasRustToolchainFile
-      then pkgs.rust-bin.fromRustupToolchainFile toolchainChannel
-      else pkgs.rust-bin.${toolchainChannel}.latest.default;
+      then prev.rust-bin.fromRustupToolchainFile toolchainChannel
+      else prev.rust-bin.${toolchainChannel}.latest.default;
     # Read and import the toolchain channel file, if we can
     rustToolchainFile =
       thenOrNull
@@ -68,6 +54,22 @@
     clippy = toolchain;
     cargo = toolchain;
   };
+in rec {
+  # pkgs set we will use.
+  pkgs = import sources.nixpkgs {
+    inherit system overlays;
+  };
+  # pkgs set with rust toolchain overlaid.
+  pkgsWithRust = import sources.nixpkgs {
+    inherit system;
+    overlays = [
+      (import sources.rustOverlay)
+      rustToolchainOverlay
+      (_: prev: {
+        rustPlatform = prev.makeRustPlatform {inherit (prev) rustc cargo;};
+      })
+    ];
+  };
   # dream2nix tools
   dream2nix = sources.dream2nix.lib.init {
     config.projectRoot = root;
@@ -79,16 +81,16 @@
   utils = import ./pkgs-lib.nix {inherit pkgs lib dream2nix;};
   # pre commit hooks
   makePreCommitHooks = let
-    pkgs = pkgs // rustToolchain;
     tools =
       lib.filterAttrs (k: v: !(lib.any (a: k == a) ["override" "overrideDerivation"]))
-      (pkgs.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+      (pkgsWithRust.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
         hindent = null;
         cabal-fmt = null;
       });
   in
-    pkgs.callPackage "${sources.preCommitHooks}/nix/run.nix" {
-      inherit tools pkgs;
+    pkgsWithRust.callPackage "${sources.preCommitHooks}/nix/run.nix" {
+      inherit tools;
+      pkgs = pkgsWithRust;
       gitignore-nix-src = null;
       isFlakes = true;
     };
