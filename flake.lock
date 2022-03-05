@@ -57,16 +57,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1646465395,
-        "narHash": "sha256-fxgHKb1Ggl1Bd1alehhlyomoqYsxLWJ0TFYgQiEEjbs=",
-        "owner": "nix-community",
+        "lastModified": 1646501165,
+        "narHash": "sha256-n5snRZ7EEGBHJbQB89mfV9QRleO/1PJhBTImtdYzcbU=",
+        "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "f8f37dd50e185452b62757bdc843446a60dc1ed2",
+        "rev": "8c7ac4b8def69825290d64598899dba1da550821",
         "type": "github"
       },
       "original": {
-        "owner": "nix-community",
-        "ref": "main",
+        "owner": "yusdacra",
+        "ref": "rust/crane-fixes",
         "repo": "dream2nix",
         "type": "github"
       }
