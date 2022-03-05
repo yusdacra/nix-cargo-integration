@@ -42,7 +42,7 @@
   releaseFlag = l.optional release "--release";
   # Member name of the package. Defaults to the crate name in Cargo.toml.
   memberName =
-    if isNull common.memberName
+    if common.memberName == null
     then null
     else cargoPkg.name;
 
@@ -57,15 +57,15 @@
   # Override that adds the desktop item for this package.
   desktopItemOv = prev:
     l.optionalAttrs mkDesktopFile {
-      nativeBuildInputs = (prev.nativeBuildInputs or []) ++ [pkgs.copyDesktopItems];
-      desktopItems = (prev.desktopItems or []) ++ [desktopFile];
+      nativeBuildInputs = l.concatLists (prev.nativeBuildInputs or []) [pkgs.copyDesktopItems];
+      desktopItems = l.concatLists (prev.desktopItems or []) [desktopFile];
     };
   # Override that adds dependencies and env from common
   commonDepsOv = prev:
     common.env
     // {
-      buildInputs = l.unique ((prev.buildInputs or []) ++ common.buildInputs);
-      nativeBuildInputs = l.unique ((prev.nativeBuildInputs or []) ++ common.nativeBuildInputs);
+      buildInputs = l.concatAttrLists prev common "buildInputs";
+      nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
     };
 
   # Overrides for the crane builder
@@ -168,7 +168,7 @@
         pkgs = pkgsWithRust;
         cargoHooks = pkgs.callPackage "${sources.nixpkgs}/pkgs/build-support/rust/hooks" {
           # Use our own rust and cargo, and our own C compiler.
-          inherit (pkgs.rustPlatform.rust) rustc cargo;
+          inherit (pkgs) rustc cargo;
           stdenv = prev.stdenv;
         };
         notOldHook = pkg:

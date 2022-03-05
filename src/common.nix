@@ -73,8 +73,7 @@
 
   # Libraries that will be put in $LD_LIBRARY_PATH
   runtimeLibs = nci-pkgs.utils.resolveToPkgs (
-    (workspaceMetadata.runtimeLibs or [])
-    ++ (packageMetadata.runtimeLibs or [])
+    l.concatAttrLists workspaceMetadata packageMetadata "runtimeLibs"
   );
 
   overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
@@ -153,15 +152,11 @@
 
     # Collect build inputs.
     buildInputs = nci-pkgs.utils.resolveToPkgs (
-      l.unique
-      ((workspaceMetadata.buildInputs or [])
-      ++ (packageMetadata.buildInputs or []))
+      l.concatAttrLists workspaceMetadata packageMetadata "buildInputs"
     );
     # Collect native build inputs.
     nativeBuildInputs = nci-pkgs.utils.resolveToPkgs (
-      l.unique
-      ((workspaceMetadata.nativeBuildInputs or [])
-      ++ (packageMetadata.nativeBuildInputs or []))
+      l.concatAttrLists workspaceMetadata packageMetadata "nativeBuildInputs"
     );
 
     # Collect the env vars. The priority is as follows:

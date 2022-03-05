@@ -47,12 +47,13 @@
   (
     memberName: let
       components = l.splitString "/" memberName;
-      parentDirRel = l.concatStringsSep "/" (l.init components);
-      parentDir = root + "/${parentDirRel}";
-      dirs = l.readDir parentDir;
     in
       if l.last components == "*"
-      then
+      then let
+        parentDirRel = l.concatStringsSep "/" (l.init components);
+        parentDir = root + "/${parentDirRel}";
+        dirs = l.readDir parentDir;
+      in
         l.mapAttrsToList
         (name: _: "${parentDirRel}/${name}")
         (l.filterAttrs (_: type: type == "directory") dirs)
@@ -95,6 +96,7 @@
         ;
     };
 
+  # Whether the package is declared in the same `Cargo.toml` as the workspace.
   isRootMember =
     if (l.length workspaceMembers) > 0
     then true
@@ -111,7 +113,6 @@
 
   # Helper function used to "combine" two "commons".
   updateCommon = prev: final: let
-    combineLists = name: l.unique ((prev.${name} or []) ++ final.${name});
     combinedLists =
       l.genAttrs
       [
@@ -121,7 +122,7 @@
         "overrideBuildInputs"
         "overrideNativeBuildInputs"
       ]
-      combineLists;
+      (name: l.concatAttrsList prev final name);
   in
     prev
     // final
@@ -130,8 +131,13 @@
       env = (prev.env or {}) // final.env;
       overrideEnv = (prev.overrideEnv or {}) // final.overrideEnv;
       overrides = {
-        shell = common: prevShell:
-          ((prev.overrides.shell or (_: _: {})) common prevShell) // (final.overrides.shell common prevShell);
+        shell = common: prevShell: let
+          overrides = [
+            ((prev.overrides.shell or (_: _: {})) common)
+            ((final.overrides.shell or (_: _: {})) common)
+          ];
+        in
+          l.applyOverrides prevShell overrides;
       };
     };
   # Recursively go through each "commons", and "combine" them. We will use this for our devshell.
@@ -171,7 +177,7 @@
       );
     }
     // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-      defaultPackage = lib.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
+      defaultPackage = l.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
     }
     // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
       defaultApp = l.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;

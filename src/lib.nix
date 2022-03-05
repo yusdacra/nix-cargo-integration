@@ -24,7 +24,7 @@
 in
   l
   // (mkDbg "")
-  // {
+  // rec {
     inherit mkDbg;
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
     defaultSystems = [
@@ -52,6 +52,10 @@ in
     putIfHasAttr = name: attrs: l.optionalAttrs (l.hasAttr name attrs) {${name} = attrs.${name};};
     # Apply some overrides in a way nci expects them to be applied.
     applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: prev // (ov prev))) overrides);
+    # Concats two lists and removes duplicate values.
+    concatLists = list: olist: l.unique (list ++ olist);
+    # Concats lists from two attribute sets.
+    concatAttrLists = attrs: oattrs: name: concatLists (attrs.${name} or []) (oattrs.${name} or []);
     # Removes `propagatedEnv` attributes from some `crateOverride`s.
     removePropagatedEnv = l.mapAttrs (_: v: (prev: l.removeAttrs (v prev) ["propagatedEnv"]));
   }
