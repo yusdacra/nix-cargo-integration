@@ -85,6 +85,7 @@
         lib
         dependencies
         memberName
+        members
         cargoToml
         workspaceMetadata
         system

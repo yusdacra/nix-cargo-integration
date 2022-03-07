@@ -94,6 +94,6 @@
         inherit makeOutputs;
       };
       inherit craneTests brpTests;
-      inherit (cliOutputs) apps packages defaultApp defaultPackage;
+      inherit (cliOutputs) apps packages defaultApp defaultPackage devShell;
     };
 }
