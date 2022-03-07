@@ -50,8 +50,29 @@ in
       licensesIds.${license} or "unfree";
     # Get an attrset containing the specified attr from the set if it exists.
     putIfHasAttr = name: attrs: l.optionalAttrs (l.hasAttr name attrs) {${name} = attrs.${name};};
+    # Merges two attrsets while concatting lists
+    merge = lattrs: rattrs:
+      rattrs
+      // (
+        l.genAttrs
+        (l.attrNames lattrs)
+        (
+          name: let
+            lval = lattrs.${name};
+            rval = rattrs.${name} or null;
+            isType = cond: (cond lval) && (cond rval);
+          in
+            if isType l.isList
+            then l.unique (lval ++ rval)
+            else if isType l.isAttrs
+            then lval // rval
+            else if rval != null
+            then rval
+            else lval
+        )
+      );
     # Apply some overrides in a way nci expects them to be applied.
-    applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: prev // (ov prev))) overrides);
+    applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: merge prev (ov prev))) overrides);
     # Concats two lists and removes duplicate values.
     concatLists = list: olist: l.unique (list ++ olist);
     # Concats lists from two attribute sets.
