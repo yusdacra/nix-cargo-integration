@@ -57,6 +57,8 @@
           l.mapAttrsToList
           (name: _: "${parentDirRel}/${name}")
           (l.filterAttrs (_: type: type == "directory") dirs)
+        else if memberName == "."
+        then rootPkg.name or (throw "manifest must have package.name specified")
         else memberName
     )
     workspaceMembers);
