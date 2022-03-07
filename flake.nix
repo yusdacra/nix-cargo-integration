@@ -18,6 +18,9 @@
       inputs.mach-nix.follows = "nixpkgs";
       inputs.node2nix.follows = "nixpkgs";
       inputs.poetry2nix.follows = "nixpkgs";
+      inputs.alejandra.follows = "nixpkgs";
+      inputs.pre-commit-hooks.follows = "nixpkgs";
+      inputs.flake-utils-pre-commit.follows = "nixpkgs";
     };
   };
 

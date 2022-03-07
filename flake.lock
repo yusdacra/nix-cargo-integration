@@ -39,7 +39,13 @@
     },
     "dream2nix": {
       "inputs": {
+        "alejandra": [
+          "nixpkgs"
+        ],
         "crane": "crane",
+        "flake-utils-pre-commit": [
+          "nixpkgs"
+        ],
         "gomod2nix": [
           "nixpkgs"
         ],
@@ -54,14 +60,17 @@
         ],
         "poetry2nix": [
           "nixpkgs"
+        ],
+        "pre-commit-hooks": [
+          "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1646503013,
-        "narHash": "sha256-TyMUMF8EJhuyDq7D3dNwOnqSiTuis/fs5zHPC2icFHU=",
+        "lastModified": 1646647374,
+        "narHash": "sha256-sFGoE9LbHfP5t8NGcNkX4sPVq9kp8+ae8ODnW5eOkzo=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "dac0e8dba90329adf63b3eb7d743f3133578633c",
+        "rev": "76412363073ea1252700eb48901849cf8480e138",
         "type": "github"
       },
       "original": {
@@ -88,11 +97,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1646254136,
-        "narHash": "sha256-8nQx02tTzgYO21BP/dy5BCRopE8OwE8Drsw98j+Qoaw=",
+        "lastModified": 1646497237,
+        "narHash": "sha256-Ccpot1h/rV8MgcngDp5OrdmLTMaUTbStZTR5/sI7zW0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3e072546ea98db00c2364b81491b893673267827",
+        "rev": "062a0c5437b68f950b081bbfc8a699d57a4ee026",
         "type": "github"
       },
       "original": {
