@@ -31,8 +31,8 @@
       ''
     else pkgs.makeDesktopItem (mkDesktopItemConfig pkgName);
 
-  # Specify --package if we are building in a workspace
-  packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
+  # Specify --package
+  packageFlag =  ["--package ${cargoPkg.name}"];
   # Specify --features if we have enabled features other than the default ones
   featuresFlags = l.optional ((l.length features) > 0) "--features ${(l.concatStringsSep "," features)}";
   # Specify --release if release profile is enabled
