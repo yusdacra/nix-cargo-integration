@@ -2,6 +2,8 @@
 {
   # an imported nixpkgs package set
   pkgs,
+  # the package set with rust toolchain to use
+  pkgsWithRust,
   # an NCI library
   lib,
   # dream2nix tools
@@ -57,7 +59,7 @@ in {
         // (crate.env or {})
         // {propagatedEnv = crate.env or {};})
       (l.dbgX "rawTomlOverrides" rawTomlOverrides);
-    extraOverrides = import ./extra-crate-overrides.nix pkgs;
+    extraOverrides = import ./extra-crate-overrides.nix { inherit pkgs pkgsWithRust; };
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});
       accOverride = getOverride acc;
