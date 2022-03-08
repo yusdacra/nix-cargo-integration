@@ -104,10 +104,9 @@
       l.flatten (l.map (v: v.${attrName} or []) crateOverridesEmpty)
     );
   noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
-  mainNames = [cargoPkg.name];
+  mainNames = l.unique ([cargoPkg.name] ++ (l.map (toml: toml.package.name) (l.attrValues attrs.members)));
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined = let
-    # TODO: also remove workspace dependency overrides here
     noMainOverrides = l.removeAttrs noPropagatedEnvOverrides mainNames;
     func = prev: l.applyOverrides prev (l.attrValues noMainOverrides);
   in
