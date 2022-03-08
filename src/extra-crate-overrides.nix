@@ -1,5 +1,5 @@
 # A set of crate overrides, in the spirit of nixpkgs's `defaultCrateOverrides`.
-pkgs: let
+{ pkgs, pkgsWithRust }: let
   mkOv = bi: ni: prev: {
     buildInputs = (prev.buildInputs or []) ++ bi;
     nativeBuildInputs = (prev.nativeBuildInputs or []) ++ ni;
@@ -36,25 +36,21 @@ in {
   gdk-sys = with pkgs; mkOv [gtk3] [pkg-config];
   gtk-sys = with pkgs; mkOv [gtk3] [pkg-config];
   harmony_rust_sdk = prev: let
+    inherit (pkgs) protobuf;
     env = {
       PROTOC = "${protobuf}/bin/protoc";
       PROTOC_INCLUDE = "${protobuf}/include";
     };
-    inherit (pkgs) protobuf nciRust;
-    inherit (nciRust) rustfmt;
   in
     {
-      buildInputs = (prev.buildInputs or []) ++ [protobuf rustfmt];
+      buildInputs = [protobuf pkgsWithRust.rustfmt];
       propagatedEnv = env;
     }
     // env;
   rust-nix-templater = prev: let
-    inherit (pkgs) nixpkgs-fmt nciRust;
-    inherit (nciRust) rustc;
-
     env = {
-      TEMPLATER_FMT_BIN = "${nixpkgs-fmt}/bin/nixpkgs-fmt";
-      TEMPLATER_CARGO_BIN = "${rustc}/bin/cargo";
+      TEMPLATER_FMT_BIN = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
+      TEMPLATER_CARGO_BIN = "${pkgsWithRust.rustc}/bin/cargo";
     };
   in
     {propagatedEnv = env;} // env;
@@ -63,15 +59,14 @@ in {
   in
     {propagatedEnv = env;} // env;
   prost-build = prev: let
+    inherit (pkgs) protobuf;
     env = {
       PROTOC = "${protobuf}/bin/protoc";
       PROTOC_INCLUDE = "${protobuf}/include";
     };
-    inherit (pkgs) protobuf nciRust;
-    inherit (nciRust) rustfmt;
   in
     {
-      buildInputs = (prev.buildInputs or []) ++ [protobuf rustfmt];
+      buildInputs = [protobuf pkgsWithRust.rustfmt];
       propagatedEnv = env;
     }
     // env;

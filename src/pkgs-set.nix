@@ -78,7 +78,7 @@ in rec {
   # devshell
   makeDevshell = import "${sources.devshell}/modules" pkgs;
   # nci library utilities
-  utils = import ./pkgs-lib.nix {inherit pkgs lib dream2nix;};
+  utils = import ./pkgs-lib.nix {inherit pkgs pkgsWithRust lib dream2nix;};
   # pre commit hooks
   makePreCommitHooks = let
     tools =
