@@ -47,13 +47,6 @@ in {
       propagatedEnv = env;
     }
     // env;
-  rust-nix-templater = prev: let
-    env = {
-      TEMPLATER_FMT_BIN = "${pkgs.nixpkgs-fmt}/bin/nixpkgs-fmt";
-      TEMPLATER_CARGO_BIN = "${pkgsWithRust.rustc}/bin/cargo";
-    };
-  in
-    {propagatedEnv = env;} // env;
   shaderc-sys = _: let
     env = {SHADERC_LIB_DIR = "${pkgs.shaderc.lib}/lib";};
   in
