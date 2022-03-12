@@ -35,7 +35,7 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
     - `overrides.systems`: mutate the list of systems to generate for (type: `def: [ ]`)
     - `overrides.sources`: override for the sources used by common (type: `common: prev: { }`)
     - `overrides.pkgsOverlays`: overlays to apply to the nixpkgs package set (type: list of nixpkgs overlays)
-    - `overrides.crateOverrides`: override for crate overrides (type: `common: prev: { }`)
+    - `overrides.crates`: override for crate overrides (type: `common: prev: { }`)
     - `overrides.common`: override for common (type: `prev: { }`)
         - this will override *all* common attribute set(s), refer to [common.nix](./src/common.nix) for more information
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
@@ -75,7 +75,6 @@ env.TEST_ENV = "test"
 ### `package.metadata.nix` attributes
 
 - `build`: whether to enable outputs which build the package (type: boolean) (default: `false`)
-- `library`: whether to copy built library to package output (type: boolean) (default: `false`)
 - `app`: whether to enable the application output (type: boolean) (default: `false`)
 - `longDescription`: a longer description (type: string)
 
@@ -156,9 +155,10 @@ NCI_DEBUG=1 nix build --impure .
 
 ### Ignoring `Cargo.lock` in Rust libraries
 
-The [official recommendation](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html) for Rust libraries is to add `Cargo.lock` to the `.gitignore`.
-This conflicts with the way paths are evaluated when using a `flake.nix`. Only files
-tracked by the version control system (i.e. git) can be accessed during evaluation.
+The [official recommendation](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html)
+for Rust libraries is to add `Cargo.lock` to the `.gitignore`. This conflicts
+with the way paths are evaluated when using a `flake.nix`. Only files tracked
+by the version control system (i.e. git) can be accessed during evaluation.
 This will manifest in the following error:
 ```console
 $ nix build

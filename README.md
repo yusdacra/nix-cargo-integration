@@ -52,7 +52,7 @@ You can also couple it with [niv](https://github.com/nmattia/niv):
 
 ### Examples
 
-- [Basic flake.nix template with commented fields and overrides](./docs/example_flake.nix)
+- [Basic flake.nix template with commented fields](./docs/example_flake.nix)
 - [Flake using a bit of everything](https://github.com/helix-editor/helix/blob/master/flake.nix)
 
 ## Documentation

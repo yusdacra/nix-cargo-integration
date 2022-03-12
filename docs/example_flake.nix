@@ -25,20 +25,15 @@
       # for *every system*. To selectively override per crate,
       # one can use `common.cargoPkg.name` attribute. To selectively
       # override per system one can use `common.system` attribute.
-      overrides = let
-        lib = inputs.nixpkgs.lib;
-      in {
-        # Mutate the systems to generate outputs for here.
-        systems = def: def;
-        # Override sources used by nixCargoIntegration in common.
-        # This can be used to provide sources that are only needed for
-        # specific systems or crates.
-        sources = common: prev: {
-          # rustOverlay = inputs.rustOverlay;
-        };
+      overrides = {
+        # Override the systems to generate outputs for.
+        systems = prev: prev;
         # Overlays to use for the nixpkgs package set.
         pkgsOverlays = [];
         # Override crate overrides.
+        #
+        # The environment variables and build inputs specified here will
+        # also get exported in the development shell.
         crateOverrides = common: prev: {
           # test = old: {
           #   buildInputs = (old.buildInputs or []) ++ [ common.pkgs.hello ];

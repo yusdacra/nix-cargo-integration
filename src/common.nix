@@ -94,7 +94,7 @@
     # Filter out unneeded overrides, using the dep names we got earlier.
     base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
   in
-    base // ((overrides.crateOverrides or (_: _: {})) overrideDataCrates base);
+    base // ((overrides.crateOverrides or overrides.crates or (_: _: {})) overrideDataCrates base);
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
   crateOverridesEmpty = l.mapAttrsToList (_: v: v {}) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them.
