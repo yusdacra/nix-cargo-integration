@@ -59,7 +59,9 @@
     lib = l;
   };
 
-  overrideDataPkgs = overrideData // {pkgs = nci-pkgs.pkgs;};
+  overrideDataPkgs = overrideData // {
+    inherit (nci-pkgs) pkgs pkgsWithRust;
+  };
 
   # The C compiler that will be put in the env
   cCompiler = nci-pkgs.utils.resolveToPkg (
