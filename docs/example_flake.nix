@@ -34,7 +34,7 @@
         #
         # The environment variables and build inputs specified here will
         # also get exported in the development shell.
-        crateOverrides = common: prev: {
+        crates = common: prev: {
           # test = old: {
           #   buildInputs = (old.buildInputs or []) ++ [ common.pkgs.hello ];
           #   TEST_ENV = "test";
