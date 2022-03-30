@@ -178,13 +178,14 @@
     inherit root memberName;
     pname = cargoPkg.name;
 
-    builder = dream2nix.builders.${system}.rust.${builder};
     packageOverrides =
       if builder == "crane"
       then craneOverrides
       else if builder == "buildRustPackage"
       then brpOverrides
       else throw "unsupported builder";
+
+    settings = [{inherit builder;}];
   };
 
   overrideConfig = config:

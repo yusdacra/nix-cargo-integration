@@ -59,7 +59,7 @@ in {
         // (crate.env or {})
         // {propagatedEnv = crate.env or {};})
       (l.dbgX "rawTomlOverrides" rawTomlOverrides);
-    extraOverrides = import ./extra-crate-overrides.nix { inherit pkgs pkgsWithRust; };
+    extraOverrides = import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust;};
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});
       accOverride = getOverride acc;

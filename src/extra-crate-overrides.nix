@@ -1,5 +1,8 @@
 # A set of crate overrides, in the spirit of nixpkgs's `defaultCrateOverrides`.
-{ pkgs, pkgsWithRust }: let
+{
+  pkgs,
+  pkgsWithRust,
+}: let
   mkOv = bi: ni: prev: {
     buildInputs = (prev.buildInputs or []) ++ bi;
     nativeBuildInputs = (prev.nativeBuildInputs or []) ++ ni;
