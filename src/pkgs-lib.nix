@@ -81,18 +81,8 @@ in {
     finalOverrides;
 
   # dream2nix build crate.
-  buildCrate = {
-    root,
-    memberName ? null,
-    ...
-    # pass everything else to dream2nix
-  } @ args: let
-    attrs =
-      {source = root;}
-      // (l.removeAttrs args ["root" "memberName"]);
-    outputs = dream2nix.makeFlakeOutputs attrs;
+  buildCrate = args: let
+    outputs = dream2nix.makeFlakeOutputs args;
   in
-    if memberName != null
-    then outputs.packages.${pkgs.system}.${memberName}
-    else outputs.defaultPackage.${pkgs.system};
+    outputs.packages.${pkgs.system}.${args.pname};
 }

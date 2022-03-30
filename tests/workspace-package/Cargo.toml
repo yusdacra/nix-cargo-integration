@@ -1,8 +1,8 @@
 [workspace]
-members = ["basic-lib", "crates/*"]
+members = ["clib", "crates/*"]
 
 [package]
-name = "basic-bin"
+name = "workspace-package"
 version = "0.1.0"
 authors = ["Yusuf Bera Ertan <y.bera003.06@protonmail.com>"]
 edition = "2018"

@@ -3,17 +3,17 @@
 version = 3
 
 [[package]]
-name = "abin"
+name = "wbin"
 version = "0.1.0"
 
 [[package]]
-name = "alib"
+name = "wlib"
 version = "0.1.0"
 
 [[package]]
-name = "basic-bin"
+name = "workspace-bin"
 version = "0.1.0"
 
 [[package]]
-name = "basic-lib"
+name = "workspace-lib"
 version = "0.1.0"

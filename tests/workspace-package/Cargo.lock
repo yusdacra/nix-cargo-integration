@@ -11,9 +11,9 @@ name = "alib"
 version = "0.1.0"
 
 [[package]]
-name = "basic-bin"
+name = "workspace-package"
 version = "0.1.0"
 
 [[package]]
-name = "basic-lib"
+name = "clib"
 version = "0.1.0"

@@ -12,7 +12,7 @@
     };
 
     dream2nix = {
-      url = "github:nix-community/dream2nix/main";
+      url = "github:yusdacra/dream2nix/fix/rust-discoverer";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";

@@ -37,8 +37,6 @@
   featuresFlags = l.optional ((l.length features) > 0) "--features ${(l.concatStringsSep "," features)}";
   # Specify --release if release profile is enabled
   releaseFlag = l.optional release "--release";
-  # Member name of the package. Defaults to the crate name in Cargo.toml.
-  memberName = l.thenOrNull (common.memberName != null) cargoPkg.name;
 
   # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
   runtimeLibsOv = prev:
@@ -175,8 +173,8 @@
   };
 
   baseConfig = {
-    inherit root memberName;
     pname = cargoPkg.name;
+    source = root;
 
     packageOverrides =
       if builder == "crane"

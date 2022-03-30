@@ -92,7 +92,7 @@
       rawTomlOverrides =
         l.foldl'
         l.recursiveUpdate
-        (l.genAttrs depNames (name: (_: {})))
+        {}
         [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
     };
     # Filter out unneeded overrides, using the dep names we got earlier.

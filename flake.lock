@@ -66,16 +66,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1648485769,
-        "narHash": "sha256-bOh8McqM6cSuKhsMEmjirB4wp/W+h8ZIl5u/hvaX5p0=",
-        "owner": "nix-community",
+        "lastModified": 1648661158,
+        "narHash": "sha256-EwyEtdxoQ2q97jJVX3cdppT3dLzDYqdxF9t+qu04PHY=",
+        "owner": "yusdacra",
         "repo": "dream2nix",
-        "rev": "28b890821fb82f2918b5a6ec49dff4bfebaba108",
+        "rev": "fca2a7999b13c155961a3e9a8cbb30aaf4ff4f4f",
         "type": "github"
       },
       "original": {
-        "owner": "nix-community",
-        "ref": "main",
+        "owner": "yusdacra",
+        "ref": "fix/rust-discoverer",
         "repo": "dream2nix",
         "type": "github"
       }
