@@ -41,6 +41,11 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
     - `overrides.shell`: override for devshell (type: `common: prev: { }`)
         - this will override *all* [devshell] configuration(s), refer to [devshell] for more information
     - `overrides.build`: override for build config (type: `common: prev: { }`)
+    - `overrides.cCompiler`: override what C compiler will be used (type: `common: { ... }`)
+        - if the returned attribute set has `cCompiler`, this is assumed to be a *package*
+        and will be used as the new C compiler.
+        - if the returned attribute set has `useCCompilerBintools`, this will be used to decide
+        whether or not to add the C compiler's `bintools` to the build environment.
 - `renameOutputs`: which crates to rename in package names and output names (type: attrset) (default: `{ }`)
 - `defaultOutputs`: which outputs to set as default (type: attrset) (default: `{ }`)
     - `defaultOutputs.app`: app output name to set as default app (`defaultApp`) output (type: string)

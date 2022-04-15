@@ -65,13 +65,19 @@
       inherit (nci-pkgs) pkgs pkgsWithRust;
     };
 
+  overridedCCompiler = (overrides.cCompiler or (_: {})) overrideDataPkgs;
   # The C compiler that will be put in the env
-  cCompiler = nci-pkgs.utils.resolveToPkg (
-    workspaceMetadata.cCompiler or packageMetadata.cCompiler or "gcc"
-  );
+  cCompiler =
+    overridedCCompiler.cCompiler
+    or (nci-pkgs.utils.resolveToPkg (
+      workspaceMetadata.cCompiler
+      or packageMetadata.cCompiler
+      or "gcc"
+    ));
   # Whether or not to put the C compiler's bintools in the env
   useCCompilerBintools =
-    workspaceMetadata.useCCompilerBintools
+    overridedCCompiler.useCCompilerBintools
+    or workspaceMetadata.useCCompilerBintools
     or packageMetadata.useCCompilerBintools
     or true;
 
