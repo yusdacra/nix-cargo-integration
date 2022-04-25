@@ -12,7 +12,7 @@
     };
 
     dream2nix = {
-      url = "github:nix-community/dream2nix";
+      url = "github:yusdacra/dream2nix/fix/get-root";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";
