@@ -22,13 +22,15 @@ to generate nix-specific boilerplate for your projects!
 
 ### With flakes
 
-Add:
+Run `nix flake init -t github:yusdacra/nix-cargo-integration`.
+
+Or add:
 ```nix
 {
   inputs = {
-    nixCargoIntegration.url = "github:yusdacra/nix-cargo-integration";
+    nci.url = "github:yusdacra/nix-cargo-integration";
   };
-  outputs = inputs: inputs.nixCargoIntegration.lib.makeOutputs { root = ./.; };
+  outputs = inputs: inputs.nci.lib.makeOutputs { root = ./.; };
 }
 ```
 to your `flake.nix`.
@@ -40,12 +42,12 @@ You can use [flake-compat] to provide the default outputs of the flake for non-f
 If you aren't using flakes, you can do (in your `default.nix` file for example):
 ```nix
 let
-  nixCargoIntegrationSrc = fetchTarball {
+  nciSrc = fetchTarball {
     url = "https://github.com/yusdacra/nix-cargo-integration/archive/<rev>.tar.gz";
     sha256 = "<hash>";
   };
-  nixCargoIntegration = import nixCargoIntegrationSrc;
-in nixCargoIntegration.makeOutputs { root = ./.; }
+  nci = import nciSrc;
+in nci.makeOutputs { root = ./.; }
 ```
 
 You can also couple it with [niv](https://github.com/nmattia/niv):
@@ -54,8 +56,8 @@ You can also couple it with [niv](https://github.com/nmattia/niv):
     ```nix
     let
       sources = import ./sources.nix;
-      nixCargoIntegration = import sources.nix-cargo-integration;
-    in nixCargoIntegration.makeOutputs { root = ./.; }
+      nci = import sources.nix-cargo-integration;
+    in nci.makeOutputs { root = ./.; }
     ```
 
 ### Examples

@@ -95,5 +95,12 @@
       };
       inherit craneTests brpTests;
       inherit (cliOutputs) apps packages defaultApp defaultPackage devShell;
+
+      templates = {
+        default = {
+          description = "a simple flake using nci";
+          path = ./templates/simple.nix;
+        };
+      };
     };
 }
