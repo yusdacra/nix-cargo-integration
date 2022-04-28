@@ -2,7 +2,10 @@
 {
   pkgs,
   pkgsWithRust,
+  lib,
 }: let
+  l = lib;
+
   mkOv = bi: ni: prev: {
     buildInputs = (prev.buildInputs or []) ++ bi;
     nativeBuildInputs = (prev.nativeBuildInputs or []) ++ ni;

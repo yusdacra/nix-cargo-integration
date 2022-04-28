@@ -66,7 +66,7 @@ in {
 
     # Our overrides (+ default crate overrides from nixpkgs)
     extraOverrides =
-      import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust;};
+      import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust lib;};
 
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});
