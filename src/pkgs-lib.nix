@@ -28,6 +28,8 @@ in {
     cCompiler ? pkgs.gcc,
     useCCompilerBintools ? true,
   }: let
+    # base inputs for each crate.
+    # this includes settting the stdenv and adding a C compiler
     baseConf = prev: {
       # No CC since we provide our own compiler
       stdenv =
@@ -43,6 +45,8 @@ in {
       # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
       CC = "cc";
     };
+
+    # Overrides from `rawTomlOverrides`
     tomlOverrides =
       l.mapAttrs
       (_: crate: prev:
@@ -59,26 +63,33 @@ in {
         // (crate.env or {})
         // {propagatedEnv = crate.env or {};})
       (l.dbgX "rawTomlOverrides" rawTomlOverrides);
-    extraOverrides = import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust;};
+
+    # Our overrides (+ default crate overrides from nixpkgs)
+    extraOverrides =
+      import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust lib;};
+
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});
       accOverride = getOverride acc;
       elOverride = getOverride el;
     in
-      attrs: l.applyOverrides attrs [baseConf accOverride elOverride];
-    finalOverrides =
-      l.foldl'
-      (acc: el:
+      attrs:
+        l.applyOverrides
+        attrs
+        [baseConf accOverride elOverride];
+  in
+    l.foldl'
+    (
+      acc: el:
         l.genAttrs
         (l.unique ((l.attrNames acc) ++ (l.attrNames el)))
-        (collectOverride acc el))
-      pkgs.defaultCrateOverrides
-      [
-        (l.dbgX "tomlOverrides" tomlOverrides)
-        extraOverrides
-      ];
-  in
-    finalOverrides;
+        (collectOverride acc el)
+    )
+    {}
+    [
+      (l.dbgX "tomlOverrides" tomlOverrides)
+      extraOverrides
+    ];
 
   # dream2nix build crate.
   buildCrate = args: let
