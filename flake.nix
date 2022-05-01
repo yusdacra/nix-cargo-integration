@@ -99,7 +99,7 @@
       templates = {
         default = {
           description = "a simple flake using nci";
-          path = ./templates/simple.nix;
+          path = ./templates/simple;
         };
       };
     };
