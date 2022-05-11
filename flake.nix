@@ -12,7 +12,7 @@
     };
 
     dream2nix = {
-      url = "github:nix-community/dream2nix";
+      url = "github:yusdacra/dream2nix/feat/cargo-toml-translator";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";
