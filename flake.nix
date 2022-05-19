@@ -43,7 +43,7 @@
       cliOutputs = makeOutputs {
         root = ./cli;
         overrides = {
-          crateOverrides = common: _: {
+          crates = common: _: {
             nci-cli = prev: {
               NCI_SRC = builtins.toString inputs.self;
               # Make sure the src doesnt get garbage collected
@@ -89,12 +89,28 @@
 
       craneTests = mkTests "crane";
       brpTests = mkTests "buildRustPackage";
+
+      devShell = let
+        systems = ["x86_64-linux"];
+        mkShell = system: let
+          mkShell =
+            import
+            "${inputs.devshell}/modules"
+            inputs.nixpkgs.legacyPackages.${system};
+          shell = mkShell {
+            configuration =
+              (inputs.devshell.lib.importTOML ./devshell.toml) {lib = l;};
+          };
+        in
+          shell.shell;
+      in
+        l.genAttrs systems mkShell;
     in {
       lib = {
         inherit makeOutputs;
       };
-      inherit craneTests brpTests;
-      inherit (cliOutputs) apps packages defaultApp defaultPackage devShell;
+      inherit craneTests brpTests devShell;
+      inherit (cliOutputs) apps packages defaultApp defaultPackage;
 
       templates = {
         default = {
