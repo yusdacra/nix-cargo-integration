@@ -20,7 +20,9 @@ to generate nix-specific boilerplate for your projects!
 
 ## Documentation
 
-You can get documentation by running `mdbook serve docs` at the root of the repository.
+Documentation for `master` branch is on https://yusdacra.github.io/nix-cargo-integration.
+
+You can also serve documentation by running `mdbook serve docs` at the root of the repository.
 
 ## Usage
 
