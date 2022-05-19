@@ -19,8 +19,12 @@
   builder ? "crane",
   # Whether to enable pre commit hooks
   enablePreCommitHooks ? false,
+  # Systems to generate outputs for
+  systems ? lib.defaultSystems,
+  # nixpkgs overlays to use for the package set
+  pkgsOverlays ? [],
   ...
-}: let
+} @ attrs: let
   l = lib // builtins;
 
   # Helper function to import a Cargo.toml from a root.
@@ -43,7 +47,8 @@
   # Get the workspace members if they exist.
   workspaceMembers = workspaceToml.members or [];
   # Process any globs that might be in workspace members.
-  globbedWorkspaceMembers = l.flatten (l.map
+  globbedWorkspaceMembers = l.flatten (
+    l.map
     (
       memberName: let
         components = l.splitString "/" memberName;
@@ -59,11 +64,16 @@
           (l.filterAttrs (_: type: type == "directory") dirs)
         else memberName
     )
-    workspaceMembers);
+    workspaceMembers
+  );
   # Get and import the members' Cargo.toml files if we are in a workspace.
   members =
     l.genAttrs
-    (l.dbg "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}" globbedWorkspaceMembers)
+    (
+      l.dbg
+      "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}"
+      globbedWorkspaceMembers
+    )
     (name: importCargoTOML (root + "/${name}"));
 
   # Get the metadata we will use from the root package attributes if it exists.
@@ -75,8 +85,10 @@
   dependencies = cargoLock.package;
   # Decide which systems we will generate outputs for. This can be overrided.
   systems =
-    (overrides.systems or (x: x))
-    (workspaceMetadata.systems or packageMetadata.systems or l.defaultSystems);
+    attrs.systems
+    or workspaceMetadata.systems
+    or packageMetadata.systems
+    or l.defaultSystems;
 
   # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
   mkCommon = memberName: cargoToml: isRootMember: system:
@@ -95,6 +107,7 @@
         enablePreCommitHooks
         isRootMember
         builder
+        pkgsOverlays
         ;
     };
 
@@ -106,9 +119,13 @@
     (rootPkg != null)
     (l.genAttrs systems (mkCommon null cargoToml isRootMember));
   # Generate "commons" for all members.
-  memberCommons' = l.mapAttrsToList (name: value: l.genAttrs systems (mkCommon name value false)) members;
+  memberCommons' =
+    l.mapAttrsToList
+    (name: value: l.genAttrs systems (mkCommon name value false))
+    members;
   # Combine the member "commons" and the "root package" "commons".
-  allCommons' = memberCommons' ++ (l.optional (rootCommons != null) rootCommons);
+  allCommons' =
+    memberCommons' ++ (l.optional (rootCommons != null) rootCommons);
 
   # Helper function used to "combine" two "commons".
   updateCommon = prev: final: let
@@ -151,12 +168,14 @@
     );
 
   # Generate outputs from all "commons".
-  allOutputs' = l.flatten (l.map
+  allOutputs' = l.flatten (
+    l.map
     (
       l.mapAttrsToList
       (_: common: import ./makeOutput.nix {inherit common renameOutputs;})
     )
-    allCommons');
+    allCommons'
+  );
   # Recursively combine all outputs we have.
   combinedOutputs = l.foldAttrs lib.recursiveUpdate {} allOutputs';
   # Create the "final" output set.
@@ -168,18 +187,26 @@
       devShell = l.mapAttrs (_: import ./shell.nix) commonsCombined;
       checks = l.recursiveUpdate (combinedOutputs.checks or {}) (
         l.mapAttrs
-        (_: common:
-          l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
-            "preCommitChecks" = common.preCommitChecks;
-          })
+        (
+          _: common:
+            l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
+              "preCommitChecks" = common.preCommitChecks;
+            }
+        )
         commonsCombined
       );
     }
     // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-      defaultPackage = l.mapAttrs (_: system: system.${defaultOutputs.package}) combinedOutputs.packages;
+      defaultPackage =
+        l.mapAttrs
+        (_: system: system.${defaultOutputs.package})
+        combinedOutputs.packages;
     }
     // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
-      defaultApp = l.mapAttrs (_: system: system.${defaultOutputs.app}) combinedOutputs.apps;
+      defaultApp =
+        l.mapAttrs
+        (_: system: system.${defaultOutputs.app})
+        combinedOutputs.apps;
     };
   checkedOutputs =
     l.warnIf
