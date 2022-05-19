@@ -1,11 +1,13 @@
 {
+  # System we want to use
+  system,
+  # NCI sources
+  sources,
   # The member name for this package, if it is in a workspace
   memberName ? null,
   # Whether this package declared in the same
   # `Cargo.toml` with the workspace declaration
   isRootMember ? false,
-  # Whether to enable pre commit hooks
-  enablePreCommitHooks ? false,
   # `Cargo.toml` of this package, as a Nix attribute set
   cargoToml ? null,
   # Workspace metadata for this package, if it is in one, as a Nix attribute set
@@ -14,10 +16,10 @@
   overrides ? {},
   # Dependency list taken directly from this package's `Cargo.lock`
   dependencies ? [],
-  # NCI sources
-  sources,
-  # System we want to use
-  system,
+  # nixpkgs overlays to use for the package set
+  pkgsOverlays ? [],
+  # Whether to enable pre commit hooks
+  enablePreCommitHooks ? false,
   ...
 } @ attrs: let
   # Extract the metadata we will need.
@@ -55,7 +57,7 @@
   # The NCI package set we will use
   nci-pkgs = import ./pkgs-set.nix {
     inherit root system sources toolchainChannel;
-    overlays = overrides.pkgsOverlays or [];
+    overlays = pkgsOverlays;
     lib = l;
   };
 
