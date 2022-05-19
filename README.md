@@ -24,6 +24,8 @@ Documentation for `master` branch is on https://yusdacra.github.io/nix-cargo-int
 
 You can also serve documentation by running `mdbook serve docs` at the root of the repository.
 
+Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG.md).
+
 ## Usage
 
 ### With flakes

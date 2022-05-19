@@ -1,5 +1,12 @@
 # Recent important changes
 
+This is a list of important (mostly breaking) changes. The dates are from
+most recent to least recent.
+
+`nix:` means that the change was related to the Nix library part of `nci`.
+`cargo-toml:` means that the change was related to the `Cargo.toml`
+attribute part of `nci`.
+
 ## 19-05-2022
 
 - nix: `overrides.pkgsOverlays` and `overrides.systems` were moved to `pkgsOverlays` and `systems` arguments to `makeOutputs` @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304
