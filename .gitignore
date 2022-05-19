@@ -1,7 +1,6 @@
 tests/**/target
 /result*
 .direnv
-.envrc
 cli/target
 /shell.nix
 .vscode
