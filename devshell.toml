@@ -1,0 +1,10 @@
+[devshell]
+name = "nci"
+
+packages = [
+  "alejandra",
+]
+
+[[commands]]
+package = "treefmt"
+category = "formatters"
