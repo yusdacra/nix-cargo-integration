@@ -18,6 +18,10 @@ without messing with any files or setting up overlays (see `Using the nci CLI` i
 Check out https://github.com/yusdacra/rust-nix-templater if you want an easy way
 to generate nix-specific boilerplate for your projects!
 
+## Documentation
+
+You can get documentation by running `mdbook serve docs` at the root of the repository.
+
 ## Usage
 
 ### With flakes
@@ -64,10 +68,6 @@ You can also couple it with [niv](https://github.com/nmattia/niv):
 
 - [Basic flake.nix template with commented fields](./docs/example_flake.nix)
 - [Flake using a bit of everything](https://github.com/helix-editor/helix/blob/master/flake.nix)
-
-## Documentation
-
-You can find library API documentation and others at [the manual](./docs/MANUAL.md).
 
 [devshell]: https://github.com/numtide/devshell "devshell"
 [flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
