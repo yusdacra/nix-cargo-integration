@@ -8,3 +8,7 @@ packages = [
 [[commands]]
 package = "treefmt"
 category = "formatters"
+
+[[commands]]
+package = "mdbook"
+category = "documentation"
