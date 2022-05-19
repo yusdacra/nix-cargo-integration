@@ -1,0 +1,431 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>NCI Documentation</title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">NCI Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="nix-cargo-integration"><a class="header" href="#nix-cargo-integration">nix-cargo-integration</a></h1>
+<p>Library to easily and effortlessly integrate Cargo projects with Nix.</p>
+<ul>
+<li>Uses <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> to build Cargo packages and <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> to provide a development shell.</li>
+<li>Allows configuration from <code>Cargo.toml</code> file(s) via <code>package.metadata.nix</code>
+and <code>workspace.metadata.nix</code> attributes.</li>
+<li>Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).</li>
+<li>Aims to offload work from the user; comes with useful configuration options
+(like <code>renameOutputs</code>, <code>defaultOutputs</code> etc.)</li>
+<li>Can generate nixpkgs-compatible Nix expressions that captures all your packages
+dependencies / env vars and so on.
+You don't need to maintain a seperate derivation for nixpkgs!
+(see <code>Generating a nixpkgs-compatible package expression</code> in manual)</li>
+<li>A CLI tool that let's you compile and run arbitrary Rust repositories directly
+without messing with any files or setting up overlays (see <code>Using the nci CLI</code> in manual)</li>
+</ul>
+<p>Check out <a href="https://github.com/yusdacra/rust-nix-templater">rust-nix-templater</a>
+if you want an easy way to generate nix-specific boilerplate for your projects!</p>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<h3 id="with-flakes"><a class="header" href="#with-flakes">With flakes</a></h3>
+<p>Run <code>nix flake init -t github:yusdacra/nix-cargo-integration</code>.</p>
+<p>Or add:</p>
+<pre><code class="language-nix">{
+  inputs = {
+    nci.url = &quot;github:yusdacra/nix-cargo-integration&quot;;
+  };
+  outputs = inputs: inputs.nci.lib.makeOutputs { root = ./.; };
+}
+</code></pre>
+<p>to your <code>flake.nix</code>.</p>
+<h3 id="without-flakes"><a class="header" href="#without-flakes">Without flakes</a></h3>
+<p>You can use <a href="https://github.com/edolstra/flake-compat" title="flake-compat">flake-compat</a> to provide the default outputs of the flake for non-flake users.</p>
+<p>If you aren't using flakes, you can do (in your <code>default.nix</code> file for example):</p>
+<pre><code class="language-nix">let
+  nciSrc = fetchTarball {
+    url = &quot;https://github.com/yusdacra/nix-cargo-integration/archive/&lt;rev&gt;.tar.gz&quot;;
+    sha256 = &quot;&lt;hash&gt;&quot;;
+  };
+  nci = import nciSrc;
+in nci.makeOutputs { root = ./.; }
+</code></pre>
+<p>You can also couple it with <a href="https://github.com/nmattia/niv">niv</a>:</p>
+<ul>
+<li>First run <code>niv add yusdacra/nix-cargo-integration</code></li>
+<li>Then you can write in your <code>default.nix</code> file:
+<pre><code class="language-nix">let
+  sources = import ./sources.nix;
+  nci = import sources.nix-cargo-integration;
+in nci.makeOutputs { root = ./.; }
+</code></pre>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="nix-library-documentation"><a class="header" href="#nix-library-documentation">Nix library documentation</a></h1>
+<p><strong>IMPORTANT</strong> public API promises: Any API that is not documented here <strong>IS NOT</strong> counted
+as &quot;public&quot; and therefore can be changed without breaking SemVer. This does not mean that
+changes will be done without any notice. You are still welcome to create issues / discussions
+about them. Upstream projects such as <a href="https://github.com/numtide/devshell" title="devshell">devshell</a>, <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> etc. can have breaking changes,
+these breakages will be limited to <code>overrides.shell</code> and <code>overrides.build</code> in the public API,
+since these directly modify <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> / <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> builder configs.</p>
+<h2 id="the-common-attribute-set"><a class="header" href="#the-common-attribute-set">The <code>common</code> attribute set</a></h2>
+<p>This attribute set is passed to (almost) all overrides. It contains everything you may
+need for adding stuff, such as the nixpkgs package set (<code>common.pkgs</code>) and other shared
+data between build and development shell (<code>common.buildInputs</code>, <code>common.env</code> etc.). For
+more information on what <code>common</code> actually exports, please check the bottom of <a href="./src/common.nix">common.nix</a>.</p>
+<h2 id="makeoutputs"><a class="header" href="#makeoutputs"><code>makeOutputs</code></a></h2>
+<p>Generates outputs for all systems specified in <code>Cargo.toml</code> (defaults to <code>defaultSystems</code> of <code>nixpkgs</code>).</p>
+<h3 id="arguments"><a class="header" href="#arguments">Arguments</a></h3>
+<ul>
+<li><code>root</code>: directory where <code>Cargo.lock</code> and <code>Cargo.toml</code> (workspace or package manifest) is in (type: path)</li>
+<li><code>systems</code>: override the list of systems to generate outputs for (type: <code>def: [ ]</code>)</li>
+<li><code>builder</code>: which dream2nix builder to use (type: string) (default: <code>&quot;crane&quot;</code>)</li>
+<li><code>enablePreCommitHooks</code>: whether to enable pre-commit hooks (type: boolean) (default: <code>false</code>)</li>
+<li><code>pkgsOverlays</code>: overlays to apply to the nixpkgs package set (type: list of nixpkgs overlays)</li>
+<li><code>renameOutputs</code>: which crates to rename in package names and output names (type: attrset) (default: <code>{ }</code>)</li>
+<li><code>defaultOutputs</code>: which outputs to set as default (type: attrset) (default: <code>{ }</code>)
+<ul>
+<li><code>defaultOutputs.app</code>: app output name to set as default app (<code>defaultApp</code>) output (type: string)</li>
+<li><code>defaultOutputs.package</code>: package output name to set as default package (<code>defaultPackage</code>) output (type: string)</li>
+</ul>
+</li>
+<li><code>overrides</code>: overrides for devshell, crates, build and common (type: attrset) (default: <code>{ }</code>)
+<ul>
+<li><code>overrides.sources</code>: override for the sources used by common (type: <code>common: prev: { }</code>)</li>
+<li><code>overrides.crates</code>: override for changing crate overrides (type: <code>common: prev: { }</code>)</li>
+<li><code>overrides.common</code>: override for common (type: <code>prev: { }</code>)
+<ul>
+<li>this will override <em>all</em> common attribute set(s), refer to <a href="./src/common.nix">common.nix</a> for more information</li>
+</ul>
+</li>
+<li><code>overrides.shell</code>: override for devshell (type: <code>common: prev: { }</code>)
+<ul>
+<li>this will override <em>all</em> <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> configuration(s), refer to <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> for more information</li>
+</ul>
+</li>
+<li><code>overrides.build</code>: override for build config (type: <code>common: prev: { }</code>)</li>
+<li><code>overrides.cCompiler</code>: override what C compiler will be used (type: <code>common: { ... }</code>)
+<ul>
+<li>if the returned attribute set has <code>cCompiler</code>, this is assumed to be a <em>package</em>
+and will be used as the new C compiler.</li>
+<li>if the returned attribute set has <code>useCCompilerBintools</code>, this will be used to decide
+whether or not to add the C compiler's <code>bintools</code> to the build environment.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="cargotoml-attributes-documentation"><a class="header" href="#cargotoml-attributes-documentation"><code>Cargo.toml</code> attributes documentation</a></h1>
+<p>The attributes described here go in a <code>Cargo.toml</code> file.</p>
+<ul>
+<li><code>workspace.metadata.nix</code> attributes apply to <em>the whole workspace</em>.</li>
+<li><code>package.metadata.nix</code> attributes only apply to the package declared
+in the same <code>Cargo.toml</code> the attributes were defined in.</li>
+</ul>
+<h2 id="packagemetadatanix-and-workspacemetadatanix-shared-attributes"><a class="header" href="#packagemetadatanix-and-workspacemetadatanix-shared-attributes"><code>package.metadata.nix</code> and <code>workspace.metadata.nix</code> shared attributes</a></h2>
+<ul>
+<li><code>runtimeLibs</code>: libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> for both dev and build env (type: list)</li>
+</ul>
+<h4 id="example"><a class="header" href="#example">Example</a></h4>
+<pre><code class="language-toml">[package.metadata.nix]
+runtimeLibs = [&quot;vulkan-loader&quot;, &quot;xorg.libXi&quot;]
+</code></pre>
+<h3 id="env-attributes"><a class="header" href="#env-attributes"><code>env</code> attributes</a></h3>
+<p>Key-value pairings that are put here will be exported into the development and build environment.</p>
+<h4 id="example-1"><a class="header" href="#example-1">Example</a></h4>
+<pre><code class="language-toml">[package.metadata.nix.env]
+PROTOC = &quot;protoc&quot;
+</code></pre>
+<h3 id="crateoverride-attributes"><a class="header" href="#crateoverride-attributes"><code>crateOverride</code> attributes</a></h3>
+<p>Key-value pairings that are put here will be used to override crates in build derivation.
+Dependencies / environment variables put here will also be exported to the development environment.</p>
+<h4 id="example-2"><a class="header" href="#example-2">Example</a></h4>
+<pre><code class="language-toml">[package.metadata.nix.crateOverride.xcb]
+buildInputs = [&quot;xorg.libxcb&quot;]
+env.TEST_ENV = &quot;test&quot;
+</code></pre>
+<h2 id="packagemetadatanix-attributes"><a class="header" href="#packagemetadatanix-attributes"><code>package.metadata.nix</code> attributes</a></h2>
+<ul>
+<li><code>build</code>: whether to enable outputs which build the package (type: boolean) (default: <code>false</code>)</li>
+<li><code>app</code>: whether to enable the application output (type: boolean) (default: <code>false</code>)</li>
+<li><code>longDescription</code>: a longer description (type: string)</li>
+</ul>
+<h4 id="example-3"><a class="header" href="#example-3">Example</a></h4>
+<pre><code class="language-toml">[package.metadata.nix]
+build = true
+app = true
+longDescription = &quot;blablabla...&quot;
+</code></pre>
+<h3 id="desktopfile-attributes"><a class="header" href="#desktopfile-attributes"><code>desktopFile</code> attributes</a></h3>
+<p>If this is set to a string specifying a path, the path will be treated as a desktop file and will be used.
+The path must start with &quot;./&quot; and specify a path relative ro <code>root</code>. </p>
+<ul>
+<li><code>icon</code>: icon string according to XDG (type: string)
+<ul>
+<li>strings starting with &quot;./&quot; will be treated as relative to <code>root</code></li>
+<li>everything else will be put into the desktop file as-is</li>
+</ul>
+</li>
+<li><code>comment</code>: comment for the desktop file (type: string) (default: <code>package.description</code>)</li>
+<li><code>name</code>: desktop name for the desktop file (type: string) (default: <code>package.name</code>)</li>
+<li><code>genericName</code>: generic name for the desktop file (type: string)</li>
+<li><code>categories</code>: categories for the desktop file according to XDG specification (type: list of strings)</li>
+</ul>
+<h4 id="example-4"><a class="header" href="#example-4">Example</a></h4>
+<pre><code class="language-toml">[package.metadata.nix.desktopFile]
+name = &quot;My App&quot;
+comment = &quot;This app is for blabla&quot;
+icon = &quot;./resources/myapp.ico&quot;
+genericName = &quot;App&quot;
+categories = [&quot;Something&quot;]
+</code></pre>
+<h2 id="workspacemetadatanix-attributes"><a class="header" href="#workspacemetadatanix-attributes"><code>workspace.metadata.nix</code> attributes</a></h2>
+<p>NOTE: If <code>root</code> does not point to a workspace, all of the attributes listed here
+will be available in <code>package.metadata.nix</code>.</p>
+<ul>
+<li><code>systems</code>: systems to enable for the flake (type: list)
+<ul>
+<li>defaults to <code>nixpkgs</code> <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14"><code>supportedSystems</code> and <code>limitedSupportSystems</code></a></li>
+</ul>
+</li>
+<li><code>toolchain</code>: rust toolchain to use (type: one of &quot;stable&quot;, &quot;beta&quot; or &quot;nightly&quot;) (default: &quot;stable&quot;)
+<ul>
+<li>if the <code>rust-toolchain</code> or <code>rust-toolchain.toml</code> file exists at project
+root, it will be used instead of this attribute</li>
+</ul>
+</li>
+</ul>
+<h4 id="example-5"><a class="header" href="#example-5">Example</a></h4>
+<pre><code class="language-toml">[workspace.metadata.nix]
+systems = [&quot;x86_64-linux&quot;, &quot;aarch64-linux&quot;]
+toolchain = &quot;beta&quot;
+</code></pre>
+<h3 id="precommithooks-attributes"><a class="header" href="#precommithooks-attributes"><code>preCommitHooks</code> attributes</a></h3>
+<ul>
+<li><code>enable</code>: whether to enable pre commit hooks (type: boolean) (default: <code>false</code>)</li>
+</ul>
+<h4 id="example-6"><a class="header" href="#example-6">Example</a></h4>
+<pre><code class="language-toml">[workspace.metadata.nix]
+preCommitHooks.enable = true
+</code></pre>
+<h3 id="cachix-attributes"><a class="header" href="#cachix-attributes"><code>cachix</code> attributes</a></h3>
+<ul>
+<li><code>name</code>: name of the cachix cache (type: string)</li>
+<li><code>key</code>: public key of the cachix cache (type: string)</li>
+</ul>
+<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
+<pre><code class="language-toml">[workspace.metadata.nix.cachix]
+name = &quot;mycachix&quot;
+key = &quot;mycachixpublickey&quot;
+</code></pre>
+<h3 id="devshell-attributes"><a class="header" href="#devshell-attributes"><code>devshell</code> attributes</a></h3>
+<p>Anything put here will be used to configure the devshell.
+Refer to [devshell] documentation for configuration options.</p>
+<p>NOTE: Attributes specified here <strong>will not</strong> be used if a top-level <code>devshell.toml</code> file exists.</p>
+<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
+<pre><code class="language-toml">[workspace.metadata.nix.devshell]
+name = &quot;myshell&quot;
+packages = [&quot;gnumake&quot;]
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tips-and-tricks"><a class="header" href="#tips-and-tricks">Tips and tricks</a></h1>
+<h2 id="ignoring-cargolock-in-rust-libraries"><a class="header" href="#ignoring-cargolock-in-rust-libraries">Ignoring <code>Cargo.lock</code> in Rust libraries</a></h2>
+<p>The <a href="https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html">official recommendation</a>
+for Rust libraries is to add <code>Cargo.lock</code> to the <code>.gitignore</code>. This conflicts
+with the way paths are evaluated when using a <code>flake.nix</code>. Only files tracked
+by the version control system (i.e. git) can be accessed during evaluation.
+This will manifest in the following error:</p>
+<pre><code class="language-console">$ nix build
+error: A Cargo.lock file must be present, please make sure it's at least staged in git.
+(use '--show-trace' to show detailed location information)
+</code></pre>
+<p>A neat fix for that is to track the path to <code>Cargo.lock</code> without staging it
+(<a href="https://github.com/yusdacra/nix-cargo-integration/issues/46#issuecomment-962589582">thanks to @bew</a>).</p>
+<pre><code class="language-console">$ git add --intent-to-add Cargo.lock
+</code></pre>
+<p>Add <code>--force</code> if your <code>Cargo.lock</code> is listed in <code>.gitignore</code>.</p>
+<h2 id="enabling-trace"><a class="header" href="#enabling-trace">Enabling trace</a></h2>
+<p>Traces in the library can be enabled by setting the <code>NCI_DEBUG</code> environment
+variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>. Example:</p>
+<pre><code>NCI_DEBUG=1 nix build --impure .
+</code></pre>
+<h2 id="generating-a-nixpkgs-compatible-package-expression"><a class="header" href="#generating-a-nixpkgs-compatible-package-expression">Generating a nixpkgs-compatible package expression</a></h2>
+<p><code>nix-cargo-integration</code> will generate outputs named <code>&lt;packageOutputName&gt;-derivation</code>.
+You can <code>nix build</code> these, and it will result in a <code>.nix</code> text file. After generating one,
+be sure to review it and change anything broken, such as source fetching.</p>
+<h2 id="using-the-nci-cli"><a class="header" href="#using-the-nci-cli">Using the <code>nci</code> CLI</a></h2>
+<p>This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:</p>
+<pre><code class="language-bash">alias nci=&quot;nix run github:yusdacra/nix-cargo-integration --&quot;
+# Show the outputs of this (flake) source
+nci show github:owner/repo
+# Run the default app of this source
+nci run github:owner/repo
+# Run a specific app of this source
+nci run github:owner/repo app-name
+# Build the default package of this source
+nci build github:owner/repo
+# Build a specific package of this source
+nci build github:owner/repo package-name
+# Show the flake metadata for this source
+nci metadata github:owner/repo
+# Update the source
+nci update github:owner/repo
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>
