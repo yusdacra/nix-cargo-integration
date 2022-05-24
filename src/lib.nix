@@ -93,6 +93,6 @@ in
       imp = expr: import (l.toFile "expr" expr);
     in
       if parsed != null
-      then imp ''args: with args; ${l.elemAt parsed 0}''
+      then imp ''args: with args; ${l.elemAt parsed 0}'' args
       else imp _expr;
   }
