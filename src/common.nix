@@ -172,7 +172,10 @@
 
     # Collect the env vars. The priority is as follows:
     # package metadata > workspace metadata
-    env = (workspaceMetadata.env or {}) // (packageMetadata.env or {});
+    env = let
+      allEnvs = (workspaceMetadata.env or {}) // (packageMetadata.env or {});
+    in
+      l.mapAttrs (_: value: nci-pkgs.utils.evalPkgs value) allEnvs;
 
     # Collect override environment vars and (native) build inputs.
     # This is collected seperately because build will already use overrides,

@@ -88,4 +88,5 @@ in
     # If the condition is true, evaluates to the
     # passed value, otherwise evalutes to null.
     thenOrNull = cond: ifTrue: thenOr cond ifTrue null;
+    eval = expr: args: import (l.toFile "expr" expr) args;
   }

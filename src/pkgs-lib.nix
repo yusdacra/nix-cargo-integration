@@ -19,8 +19,9 @@
     l.foldl' op pkgs attrs;
   # Resolves a list of string keys to packages.
   resolveToPkgs = l.map resolveToPkg;
+  evalPkgs = expr: l.eval expr {inherit pkgs;};
 in {
-  inherit resolveToPkg resolveToPkgs;
+  inherit resolveToPkg resolveToPkgs evalPkgs;
 
   # Creates crate overrides.
   makeCrateOverrides = {
@@ -49,7 +50,12 @@ in {
     # Overrides from `rawTomlOverrides`
     tomlOverrides =
       l.mapAttrs
-      (_: crate: prev:
+      (_: crate: prev: let
+        envsEvaled =
+          l.mapAttrs
+          (_: value: evalPkgs value)
+          (crate.env or {});
+      in
         {
           nativeBuildInputs = l.unique (
             (prev.nativeBuildInputs or [])
@@ -60,8 +66,8 @@ in {
             ++ (resolveToPkgs (crate.buildInputs or []))
           );
         }
-        // (crate.env or {})
-        // {propagatedEnv = crate.env or {};})
+        // envsEvaled
+        // {propagatedEnv = envsEvaled;})
       (l.dbgX "rawTomlOverrides" rawTomlOverrides);
 
     # Our overrides (+ default crate overrides from nixpkgs)
