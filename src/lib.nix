@@ -91,7 +91,7 @@ in
     eval = _expr: args: let
       parsed = l.match ''eval (.*)'' _expr;
       expr =
-        if l.length parsed > 0
+        if parsed != null
         then l.elemAt parsed 0
         else "${_expr}";
     in
