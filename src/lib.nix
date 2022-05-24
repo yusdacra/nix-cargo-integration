@@ -88,5 +88,12 @@ in
     # If the condition is true, evaluates to the
     # passed value, otherwise evalutes to null.
     thenOrNull = cond: ifTrue: thenOr cond ifTrue null;
-    eval = expr: args: import (l.toFile "expr" expr) args;
+    eval = _expr: args: let
+      parsed = l.match ''eval (.*)'' _expr;
+      expr =
+        if l.length parsed > 0
+        then l.elemAt parsed 0
+        else "${_expr}";
+    in
+      import (l.toFile "expr" expr) args;
   }
