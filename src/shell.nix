@@ -81,7 +81,19 @@ common: let
         ++ common.buildInputs
         ++ common.overrideNativeBuildInputs
         ++ common.overrideBuildInputs;
-      commands = with pkgs;
+      commands = with pkgs; let
+        buildFlakeExpr = nixArgs: expr: ''
+          function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
+          url="$(get '.locked.url')"
+          narhash="$(get '.locked.narHash')"
+          nix build -L --show-trace ${nixArgs} --expr "
+            let
+              b = builtins;
+              flake = b.getFlake \"$url?narHash=$narhash\";
+            in ${expr}
+          "
+        '';
+      in
         [
           {
             package = pkgsWithRust.rustc;
@@ -98,12 +110,8 @@ common: let
             help = "Rust's package manager";
           }
           {
-            package = git;
-            category = "vcs";
-          }
-          {
             package = alejandra;
-            category = "tools";
+            category = "formatting";
           }
           {
             name = "show";
@@ -115,23 +123,19 @@ common: let
             name = "check";
             category = "flake tools";
             help = "Check flake outputs";
-            command = ''
-              function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
-              url="$(get '.locked.url')"
-              narhash="$(get '.locked.narHash')"
-              nix build -L --show-trace --no-link --expr "
-                let b = builtins; in
-                  b.removeAttrs
-                  (b.getFlake \"$url?narHash=$narhash\").checks.\"${common.system}\"
-                  [ \"preCommitChecks\" ]
-              "
-            '';
+            command =
+              buildFlakeExpr
+              "--no-link"
+              ''b.removeAttrs flake.checks.\"${common.system}\" [ \"preCommitChecks\" ]'';
           }
           {
             name = "fmt";
-            category = "flake tools";
-            help = "Format all Nix files";
-            command = "alejandra $(pwd)";
+            category = "formatting";
+            help = ''
+              Format all files
+              (if treefmt is setup, otherwise fallbacks to just formatting Nix files)
+            '';
+            command = "treefmt || alejandra $(pwd)";
           }
           {
             name = "update-input";
@@ -148,8 +152,33 @@ common: let
           {
             name = "build";
             category = "flake tools";
-            help = "Build the specified derivation and push results to cachix.";
+            help = "Build the specified package and push results to cachix.";
             command = "cachix watch-exec ${cachixName} nix -- build .#$1";
+          }
+          {
+            name = "build-all";
+            category = "flake tools";
+            help = "Build all packages and push results to cachix";
+            command = ''
+              function build {
+                ${buildFlakeExpr "" ''flake.packages.\"${common.system}\"''}
+              }
+              cachix watch-exec build
+            '';
+          }
+        ]
+        ++ l.optionals (cachixName == null) [
+          {
+            name = "build";
+            category = "flake tools";
+            help = "Build the specified package";
+            command = "nix build .#$1";
+          }
+          {
+            name = "build-all";
+            category = "flake tools";
+            help = "Build all packages";
+            command = buildFlakeExpr "" ''flake.packages.\"${common.system}\"'';
           }
         ]
         ++ l.optional (l.hasAttr "preCommitChecks" common.internal) {
