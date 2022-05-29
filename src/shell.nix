@@ -115,13 +115,17 @@ common: let
             name = "check";
             category = "flake tools";
             help = "Check flake outputs";
-            command = "
-          nix build -L --show-trace --no-link --impure --expr '
-            builtins.removeAttrs
-              (builtins.getFlake (toString ./.)).checks.${common.system}
-              [ \"preCommitChecks\" ]
-          '
-        ";
+            command = ''
+              function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
+              url="$(get '.locked.url')"
+              narhash="$(get '.locked.narHash')"
+              nix build -L --show-trace --no-link --expr "
+                let b = builtins; in
+                  b.removeAttrs
+                  (b.getFlake \"$url?narHash=$narhash\").checks.\"${common.system}\"
+                  [ \"preCommitChecks\" ]
+              "
+            '';
           }
           {
             name = "fmt";

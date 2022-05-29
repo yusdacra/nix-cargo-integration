@@ -109,8 +109,13 @@
       lib = {
         inherit makeOutputs;
       };
-      inherit craneTests brpTests devShell;
+      inherit craneTests brpTests;
       inherit (cliOutputs) apps packages defaultApp defaultPackage;
+
+      devShells =
+        l.recursiveUpdate
+        (l.mapAttrs (_: d: {default = d;}) devShell)
+        (l.mapAttrs (_: d: {cli = d;}) cliOutputs.devShell);
 
       templates = {
         default = {
