@@ -53,7 +53,7 @@
         };
       };
 
-      mkTests = builder: let
+      mkTestOutputs = builder: let
         testNames = l.remove null (l.mapAttrsToList (name: type:
           if type == "directory"
           then
@@ -87,8 +87,48 @@
         shells = l.foldAttrs l.recursiveUpdate {} shells;
       };
 
-      craneTests = mkTests "crane";
-      brpTests = mkTests "build-rust-package";
+      craneTests = mkTestOutputs "crane";
+      brpTests = mkTestOutputs "build-rust-package";
+
+      testsApps = let
+        systems = ["x86_64-linux"];
+        outputsNames = ["craneTests" "brpTests"];
+        _mkTestsApp = system: outputsPath: let
+          pkgs = inputs.nixpkgs.legacyPackages.${system};
+          flakeSrc = "path:${inputs.self.outPath}?narHash=${inputs.self.narHash}";
+          script =
+            pkgs.writeScript
+            "test-${l.replaceStrings ["."] ["-"] outputsPath}.sh"
+            ''
+              #!${pkgs.stdenv.shell}
+              nix build -L --show-trace --keep-failed --keep-going \
+              --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}"
+            '';
+        in {
+          type = "app";
+          program = toString script;
+        };
+        mkOutputs = system: let
+          mkTestsApp = _mkTestsApp system;
+        in
+          l.listToAttrs
+          (l.flatten (
+            l.map
+            (
+              name: let
+                mkApp = tname:
+                  l.nameValuePair
+                  "run-${name}-${tname}"
+                  (mkTestsApp "${name}.${tname}.${system}");
+                tnames = ["checks" "shells" "packages"];
+              in
+                l.map mkApp tnames
+            )
+            outputsNames
+          ));
+        outputs = l.genAttrs systems mkOutputs;
+      in
+        outputs;
 
       devShell = let
         systems = ["x86_64-linux"];
@@ -105,12 +145,19 @@
           shell.shell;
       in
         l.genAttrs systems mkShell;
+
+      allApps = l.recursiveUpdate cliOutputs.apps testsApps;
     in {
       lib = {
         inherit makeOutputs;
       };
       inherit craneTests brpTests;
-      inherit (cliOutputs) apps packages defaultApp defaultPackage;
+      inherit (cliOutputs) packages defaultPackage;
+
+      apps =
+        l.mapAttrs
+        (_: apps: apps // {default = apps.nci-cli;})
+        allApps;
 
       devShells =
         l.recursiveUpdate
