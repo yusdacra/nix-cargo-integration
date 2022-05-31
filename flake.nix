@@ -88,7 +88,7 @@
       };
 
       craneTests = mkTests "crane";
-      brpTests = mkTests "buildRustPackage";
+      brpTests = mkTests "build-rust-package";
 
       devShell = let
         systems = ["x86_64-linux"];

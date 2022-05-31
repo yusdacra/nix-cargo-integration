@@ -179,7 +179,7 @@
     packageOverrides =
       if builder == "crane"
       then craneOverrides
-      else if builder == "buildRustPackage"
+      else if builder == "build-rust-package"
       then brpOverrides
       else throw "unsupported builder";
 
