@@ -27,11 +27,11 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Test checks
-      run: nix build -L --keep-going --show-trace --impure --expr '(builtins.getFlake (toString ./.)).${{ matrix.builder }}Tests.checks.${builtins.currentSystem}'
+      run: nix run .#run-${{ matrix.builder }}Tests-checks
     - name: Test shells
-      run: nix build -L --keep-going --show-trace --impure --expr '(builtins.getFlake (toString ./.)).${{ matrix.builder }}Tests.shells.${builtins.currentSystem}'
+      run: nix run .#run-${{ matrix.builder }}Tests-shells
     - name: Test packages
-      run: nix build -L --keep-going --show-trace --impure --expr '(builtins.getFlake (toString ./.)).${{ matrix.builder }}Tests.packages.${builtins.currentSystem}'
+      run: nix run .#run-${{ matrix.builder }}Tests-packages
   build-cli:
     runs-on: ubuntu-latest
     steps:
