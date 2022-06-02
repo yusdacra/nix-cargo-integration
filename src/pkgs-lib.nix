@@ -98,8 +98,5 @@ in {
     ];
 
   # dream2nix build crate.
-  buildCrate = args: let
-    outputs = dream2nix.makeFlakeOutputs args;
-  in
-    outputs.packages.${pkgs.system}.${args.pname};
+  buildCrate = args: (dream2nix.realizeOutputs args).packages.${args.pname};
 }
