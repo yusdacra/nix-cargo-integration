@@ -98,5 +98,5 @@ in {
     ];
 
   # dream2nix build crate.
-  buildCrate = args: (dream2nix.realizeOutputs args).packages.${args.pname};
+  buildCrate = args: (dream2nix.realizeProjects args).packages.${args.pname};
 }
