@@ -3,11 +3,11 @@
     "crane": {
       "flake": false,
       "locked": {
-        "lastModified": 1654129972,
-        "narHash": "sha256-uMbzg3IyJC9VCGQMAWSRxCOzQxHZpEJrus/1X8AYmeY=",
+        "lastModified": 1654444508,
+        "narHash": "sha256-4OBvQ4V7jyt7afs6iKUvRzJ1u/9eYnKzVQbeQdiamuY=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "d64285699a4fae54c7a0d3bf412fc557d1532621",
+        "rev": "db5482bf225acc3160899124a1df5a617cfa27b5",
         "type": "github"
       },
       "original": {
@@ -66,11 +66,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1654258320,
-        "narHash": "sha256-bxLwcKdvfZCcyvDNA0WISb91Vh2PISuEdWuFkgAJvO4=",
+        "lastModified": 1654444921,
+        "narHash": "sha256-dfOSzZHVR7fLeN9BUoLvHkbG3ypte+zSsd5ODc4RRxA=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "6bc00a70df725df5eaa22e19ccdf0e05705ea338",
+        "rev": "7e31c966fb0f6511115e4a128a0343c85817991d",
         "type": "github"
       },
       "original": {
