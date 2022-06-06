@@ -4,7 +4,7 @@
 
     devshell = {
       url = "github:numtide/devshell";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
     rustOverlay = {
       url = "github:oxalica/rust-overlay";
@@ -21,6 +21,7 @@
       inputs.alejandra.follows = "nixpkgs";
       inputs.pre-commit-hooks.follows = "nixpkgs";
       inputs.flake-utils-pre-commit.follows = "nixpkgs";
+      inputs.devshell.follows = "devshell";
     };
   };
 
@@ -139,7 +140,9 @@
             inputs.nixpkgs.legacyPackages.${system};
           shell = mkShell {
             configuration =
-              (inputs.devshell.lib.importTOML ./devshell.toml) {lib = l;};
+              import "${inputs.devshell}/nix/importTOML.nix"
+              ./devshell.toml
+              {lib = l;};
           };
         in
           shell.shell;
