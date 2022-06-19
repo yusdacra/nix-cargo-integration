@@ -59,9 +59,7 @@
       buildInputs = l.concatAttrLists prev common "buildInputs";
       nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
     };
-  rustToolchainOv = {
-    "^.*".set-toolchain.overrideRustToolchain = _: rustToolchain;
-  };
+  set-toolchain = {overrideRustToolchain = _: rustToolchain;};
 
   # Overrides for the crane builder
   craneOverrides = let
@@ -131,12 +129,14 @@
       ];
   in {
     "${cargoPkg.name}-deps" = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = depsOverride prev;
       in
         l.dbgX "overrided deps drv" data;
     };
     ${cargoPkg.name} = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = mainOverride prev;
       in
@@ -168,6 +168,7 @@
       ];
   in {
     ${cargoPkg.name} = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = overrides prev;
       in
@@ -175,18 +176,16 @@
     };
   };
 
-  builderOverrides =
-    if builder == "crane"
-    then craneOverrides
-    else if builder == "build-rust-package"
-    then brpOverrides
-    else throw "unsupported builder";
-
   baseConfig = {
     pname = cargoPkg.name;
     source = root;
 
-    packageOverrides = builderOverrides // rustToolchainOv;
+    packageOverrides =
+      if builder == "crane"
+      then craneOverrides
+      else if builder == "build-rust-package"
+      then brpOverrides
+      else throw "unsupported builder";
 
     settings = [{inherit builder;}];
   };
