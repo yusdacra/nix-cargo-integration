@@ -2,8 +2,8 @@
 {
   # an imported nixpkgs package set
   pkgs,
-  # the package set with rust toolchain to use
-  pkgsWithRust,
+  # the rust toolchain we use
+  rustToolchain,
   # an NCI library
   lib,
   # dream2nix tools
@@ -72,7 +72,7 @@ in {
 
     # Our overrides (+ default crate overrides from nixpkgs)
     extraOverrides =
-      import ./extra-crate-overrides.nix {inherit pkgs pkgsWithRust lib;};
+      import ./extra-crate-overrides.nix {inherit pkgs rustToolchain lib;};
 
     collectOverride = acc: el: name: let
       getOverride = x: x.${name} or (_: {});
@@ -80,7 +80,7 @@ in {
       elOverride = getOverride el;
     in
       attrs:
-        l.applyOverrides
+        l.computeOverridesResult
         attrs
         [baseConf accOverride elOverride];
   in

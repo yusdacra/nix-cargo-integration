@@ -6,7 +6,7 @@
       url = "github:numtide/devshell";
       flake = false;
     };
-    rustOverlay = {
+    rust-overlay = {
       url = "github:oxalica/rust-overlay";
       flake = false;
     };
@@ -33,7 +33,7 @@
         rev = "b6bc0b21e1617e2b07d8205e7fae7224036dfa4b";
       };
 
-      sources = {inherit rustOverlay devshell nixpkgs dream2nix preCommitHooks;};
+      sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
       lib = import ./src/lib.nix {
         lib = import "${nixpkgs}/lib";
       };

@@ -12,7 +12,7 @@
 }: let
   inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
-  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils dream2nix;
+  inherit (common.internal.nci-pkgs) pkgs utils rustToolchain;
 
   l = common.internal.lib;
 
@@ -59,6 +59,9 @@
       buildInputs = l.concatAttrLists prev common "buildInputs";
       nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
     };
+  rustToolchainOv = {
+    "^.*".set-toolchain.overrideRustToolchain = _: rustToolchain;
+  };
 
   # Overrides for the crane builder
   craneOverrides = let
@@ -102,7 +105,7 @@
 
     # Overrides for the dependency only drv
     depsOverride = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           doCheck = false;
           buildPhase = buildPhase true;
@@ -113,7 +116,7 @@
       ];
     # Overrides for the main drv
     mainOverride = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           inherit doCheck;
           meta = common.meta;
@@ -147,7 +150,7 @@
     profile = l.thenOr release "release" "debug";
     # Overrides for the drv
     overrides = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           inherit doCheck;
           meta = common.meta;
@@ -172,16 +175,18 @@
     };
   };
 
+  builderOverrides =
+    if builder == "crane"
+    then craneOverrides
+    else if builder == "build-rust-package"
+    then brpOverrides
+    else throw "unsupported builder";
+
   baseConfig = {
     pname = cargoPkg.name;
     source = root;
 
-    packageOverrides =
-      if builder == "crane"
-      then craneOverrides
-      else if builder == "build-rust-package"
-      then brpOverrides
-      else throw "unsupported builder";
+    packageOverrides = builderOverrides // rustToolchainOv;
 
     settings = [{inherit builder;}];
   };

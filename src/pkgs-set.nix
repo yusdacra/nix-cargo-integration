@@ -14,84 +14,76 @@
   # Overlays to apply to the nixpkgs package set
   overlays ? [],
 }: let
-  # Rust toolchain we will use.
-  rustToolchainOverlay = final: prev: let
-    inherit (builtins) readFile fromTOML isPath pathExists match;
-    inherit (lib) hasInfix unique head thenOrNull;
+  l = lib;
 
+  # pkgs set we will use.
+  pkgs =
+    if l.length overlays > 0
+    then import sources.nixpkgs {inherit system overlays;}
+    else sources.nixpkgs.legacyPackages.${system};
+
+  # Rust toolchain we will use.
+  rustToolchain = let
+    rust-lib = l.fix (l.extends (import sources.rust-overlay) (self: pkgs));
     # Check if the passed toolchainChannel points to a toolchain file
-    hasRustToolchainFile = (isPath toolchainChannel) && (pathExists toolchainChannel);
-    # Create the base Rust toolchain that we will override to add other components.
-    baseRustToolchain =
-      if hasRustToolchainFile
-      then prev.rust-bin.fromRustupToolchainFile toolchainChannel
-      else prev.rust-bin.${toolchainChannel}.latest.default;
+    hasRustToolchainFile =
+      if l.isPath toolchainChannel
+      then
+        if l.pathExists toolchainChannel
+        then true
+        else l.throw "toolchain file (${toolchainChannel}) does not exist"
+      else false;
     # Read and import the toolchain channel file, if we can
     rustToolchainFile =
-      thenOrNull
+      l.thenOrNull
       hasRustToolchainFile
       (
         let
-          content = readFile toolchainChannel;
-          legacy = match "([^\r\n]+)\r?\n?" content;
-        in (thenOrNull (legacy == null) (fromTOML content).toolchain)
+          content = l.readFile toolchainChannel;
+          legacy = l.match "([^\r\n]+)\r?\n?" content;
+        in (l.thenOrNull (legacy == null) (l.fromTOML content).toolchain)
       );
-    # Whether the toolchain is nightly or not.
-    isNightly =
-      hasInfix "nightly"
-      (
-        if hasRustToolchainFile
-        then rustToolchainFile.channel or ""
-        else toolchainChannel
-      );
-    # Override the base toolchain and add some default components.
-    toolchain = baseRustToolchain.override {
-      extensions = unique ((rustToolchainFile.components or []) ++ ["rust-src" "rustfmt" "clippy"]);
+    # Create the base Rust toolchain that we will override to add other components.
+    baseToolchain =
+      if hasRustToolchainFile
+      then rust-lib.rust-bin.fromRustupToolchainFile toolchainChannel
+      else rust-lib.rust-bin.${toolchainChannel}.latest.default;
+    toolchain = baseToolchain.override {
+      extensions =
+        l.unique ((rustToolchainFile.components or [])
+          ++ ["rust-src" "rustfmt" "clippy"]);
     };
   in {
     rustc = toolchain;
+    cargo = toolchain;
+    rust-src = toolchain;
     rustfmt = toolchain;
     clippy = toolchain;
-    cargo = toolchain;
   };
 in rec {
-  # pkgs set we will use.
-  pkgs = import sources.nixpkgs {
-    inherit system overlays;
-  };
-  # pkgs set with rust toolchain overlaid.
-  pkgsWithRust = import sources.nixpkgs {
-    inherit system;
-    overlays = [
-      (import sources.rustOverlay)
-      rustToolchainOverlay
-      (_: prev: {
-        rustPlatform = prev.makeRustPlatform {inherit (prev) rustc cargo;};
-      })
-    ];
-  };
+  inherit rustToolchain pkgs;
   # dream2nix tools
   dream2nix = sources.dream2nix.lib.init {
+    inherit pkgs;
     config.projectRoot = root;
     config.disableIfdWarning = true;
-    pkgs = pkgsWithRust;
   };
   # devshell
   makeDevshell = import "${sources.devshell}/modules" pkgs;
   # nci library utilities
-  utils = import ./pkgs-lib.nix {inherit pkgs pkgsWithRust lib dream2nix;};
+  utils = import ./pkgs-lib.nix {inherit pkgs rustToolchain lib dream2nix;};
   # pre commit hooks
   makePreCommitHooks = let
     tools =
-      lib.filterAttrs (k: v: !(lib.any (a: k == a) ["override" "overrideDerivation"]))
-      (pkgsWithRust.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+      lib.filterAttrs (k: v: !(l.any (a: k == a) ["override" "overrideDerivation"]))
+      (pkgs.callPackage "${sources.preCommitHooks}/nix/tools.nix" {
+        inherit (rustToolchain) rustfmt;
         hindent = null;
         cabal-fmt = null;
       });
   in
-    pkgsWithRust.callPackage "${sources.preCommitHooks}/nix/run.nix" {
-      inherit tools;
-      pkgs = pkgsWithRust;
+    pkgs.callPackage "${sources.preCommitHooks}/nix/run.nix" {
+      inherit tools pkgs;
       gitignore-nix-src = null;
       isFlakes = true;
     };
