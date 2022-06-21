@@ -59,7 +59,7 @@
       buildInputs = l.concatAttrLists prev common "buildInputs";
       nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
     };
-  set-toolchain = {overrideRustToolchain = _: rustToolchain;};
+  set-toolchain.overrideRustToolchain = _: {inherit (rustToolchain) rustc cargo;};
 
   # Overrides for the crane builder
   craneOverrides = let
