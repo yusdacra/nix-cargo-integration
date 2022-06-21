@@ -7,6 +7,10 @@ most recent to least recent.
 `cargo-toml:` means that the change was related to the `Cargo.toml`
 attribute part of `nci`.
 
+## 20-06-2022
+
+- nix: `common.pkgsWithRust` is removed, you can now access the Rust toolchain via `common.rustToolchain` @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830
+
 ## 19-05-2022
 
 - nix: `overrides.pkgsOverlays` and `overrides.systems` were moved to `pkgsOverlays` and `systems` arguments to `makeOutputs` @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304

@@ -65,14 +65,31 @@ in
             if isType l.isList
             then l.unique (lval ++ rval)
             else if isType l.isAttrs
-            then lval // rval
+            then merge lval rval
             else if rval != null
             then rval
             else lval
         )
       );
-    # Apply some overrides in a way nci expects them to be applied.
-    applyOverrides = value: overrides: l.pipe value (l.map (ov: (prev: merge prev (ov prev))) overrides);
+    # Computes the result of some overrides for a specific value.
+    computeOverridesResult = value: overrides: let
+      combined =
+        l.foldl'
+        (
+          acc: el: (
+            prev: let
+              accApplied = acc prev;
+              elApplied = el (merge prev accApplied);
+            in
+              merge accApplied elApplied
+          )
+        )
+        (_: {})
+        overrides;
+    in
+      combined value;
+    applyOverrides = value: overrides:
+      merge value (computeOverridesResult value overrides);
     # Concats two lists and removes duplicate values.
     concatLists = list: olist: l.unique (list ++ olist);
     # Concats lists from two attribute sets.

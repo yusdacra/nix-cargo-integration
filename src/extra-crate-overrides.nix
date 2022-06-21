@@ -1,7 +1,7 @@
 # A set of crate overrides, in the spirit of nixpkgs's `defaultCrateOverrides`.
 {
   pkgs,
-  pkgsWithRust,
+  rustToolchain,
   lib,
 }: let
   l = lib;
@@ -51,7 +51,7 @@
       };
     in
       {
-        buildInputs = [protobuf pkgsWithRust.rustfmt];
+        buildInputs = [protobuf rustToolchain.rustfmt];
         propagatedEnv = env;
       }
       // env;
@@ -67,7 +67,7 @@
       };
     in
       {
-        buildInputs = [protobuf pkgsWithRust.rustfmt];
+        buildInputs = [protobuf rustToolchain.rustfmt];
         propagatedEnv = env;
       }
       // env;

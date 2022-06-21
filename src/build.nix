@@ -12,7 +12,7 @@
 }: let
   inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
-  inherit (common.internal.nci-pkgs) pkgs pkgsWithRust utils dream2nix;
+  inherit (common.internal.nci-pkgs) pkgs utils rustToolchain;
 
   l = common.internal.lib;
 
@@ -59,6 +59,7 @@
       buildInputs = l.concatAttrLists prev common "buildInputs";
       nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
     };
+  set-toolchain.overrideRustToolchain = _: {inherit (rustToolchain) rustc cargo;};
 
   # Overrides for the crane builder
   craneOverrides = let
@@ -102,7 +103,7 @@
 
     # Overrides for the dependency only drv
     depsOverride = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           doCheck = false;
           buildPhase = buildPhase true;
@@ -113,7 +114,7 @@
       ];
     # Overrides for the main drv
     mainOverride = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           inherit doCheck;
           meta = common.meta;
@@ -128,12 +129,14 @@
       ];
   in {
     "${cargoPkg.name}-deps" = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = depsOverride prev;
       in
         l.dbgX "overrided deps drv" data;
     };
     ${cargoPkg.name} = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = mainOverride prev;
       in
@@ -147,7 +150,7 @@
     profile = l.thenOr release "release" "debug";
     # Overrides for the drv
     overrides = prev:
-      l.applyOverrides prev [
+      l.computeOverridesResult prev [
         (prev: {
           inherit doCheck;
           meta = common.meta;
@@ -165,6 +168,7 @@
       ];
   in {
     ${cargoPkg.name} = {
+      inherit set-toolchain;
       nci-overrides.overrideAttrs = prev: let
         data = overrides prev;
       in

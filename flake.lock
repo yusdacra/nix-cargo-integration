@@ -64,11 +64,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1655574739,
-        "narHash": "sha256-4ElXxS9GlPNYgcCtnhqEmVf/UltGDozigmXjX/o+sUM=",
+        "lastModified": 1655826285,
+        "narHash": "sha256-dyrNTVBefSZWKdFNnAW+zUkO5bVo1colvLje4l1XXwA=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "16f11d2469d80461c73ff4fb5861cb55ebb4dbc0",
+        "rev": "f23add2b9c313c63dea5cff71523a850d29ffddb",
         "type": "github"
       },
       "original": {
@@ -98,10 +98,10 @@
         "devshell": "devshell",
         "dream2nix": "dream2nix",
         "nixpkgs": "nixpkgs",
-        "rustOverlay": "rustOverlay"
+        "rust-overlay": "rust-overlay"
       }
     },
-    "rustOverlay": {
+    "rust-overlay": {
       "flake": false,
       "locked": {
         "lastModified": 1655779671,

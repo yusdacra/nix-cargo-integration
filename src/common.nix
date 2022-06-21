@@ -64,7 +64,7 @@
   overrideDataPkgs =
     overrideData
     // {
-      inherit (nci-pkgs) pkgs pkgsWithRust;
+      inherit (nci-pkgs) pkgs rustToolchain;
     };
 
   overridedCCompiler = (overrides.cCompiler or (_: {})) overrideDataPkgs;
@@ -120,14 +120,14 @@
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined = let
     noMainOverrides = l.removeAttrs noPropagatedEnvOverrides mainNames;
-    func = prev: l.applyOverrides prev (l.attrValues noMainOverrides);
+    func = prev: l.computeOverridesResult prev (l.attrValues noMainOverrides);
   in
     l.dbgXY "combined overrides diff" (func {}) func;
   # Combine all main dep overrides
   mainOverrides = let
     ovs = l.filterAttrs (n: _: l.any (on: n == on) mainNames) noPropagatedEnvOverrides;
   in
-    prev: l.applyOverrides prev (l.attrValues ovs);
+    prev: l.computeOverridesResult prev (l.attrValues ovs);
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =
@@ -144,7 +144,7 @@
   # Create the base config that will be overrided.
   # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
   baseConfig = {
-    inherit (nci-pkgs) pkgs pkgsWithRust;
+    inherit (nci-pkgs) pkgs rustToolchain;
     inherit
       builder
       root
