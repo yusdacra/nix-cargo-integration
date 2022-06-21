@@ -9,6 +9,7 @@ attribute part of `nci`.
 
 ## 20-06-2022
 
+- nix: the `rustOverlay` input was changed to `rust-overlay` @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830
 - nix: `common.pkgsWithRust` is removed, you can now access the Rust toolchain via `common.rustToolchain` @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830
 
 ## 19-05-2022
