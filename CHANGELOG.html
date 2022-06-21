@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Page not found - NCI Documentation</title>
-        <base href="/">
+        <title>Changelog - NCI Documentation</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -76,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html" class="active"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -135,19 +134,44 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="recent-important-changes"><a class="header" href="#recent-important-changes">Recent important changes</a></h1>
+<p>This is a list of important (mostly breaking) changes. The dates are from
+most recent to least recent.</p>
+<p><code>nix:</code> means that the change was related to the Nix library part of <code>nci</code>.
+<code>cargo-toml:</code> means that the change was related to the <code>Cargo.toml</code>
+attribute part of <code>nci</code>.</p>
+<h2 id="20-06-2022"><a class="header" href="#20-06-2022">20-06-2022</a></h2>
+<ul>
+<li>nix: the <code>rustOverlay</code> input was changed to <code>rust-overlay</code> @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830</li>
+<li>nix: <code>common.pkgsWithRust</code> is removed, you can now access the Rust toolchain via <code>common.rustToolchain</code> @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830</li>
+</ul>
+<h2 id="19-05-2022"><a class="header" href="#19-05-2022">19-05-2022</a></h2>
+<ul>
+<li>nix: <code>overrides.pkgsOverlays</code> and <code>overrides.systems</code> were moved to <code>pkgsOverlays</code> and <code>systems</code> arguments to <code>makeOutputs</code> @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304</li>
+<li>nix: <code>systems</code> now just take a list of strings instead of a function taking default systems @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304</li>
+</ul>
+<h2 id="12-03-2022"><a class="header" href="#12-03-2022">12-03-2022</a></h2>
+<ul>
+<li>cargo-toml: <code>library</code> option in <code>package.metadata.nix</code> is removed and will no longer be used @ 11f26a1aa9aeddfb2ca32b3441091d4d8dc4cf0c</li>
+<li>nix: <code>overrides.crateOverrides</code> was renamed to <code>overrides.crates</code> @ 11f26a1aa9aeddfb2ca32b3441091d4d8dc4cf0c</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="tips-and-tricks.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
                         <div style="clear: both"></div>
                     </nav>
                 </div>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="tips-and-tricks.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
             </nav>
 
         </div>
