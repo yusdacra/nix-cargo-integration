@@ -18,6 +18,9 @@ without messing with any files or setting up overlays (see `Using the nci CLI` i
 Check out [rust-nix-templater](https://github.com/yusdacra/rust-nix-templater)
 if you want an easy way to generate nix-specific boilerplate for your projects!
 
+NOTE: `nix-cargo-integration` should work with any Nix version above 2.4+, but
+the experience may not be smooth if you aren't using the newest version of Nix.
+
 ## Usage
 
 ### With flakes
