@@ -197,15 +197,21 @@
       );
     }
     // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-      defaultPackage =
+      packages =
         l.mapAttrs
-        (_: system: system.${defaultOutputs.package})
+        (
+          _: packages:
+            packages // {default = packages.${defaultOutputs.package};}
+        )
         combinedOutputs.packages;
     }
     // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
-      defaultApp =
+      apps =
         l.mapAttrs
-        (_: system: system.${defaultOutputs.app})
+        (
+          _: apps:
+            apps // {default = apps.${defaultOutputs.app};}
+        )
         combinedOutputs.apps;
     };
   checkedOutputs =

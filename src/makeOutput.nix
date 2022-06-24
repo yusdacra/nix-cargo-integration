@@ -114,19 +114,7 @@
 in
   l.optionalAttrs (packageMetadata.build or false) ({
       inherit packages checks;
-      defaultPackage = {
-        ${system} = packages.${system}.${name};
-      };
     }
     // l.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
-      defaultApp = {
-        ${system} = let
-          appName =
-            if (l.length allBins) > 0
-            then (l.head allBins).name
-            else name;
-        in
-          apps.${system}.${appName};
-      };
     })
