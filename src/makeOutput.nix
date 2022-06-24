@@ -119,9 +119,8 @@ in
       };
     }
     // l.optionalAttrs (packageMetadata.app or false) {
-      inherit apps;
-      defaultApp = {
-        ${system} = let
+      apps = l.recursiveUpdate apps {
+        ${system}.default = let
           appName =
             if (l.length allBins) > 0
             then (l.head allBins).name
