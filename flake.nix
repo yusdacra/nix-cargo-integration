@@ -155,7 +155,7 @@
         inherit makeOutputs;
       };
       inherit craneTests brpTests;
-      inherit (cliOutputs) packages defaultPackage;
+      inherit (cliOutputs) packages;
 
       apps =
         l.mapAttrs
