@@ -70,7 +70,14 @@
   overridedCCompiler = (overrides.cCompiler or (_: {})) overrideDataPkgs;
   # The C compiler that will be put in the env
   cCompiler =
-    overridedCCompiler.cCompiler
+    (
+      if overridedCCompiler ? cCompiler
+      then overridedCCompiler
+      else if overridedCCompiler != {}
+      then {cCompiler = overridedCCompiler;}
+      else {}
+    )
+    .cCompiler
     or (nci-pkgs.utils.resolveToPkg (
       workspaceMetadata.cCompiler
       or packageMetadata.cCompiler
