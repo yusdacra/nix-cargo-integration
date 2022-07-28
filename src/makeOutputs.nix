@@ -27,6 +27,8 @@
 } @ attrs: let
   l = lib // builtins;
 
+  root = toString attrs.root;
+
   # Helper function to import a Cargo.toml from a root.
   importCargoTOML = root: l.fromTOML (l.readFile (root + "/Cargo.toml"));
 
