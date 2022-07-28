@@ -45,8 +45,8 @@
 
   # The toolchain channel we will use
   toolchainChannel = let
-    rustToolchain = root + "/rust-toolchain";
-    rustTomlToolchain = root + "/rust-toolchain.toml";
+    rustToolchain = "${toString root}/rust-toolchain";
+    rustTomlToolchain = "${toString root}/rust-toolchain.toml";
   in
     if l.pathExists rustToolchain
     then rustToolchain
@@ -233,7 +233,7 @@
               # Otherwise treat it as an absolute path
               makeIcon = icon:
                 if l.hasPrefix "./" icon
-                then root + "/${l.removePrefix "./" icon}"
+                then "${toString root}/${l.removePrefix "./" icon}"
                 else icon;
             in {icon = makeIcon desktopFileMetadata.icon;}
             else {}
@@ -259,7 +259,7 @@
       )
       {
         preCommitChecks = nci-pkgs.makePreCommitHooks {
-          src = root;
+          src = toString root;
           hooks = {
             rustfmt.enable = true;
             alejandra.enable = true;

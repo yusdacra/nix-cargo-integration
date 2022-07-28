@@ -27,7 +27,7 @@
     rust-lib = l.fix (l.extends (import sources.rust-overlay) (self: pkgs));
     # Check if the passed toolchainChannel points to a toolchain file
     hasRustToolchainFile =
-      if l.isPath toolchainChannel
+      if l.hasPrefix "/nix/store/" toolchainChannel
       then
         if l.pathExists toolchainChannel
         then true

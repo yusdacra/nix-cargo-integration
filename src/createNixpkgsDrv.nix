@@ -86,8 +86,8 @@ common.pkgs.writeTextFile {
     desktopItems = "\n  desktopItems = [ (makeDesktopItem {\n${desktopItemAttrs}\n  }) ];";
     desktopLink = "\n  desktopItems = [ (pkgs.runCommand \"${cargoPkg.name}-desktopFileLink\" { } ''\n    mkdir -p $out/share/applications\n    ln -sf \${src}/${desktopFileMetadata} $out/share/applications\n  '') ];";
 
-    isGitHub = builtins.pathExists (root + "/.github");
-    isGitLab = builtins.pathExists (root + "/.gitlab");
+    isGitHub = builtins.pathExists "${toString root}/.github";
+    isGitLab = builtins.pathExists "${toString root}/.gitlab";
 
     mkForgeFetch = name: rec {
       fetcher = "fetchFrom${name}";

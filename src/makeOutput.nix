@@ -20,8 +20,8 @@
   pkgSrc = let
     src =
       if memberName == null
-      then root + "/src"
-      else root + "/${memberName}" + "/src";
+      then "${toString root}/src"
+      else "${toString root}/${memberName}/src";
   in
     l.dbg "package source for ${name} at: ${src}" src;
 

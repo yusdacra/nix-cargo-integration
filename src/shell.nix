@@ -236,7 +236,7 @@ common: let
   packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
 
   # Import the devshell specified in devshell.toml if it exists
-  devshellFilePath = common.root + "/devshell.toml";
+  devshellFilePath = "${toString common.root}/devshell.toml";
   importedDevshell =
     l.thenOrNull
     (l.pathExists devshellFilePath)

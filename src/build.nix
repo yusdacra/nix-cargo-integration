@@ -21,7 +21,7 @@
 
   # Desktop file to put in the package derivation.
   desktopFile = let
-    desktopFilePath = root + "/${l.removePrefix "./" desktopFileMetadata}";
+    desktopFilePath = "${toString root}/${l.removePrefix "./" desktopFileMetadata}";
   in
     if l.isString desktopFileMetadata
     then

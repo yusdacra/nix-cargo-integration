@@ -34,7 +34,7 @@
       };
 
       sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
-      lib = import "${self}/src/lib.nix" {
+      lib = import ./src/lib.nix {
         lib = import "${nixpkgs}/lib";
       };
       l = lib;
@@ -42,7 +42,7 @@
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
       cliOutputs = makeOutputs {
-        root = "${self}/cli";
+        root = ./cli;
         overrides = {
           crates = common: _: {
             nci-cli = prev: {

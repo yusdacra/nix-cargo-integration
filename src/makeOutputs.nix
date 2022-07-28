@@ -27,15 +27,13 @@
 } @ attrs: let
   l = lib // builtins;
 
-  root = toString attrs.root;
-
   # Helper function to import a Cargo.toml from a root.
-  importCargoTOML = root: l.fromTOML (l.readFile (root + "/Cargo.toml"));
+  importCargoTOML = root: l.fromTOML (l.readFile "${toString root}/Cargo.toml");
 
   # Import the "main" Cargo.toml we will use. This Cargo.toml can either be a workspace manifest, or a package manifest.
-  cargoToml = importCargoTOML (l.dbg "root at: ${root}" root);
+  cargoToml = importCargoTOML (l.dbg "root at: ${toString root}" root);
   # Import the Cargo.lock file.
-  cargoLockPath = root + "/Cargo.lock";
+  cargoLockPath = "${toString root}/Cargo.lock";
   cargoLock =
     if l.pathExists cargoLockPath
     then l.fromTOML (l.readFile cargoLockPath)
@@ -58,7 +56,7 @@
         if l.last components == "*"
         then let
           parentDirRel = l.concatStringsSep "/" (l.init components);
-          parentDir = root + "/${parentDirRel}";
+          parentDir = "${toString root}/${parentDirRel}";
           dirs = l.readDir parentDir;
         in
           l.mapAttrsToList
@@ -76,7 +74,7 @@
       "workspace members: ${l.concatStringsSep ", " globbedWorkspaceMembers}"
       globbedWorkspaceMembers
     )
-    (name: importCargoTOML (root + "/${name}"));
+    (name: importCargoTOML "${toString root}/${name}");
 
   # Get the metadata we will use from the root package attributes if it exists.
   packageMetadata = rootPkg.metadata.nix or null;
