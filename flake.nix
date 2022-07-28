@@ -65,7 +65,7 @@
         tests = l.genAttrs testNames (test:
           makeOutputs {
             inherit builder;
-            root = "${toString ./tests}/${test}";
+            root = ./tests + "/${test}";
           });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
@@ -141,7 +141,7 @@
           shell = mkShell {
             configuration =
               import "${inputs.devshell}/nix/importTOML.nix"
-              (toString ./devshell.toml)
+              ./devshell.toml
               {lib = l;};
           };
         in
@@ -170,7 +170,7 @@
       templates = {
         default = {
           description = "a simple flake using nci";
-          path = "${self}/templates/simple";
+          path = ./templates/simple;
         };
       };
     };
