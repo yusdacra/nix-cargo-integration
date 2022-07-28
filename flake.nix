@@ -34,7 +34,7 @@
       };
 
       sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
-      lib = import ./src/lib.nix {
+      lib = import "${self}/src/lib.nix" {
         lib = import "${nixpkgs}/lib";
       };
       l = lib;
@@ -42,7 +42,7 @@
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
       cliOutputs = makeOutputs {
-        root = toString ./cli;
+        root = "${self}/cli";
         overrides = {
           crates = common: _: {
             nci-cli = prev: {
@@ -65,7 +65,7 @@
         tests = l.genAttrs testNames (test:
           makeOutputs {
             inherit builder;
-            root = ./tests + "/${test}";
+            root = "${self}/tests/${test}";
           });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
@@ -141,7 +141,7 @@
           shell = mkShell {
             configuration =
               import "${inputs.devshell}/nix/importTOML.nix"
-              ./devshell.toml
+              "${self}/devshell.toml"
               {lib = l;};
           };
         in
@@ -170,7 +170,7 @@
       templates = {
         default = {
           description = "a simple flake using nci";
-          path = ./templates/simple;
+          path = "${self}/templates/simple";
         };
       };
     };
