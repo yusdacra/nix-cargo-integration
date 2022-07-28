@@ -65,7 +65,7 @@
         tests = l.genAttrs testNames (test:
           makeOutputs {
             inherit builder;
-            root = "${self}/tests/${test}";
+            root = "${toString ./tests}/${test}";
           });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
@@ -141,7 +141,7 @@
           shell = mkShell {
             configuration =
               import "${inputs.devshell}/nix/importTOML.nix"
-              "${self}/devshell.toml"
+              (toString ./devshell.toml)
               {lib = l;};
           };
         in
