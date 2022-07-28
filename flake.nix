@@ -42,7 +42,7 @@
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
       cliOutputs = makeOutputs {
-        root = ./cli;
+        root = toString ./cli;
         overrides = {
           crates = common: _: {
             nci-cli = prev: {
