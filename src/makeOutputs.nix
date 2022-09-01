@@ -11,6 +11,8 @@
   root,
   # All overrides
   overrides ? {},
+  # All crate namespaced overrides
+  perCrateOverrides ? {},
   # Rename outputs in flake structure
   renameOutputs ? {},
   # Default output for apps / packages
@@ -103,6 +105,7 @@
         system
         root
         overrides
+        perCrateOverrides
         sources
         enablePreCommitHooks
         isRootMember

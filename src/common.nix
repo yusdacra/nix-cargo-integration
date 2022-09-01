@@ -14,6 +14,8 @@
   workspaceMetadata ? null,
   # Overrides to use
   overrides ? {},
+  # Crate namespaced overrides
+  perCrateOverrides ? {},
   # Dependency list taken directly from this package's `Cargo.lock`
   dependencies ? [],
   # nixpkgs overlays to use for the package set
@@ -25,7 +27,7 @@
   # Extract the metadata we will need.
   cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
   _packageMetadata = cargoPkg.metadata.nix or {};
-  packageMetadata = _packageMetadata // ((overrides.packageMetadata or (_: {})) _packageMetadata);
+  packageMetadata = _packageMetadata // ((perCrateOverrides.${cargoPkg.name}.packageMetadata or (_: {})) _packageMetadata);
   desktopFileMetadata = packageMetadata.desktopFile or null;
 
   l = attrs.lib // (attrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
