@@ -115,7 +115,12 @@
     # Filter out unneeded overrides, using the dep names we got earlier.
     base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
   in
-    base // ((overrides.crateOverrides or overrides.crates or (_: _: {})) overrideDataCrates base);
+    base
+    // (
+      (overrides.crateOverrides or overrides.crates or (_: _: {}))
+      overrideDataCrates
+      base
+    );
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
   crateOverridesEmpty = l.mapAttrsToList (_: v: v {}) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them.
@@ -125,7 +130,16 @@
       l.flatten (l.map (v: v.${attrName} or []) crateOverridesEmpty)
     );
   noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
-  mainNames = l.unique ([cargoPkg.name] ++ (l.map (toml: toml.package.name) (l.attrValues attrs.members)));
+  mainNames =
+    l.unique
+    (
+      [cargoPkg.name]
+      ++ (
+        l.map
+        (toml: toml.package.name)
+        (l.attrValues attrs.members)
+      )
+    );
   # Combine all crate overrides into one big override function, except the main crate override
   crateOverridesCombined = let
     noMainOverrides = l.removeAttrs noPropagatedEnvOverrides mainNames;
@@ -133,10 +147,8 @@
   in
     l.dbgXY "combined overrides diff" (func {}) func;
   # Combine all main dep overrides
-  mainOverrides = let
-    ovs = l.filterAttrs (n: _: l.any (on: n == on) mainNames) noPropagatedEnvOverrides;
-  in
-    prev: l.computeOverridesResult prev (l.attrValues ovs);
+  mainOverrides = prev:
+    prev // (noPropagatedEnvOverrides.${cargoPkg.name} or (_: {}));
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =

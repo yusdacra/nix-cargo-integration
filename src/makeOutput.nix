@@ -5,7 +5,8 @@
   # Rename outputs in flake structure
   renameOutputs ? {},
 }: let
-  inherit (common)
+  inherit
+    (common)
     cargoToml
     cargoPkg
     packageMetadata
