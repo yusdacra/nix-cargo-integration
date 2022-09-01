@@ -307,6 +307,19 @@ icon = &quot;./resources/myapp.ico&quot;
 genericName = &quot;App&quot;
 categories = [&quot;Something&quot;]
 </code></pre>
+<h3 id="features-attributes"><a class="header" href="#features-attributes"><code>features</code> attributes</a></h3>
+<p>Allows you to set which Cargo features will be enable while building this crate.</p>
+<ul>
+<li><code>release</code>: features to enable while building release builds (type: list of strings) (default: <code>[]</code>)</li>
+<li><code>debug</code>: features to enable while building debug builds (type: list of strings) (default: <code>[]</code>)</li>
+<li><code>test</code>: features to enable while building test builds (type: list of strings) (default: <code>[]</code>)</li>
+</ul>
+<h4 id="example-5"><a class="header" href="#example-5">Example</a></h4>
+<pre><code class="language-toml">[package.metadate.nix.features]
+release = [&quot;default-publish&quot;]
+debug = [&quot;default-dev&quot;]
+test = [&quot;default-publish&quot;, &quot;testing&quot;]
+</code></pre>
 <h2 id="workspacemetadatanix-attributes"><a class="header" href="#workspacemetadatanix-attributes"><code>workspace.metadata.nix</code> attributes</a></h2>
 <p>NOTE: If <code>root</code> does not point to a workspace, all of the attributes listed here
 will be available in <code>package.metadata.nix</code>.</p>
@@ -323,7 +336,7 @@ root, it will be used instead of this attribute</li>
 </ul>
 </li>
 </ul>
-<h4 id="example-5"><a class="header" href="#example-5">Example</a></h4>
+<h4 id="example-6"><a class="header" href="#example-6">Example</a></h4>
 <pre><code class="language-toml">[workspace.metadata.nix]
 systems = [&quot;x86_64-linux&quot;, &quot;aarch64-linux&quot;]
 toolchain = &quot;beta&quot;
@@ -332,7 +345,7 @@ toolchain = &quot;beta&quot;
 <ul>
 <li><code>enable</code>: whether to enable pre commit hooks (type: boolean) (default: <code>false</code>)</li>
 </ul>
-<h4 id="example-6"><a class="header" href="#example-6">Example</a></h4>
+<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
 <pre><code class="language-toml">[workspace.metadata.nix]
 preCommitHooks.enable = true
 </code></pre>
@@ -341,7 +354,7 @@ preCommitHooks.enable = true
 <li><code>name</code>: name of the cachix cache (type: string)</li>
 <li><code>key</code>: public key of the cachix cache (type: string)</li>
 </ul>
-<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
+<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
 <pre><code class="language-toml">[workspace.metadata.nix.cachix]
 name = &quot;mycachix&quot;
 key = &quot;mycachixpublickey&quot;
@@ -350,7 +363,7 @@ key = &quot;mycachixpublickey&quot;
 <p>Anything put here will be used to configure the devshell.
 Refer to [devshell] documentation for configuration options.</p>
 <p>NOTE: Attributes specified here <strong>will not</strong> be used if a top-level <code>devshell.toml</code> file exists.</p>
-<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
+<h4 id="example-9"><a class="header" href="#example-9">Example</a></h4>
 <pre><code class="language-toml">[workspace.metadata.nix.devshell]
 name = &quot;myshell&quot;
 packages = [&quot;gnumake&quot;]
