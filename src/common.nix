@@ -147,8 +147,10 @@
   in
     l.dbgXY "combined overrides diff" (func {}) func;
   # Combine all main dep overrides
-  mainOverrides = prev:
-    prev // (noPropagatedEnvOverrides.${cargoPkg.name} or (_: {}));
+  mainOverrides = let
+    func = prev: prev // ((noPropagatedEnvOverrides.${cargoPkg.name} or (_: {})) prev);
+  in
+    l.dbgXY "main override diff" (func {}) func;
 
   # TODO: try to convert cargo maintainers to nixpkgs maintainers
   meta =
