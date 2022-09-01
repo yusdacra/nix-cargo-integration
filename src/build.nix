@@ -10,7 +10,7 @@
   # The common we got from `./common.nix` for this package
   common,
 }: let
-  inherit (common) sources system builder root packageMetadata desktopFileMetadata cargoPkg;
+  inherit (common) builder root desktopFileMetadata cargoPkg;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
   inherit (common.internal.nci-pkgs) pkgs utils rustToolchain;
 
@@ -34,7 +34,7 @@
   # Specify --package if we are building in a workspace
   packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
   # Specify --features if we have enabled features other than the default ones
-  featuresFlags = l.optional ((l.length features) > 0) "--features ${(l.concatStringsSep "," features)}";
+  featuresFlags = l.optional ((l.length features) > 0) "--no-default-features --features ${(l.concatStringsSep "," features)}";
   # Specify --release if release profile is enabled
   releaseFlag = l.optional release "--release";
 
