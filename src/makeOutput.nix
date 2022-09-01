@@ -5,8 +5,15 @@
   # Rename outputs in flake structure
   renameOutputs ? {},
 }: let
-  inherit (common) cargoToml cargoPkg packageMetadata system memberName root;
-  inherit (common.internal) nci-pkgs;
+  inherit (common)
+    cargoToml
+    cargoPkg
+    packageMetadata
+    system
+    memberName
+    root
+    features
+    ;
 
   l = common.internal.lib;
 
@@ -83,8 +90,8 @@
   # "raw" packages that will be proccesed.
   # It's called so since `build.nix` generates an attrset containing the config and the package.
   packagesRaw = {
-    "${name}" = mkBuild [] true true;
-    "${name}-debug" = mkBuild [] false false;
+    "${name}" = mkBuild (features.release or []) true true;
+    "${name}-debug" = mkBuild (features.debug or []) false false;
   };
   # Packages set to be put in the outputs.
   packages = {
@@ -97,7 +104,7 @@
   # Checks to be put in outputs.
   checks = {
     ${system} = {
-      "${name}-tests" = (mkBuild [] false true).package;
+      "${name}-tests" = (mkBuild (features.test or []) false true).package;
     };
   };
   # Apps to be put in outputs.

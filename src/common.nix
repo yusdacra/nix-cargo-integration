@@ -168,6 +168,8 @@
       runtimeLibs
       ;
 
+    features = packageMetadata.features or {};
+
     # Collect build inputs.
     buildInputs = nci-pkgs.utils.resolveToPkgs (
       l.concatAttrLists workspaceMetadata packageMetadata "buildInputs"

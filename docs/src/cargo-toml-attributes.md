@@ -80,6 +80,23 @@ genericName = "App"
 categories = ["Something"]
 ```
 
+### `features` attributes
+
+Allows you to set which Cargo features will be enable while building this crate.
+
+- `release`: features to enable while building release builds (type: list of strings) (default: `[]`)
+- `debug`: features to enable while building debug builds (type: list of strings) (default: `[]`)
+- `test`: features to enable while building test builds (type: list of strings) (default: `[]`)
+
+#### Example
+
+```toml
+[package.metadate.nix.features]
+release = ["default-publish"]
+debug = ["default-dev"]
+test = ["default-publish", "testing"]
+```
+
 ## `workspace.metadata.nix` attributes
 
 NOTE: If `root` does not point to a workspace, all of the attributes listed here
