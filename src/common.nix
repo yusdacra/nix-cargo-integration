@@ -109,9 +109,8 @@
     )
   );
   # Collect crate overrides
-  crateOverrides = let
+  _crateOverrides = let
     # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
-    depNames = packageDependencies ++ ["${cargoPkg.name}-deps"];
     baseRaw = nci-pkgs.utils.makeCrateOverrides {
       inherit cCompiler useCCompilerBintools;
       rawTomlOverrides =
@@ -120,15 +119,19 @@
         {}
         [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
     };
-    # Filter out unneeded overrides, using the dep names we got earlier.
-    base = l.filterAttrs (n: _: l.any (depName: n == depName) depNames) baseRaw;
   in
-    base
+    baseRaw
     // (
       (overrides.crateOverrides or overrides.crates or (_: _: {}))
       overrideDataCrates
-      base
+      baseRaw
     );
+  depNames = packageDependencies ++ ["${cargoPkg.name}-deps"];
+  # Filter out unneeded overrides, using the dep names we got earlier.
+  crateOverrides =
+    l.filterAttrs
+    (n: _: l.any (depName: n == depName) depNames)
+    _crateOverrides;
   # "empty" crate overrides; we override an empty attr set to see what values the override changes.
   crateOverridesEmpty = l.mapAttrsToList (_: v: v {}) crateOverrides;
   # Get a field from all overrides in "empty" crate overrides and flatten them.
