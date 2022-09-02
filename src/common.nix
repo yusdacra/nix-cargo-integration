@@ -99,11 +99,20 @@
 
   overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
 
+  packageDependencies = l.unique (
+    l.map
+    (e: (l.parseDepEntry e).name)
+    (
+      l.getTransitiveDependencies
+      dependencies
+      cargoPkg.name
+      cargoPkg.version
+    )
+  );
   # Collect crate overrides
   crateOverrides = let
     # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
-    # TODO: ideally this would only include the deps of the crate we are currently building, not all deps in Cargo.lock
-    depNames = (l.map (dep: dep.name) dependencies) ++ ["${cargoPkg.name}-deps"];
+    depNames = packageDependencies ++ ["${cargoPkg.name}-deps"];
     baseRaw = nci-pkgs.utils.makeCrateOverrides {
       inherit cCompiler useCCompilerBintools;
       rawTomlOverrides =

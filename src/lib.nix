@@ -105,6 +105,7 @@ in
     # If the condition is true, evaluates to the
     # passed value, otherwise evalutes to null.
     thenOrNull = cond: ifTrue: thenOr cond ifTrue null;
+    # evaluate a nix expression with some args
     eval = _expr: args: let
       parsed = l.match ''eval (.*)'' _expr;
       imp = expr: import (l.toFile "expr" expr);
@@ -112,4 +113,38 @@ in
       if parsed != null
       then imp ''args: with args; ${l.elemAt parsed 0}'' args
       else _expr;
+    parseDepEntry = entry: let
+      split = l.splitString " " entry;
+      hasSource = l.length split > 2;
+    in {
+      name = l.head split;
+      version =
+        if hasSource
+        then l.elemAt split 1
+        else l.last split;
+      source =
+        if hasSource
+        then l.last split
+        else null;
+    };
+    # gets a crate's transitive dependencies
+    getTransitiveDependencies = lockPackages: name: version: let
+      deps = getDependencies lockPackages name version;
+      _get = entry: let
+        parsed = parseDepEntry entry;
+      in
+        getTransitiveDependencies
+        lockPackages
+        parsed.name
+        parsed.version;
+    in
+      (l.flatten (l.map _get deps)) ++ deps;
+    # gets a crate's direct dependencies
+    getDependencies = lockPackages: name: version: let
+      pkg =
+        l.findFirst
+        (p: p.name == name && p.version == version)
+        (throw "no such crate")
+        lockPackages;
+    in (pkg.dependencies or []);
   }
