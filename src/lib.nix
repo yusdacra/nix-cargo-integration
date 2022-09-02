@@ -131,12 +131,11 @@ in
         else null;
     };
     makeDepsAttrset = lockPackages: let
-      makeAttr = dep: {
-        name = "${dep.name} ${dep.version}";
-        value = dep;
+      makeAttrset = dep: {
+        ${dep.name}.${dep.version}.${dep.source or ""} = dep;
       };
     in
-      l.listToAttrs (l.map makeAttr lockPackages);
+      l.foldl' l.recursiveUpdate {} (l.map makeAttrset lockPackages);
     # gets a crate's transitive dependencies
     getTransitiveDependencies = lock: entry:
       _getTransitiveDependencies (getDependencies lock) entry;
@@ -147,17 +146,13 @@ in
       (l.flatten (l.map _get deps)) ++ deps;
     # gets a crate's direct dependencies
     getDependencies = lock: entry: let
-      split = l.splitString " " entry;
-      e = l.concatStringsSep " " (l.take 2 split);
+      p = parseDepEntry entry;
       pkg =
-        lock.${e}
-        or lock
-        .${
-          l.findFirst
-          (n: l.hasPrefix e n)
-          (throw "no such dep")
-          (l.attrNames lock)
-        };
+        if p.version == null
+        then l.head (l.mapAttrsToList (n: v: l.attrValues v) lock.${p.name})
+        else if p.source == null
+        then l.head (l.attrValues lock.${p.name}.${p.version})
+        else lock.${p.name}.${p.version}.${p.source};
     in
       pkg.dependencies or [];
   }
