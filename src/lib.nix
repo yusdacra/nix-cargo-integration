@@ -149,6 +149,15 @@ in
     getDependencies = lock: entry: let
       split = l.splitString " " entry;
       e = l.concatStringsSep " " (l.take 2 split);
+      pkg =
+        lock.${e}
+        or lock
+        .${
+          l.findFirst
+          (n: l.hasPrefix e n)
+          (throw "no such dep")
+          (l.attrNames lock)
+        };
     in
-      lock.${e}.dependencies or [];
+      pkg.dependencies or [];
   }
