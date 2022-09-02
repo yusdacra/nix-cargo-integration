@@ -105,8 +105,7 @@
     (
       l.getTransitiveDependencies
       dependencies
-      cargoPkg.name
-      cargoPkg.version
+      (l.parseDepEntry "${cargoPkg.name} ${cargoPkg.version}")
     )
   );
   # Collect crate overrides

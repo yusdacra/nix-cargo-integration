@@ -115,35 +115,41 @@ in
       else _expr;
     parseDepEntry = entry: let
       split = l.splitString " " entry;
+      hasVersion = l.length split > 1;
       hasSource = l.length split > 2;
     in {
       name = l.head split;
       version =
         if hasSource
         then l.elemAt split 1
-        else l.last split;
+        else if hasVersion
+        then l.last split
+        else null;
       source =
         if hasSource
-        then l.last split
+        then l.removePrefix "(" (l.removeSuffix ")" (l.last split))
         else null;
     };
     # gets a crate's transitive dependencies
-    getTransitiveDependencies = lockPackages: name: version: let
-      deps = getDependencies lockPackages name version;
-      _get = entry: let
-        parsed = parseDepEntry entry;
-      in
+    getTransitiveDependencies = lockPackages: parsed: let
+      deps = getDependencies lockPackages parsed;
+      _get = entry:
         getTransitiveDependencies
         lockPackages
-        parsed.name
-        parsed.version;
+        (parseDepEntry entry);
     in
       (l.flatten (l.map _get deps)) ++ deps;
     # gets a crate's direct dependencies
-    getDependencies = lockPackages: name: version: let
+    getDependencies = lockPackages: p: let
       pkg =
         l.findFirst
-        (p: p.name == name && p.version == version)
+        (
+          op:
+            op.name
+            == p.name
+            && (p.version == null || op.version == p.version)
+            && (p.source == null || op.source == p.source)
+        )
         (throw "no such crate")
         lockPackages;
     in (pkg.dependencies or []);
