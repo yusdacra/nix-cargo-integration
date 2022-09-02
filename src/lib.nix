@@ -130,27 +130,25 @@ in
         then l.removePrefix "(" (l.removeSuffix ")" (l.last split))
         else null;
     };
+    makeDepsAttrset = lockPackages: let
+      makeAttr = dep: {
+        name = "${dep.name} ${dep.version}";
+        value = dep;
+      };
+    in
+      l.listToAttrs (l.map makeAttr lockPackages);
     # gets a crate's transitive dependencies
-    getTransitiveDependencies = lockPackages: parsed: let
-      deps = getDependencies lockPackages parsed;
-      _get = entry:
-        getTransitiveDependencies
-        lockPackages
-        (parseDepEntry entry);
+    getTransitiveDependencies = lock: entry:
+      _getTransitiveDependencies (getDependencies lock) entry;
+    _getTransitiveDependencies = getDeps: entry: let
+      deps = getDeps entry;
+      _get = _getTransitiveDependencies getDeps;
     in
       (l.flatten (l.map _get deps)) ++ deps;
     # gets a crate's direct dependencies
-    getDependencies = lockPackages: p: let
-      pkg =
-        l.findFirst
-        (
-          op:
-            op.name
-            == p.name
-            && (p.version == null || op.version == p.version)
-            && (p.source == null || op.source == p.source)
-        )
-        (throw "no such crate")
-        lockPackages;
-    in (pkg.dependencies or []);
+    getDependencies = lock: entry: let
+      split = l.splitString " " entry;
+      e = l.concatStringsSep " " (l.take 2 split);
+    in
+      lock.${e}.dependencies or [];
   }

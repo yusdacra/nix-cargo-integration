@@ -99,13 +99,14 @@
 
   overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
 
+  dependenciesAttrset = l.makeDepsAttrset dependencies;
   packageDependencies = l.unique (
     l.map
     (e: (l.parseDepEntry e).name)
     (
       l.getTransitiveDependencies
-      dependencies
-      (l.parseDepEntry "${cargoPkg.name} ${cargoPkg.version}")
+      dependenciesAttrset
+      "${cargoPkg.name} ${cargoPkg.version}"
     )
   );
   # Collect crate overrides
