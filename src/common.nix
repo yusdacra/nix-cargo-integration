@@ -148,7 +148,10 @@
     l.dbgXY "combined overrides diff" (func {}) func;
   # Combine all main dep overrides
   mainOverrides = let
-    _mainOverrides = l.getAttrs mainNames noPropagatedEnvOverrides;
+    _mainOverrides =
+      l.filterAttrs
+      (n: _: l.any (on: n == on) mainNames)
+      noPropagatedEnvOverrides;
     func = prev: l.computeOverridesResult prev (l.attrValues _mainOverrides);
   in
     l.dbgXY "main overrides diff" (func {}) func;
