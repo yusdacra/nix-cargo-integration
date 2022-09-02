@@ -138,12 +138,32 @@ in
       l.foldl' l.recursiveUpdate {} (l.map makeAttrset lockPackages);
     # gets a crate's transitive dependencies
     getTransitiveDependencies = lock: entry:
-      _getTransitiveDependencies (getDependencies lock) entry;
-    _getTransitiveDependencies = getDeps: entry: let
+      _getTransitiveDependencies
+      (getDependencies lock)
+      {
+        inherit entry;
+        depth = 0;
+      };
+    _getTransitiveDependencies = getDeps: {
+      entry,
+      depth,
+    }: let
       deps = getDeps entry;
-      _get = _getTransitiveDependencies getDeps;
+      _get = e:
+        _getTransitiveDependencies
+        getDeps
+        {
+          entry = e;
+          depth = depth + 1;
+        };
     in
-      (l.flatten (l.map _get deps)) ++ deps;
+      # ideally we would have proper cyclic dependency detection
+      # even more ideally we wouldn't need to do all this when a
+      # granular builder lands on d2n
+      # but for now this should let us avoid infinite recursion
+      if depth < 10
+      then (l.flatten (l.map _get deps)) ++ deps
+      else deps;
     # gets a crate's direct dependencies
     getDependencies = lock: entry: let
       p = parseDepEntry entry;
