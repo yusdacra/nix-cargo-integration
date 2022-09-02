@@ -100,14 +100,15 @@
   overrideDataCrates = overrideDataPkgs // {inherit cCompiler runtimeLibs root;};
 
   dependenciesAttrset = l.makeDepsAttrset dependencies;
-  packageDependencies =
+  packageDependencies = l.unique (
     l.map
     (e: (l.parseDepEntry e).name)
     (
       l.getTransitiveDependencies
       dependenciesAttrset
       "${cargoPkg.name} ${cargoPkg.version}"
-    );
+    )
+  );
   # Collect crate overrides
   _crateOverrides = let
     # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
