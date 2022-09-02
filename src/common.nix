@@ -126,7 +126,12 @@
       overrideDataCrates
       baseRaw
     );
-  depNames = packageDependencies ++ ["${cargoPkg.name}-deps"];
+  depNames =
+    packageDependencies
+    ++ [
+      cargoPkg.name
+      "${cargoPkg.name}-deps"
+    ];
   # Filter out unneeded overrides, using the dep names we got earlier.
   crateOverrides =
     l.filterAttrs
