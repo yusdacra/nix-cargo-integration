@@ -98,12 +98,12 @@
       ]);
     # Build phase for crane drvs
     buildPhase = isDeps: let
-      p = fixupCargoCommand false isDeps;
+      p = fixupCargoCommand isDeps false;
     in
       l.dbgX "${l.optionalString isDeps "deps-"}buildPhase" p;
     # Check phase for crane drvs
     checkPhase = isDeps: let
-      p = fixupCargoCommand true isDeps;
+      p = fixupCargoCommand isDeps true;
     in
       l.dbgX "${l.optionalString isDeps "deps-"}checkPhase" p;
 
@@ -111,7 +111,6 @@
     depsOverride = prev:
       l.computeOverridesResult prev [
         (prev: {
-          doCheck = false;
           buildPhase = buildPhase true;
           checkPhase = checkPhase true;
         })
