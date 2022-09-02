@@ -149,7 +149,7 @@ in
       p = parseDepEntry entry;
       pkg =
         if p.version == null
-        then l.head (l.mapAttrsToList (n: v: l.attrValues v) lock.${p.name})
+        then l.head (l.flatten (l.mapAttrsToList (n: v: l.attrValues v) lock.${p.name}))
         else if p.source == null
         then l.head (l.attrValues lock.${p.name}.${p.version})
         else lock.${p.name}.${p.version}.${p.source};
