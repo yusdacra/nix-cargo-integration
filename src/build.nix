@@ -68,28 +68,34 @@
       subcmd = l.thenOr isTest "test" "build";
       hook = l.thenOr isTest "Check" "Build";
 
-      cmd = l.concatStringsSep " " (
-        ["cargo" subcmd]
-        ++ releaseFlag
-        ++ packageFlag
-        ++ featuresFlags
-        ++ (l.optionals (!isTest && !isDeps) [
-          "--message-format"
-          "json-render-diagnostics"
-          ">\"$cargoBuildLog\""
-        ])
-      );
-    in ''
-      runHook pre${hook}
-      echo running: ${l.strings.escapeShellArg cmd}
-      ${
-        l.optionalString
-        (!isTest && !isDeps)
-        "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"
-      }
-      ${cmd}
-      runHook post${hook}
-    '';
+      mkCmd = subcmd:
+        l.concatStringsSep " " (l.flatten [
+          "cargo"
+          subcmd
+          releaseFlag
+          packageFlag
+          featuresFlags
+          (
+            l.optionals (!isTest && !isDeps) [
+              "--message-format"
+              "json-render-diagnostics"
+              ">\"$cargoBuildLog\""
+            ]
+          )
+        ]);
+      cmd = mkCmd subcmd;
+    in
+      l.concatStringsSep "\n" (l.flatten [
+        "runHook pre${hook}"
+        (
+          l.optional
+          (!isTest && !isDeps)
+          "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"
+        )
+        (l.optional (!isTest && isDeps) (mkCmd "check"))
+        cmd
+        "runHook post${hook}"
+      ]);
     # Build phase for crane drvs
     buildPhase = isDeps: let
       p = fixupCargoCommand false isDeps;
