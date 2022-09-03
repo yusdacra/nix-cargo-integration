@@ -187,6 +187,11 @@ whether or not to add the C compiler's <code>bintools</code> to the build enviro
 </li>
 </ul>
 </li>
+<li><code>perCrateOverrides.crateName</code>: overrides that are crate namespaced (type: attrset)
+<ul>
+<li><code>wrapper</code>: a function that produces a derivation. this can be used to wrap packages. (type: <code>common: buildConfig: package: derivation</code>)</li>
+</ul>
+</li>
 </ul>
 
                     </main>

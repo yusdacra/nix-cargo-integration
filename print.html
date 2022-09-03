@@ -242,6 +242,11 @@ whether or not to add the C compiler's <code>bintools</code> to the build enviro
 </li>
 </ul>
 </li>
+<li><code>perCrateOverrides.crateName</code>: overrides that are crate namespaced (type: attrset)
+<ul>
+<li><code>wrapper</code>: a function that produces a derivation. this can be used to wrap packages. (type: <code>common: buildConfig: package: derivation</code>)</li>
+</ul>
+</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cargotoml-attributes-documentation"><a class="header" href="#cargotoml-attributes-documentation"><code>Cargo.toml</code> attributes documentation</a></h1>
 <p>The attributes described here go in a <code>Cargo.toml</code> file.</p>
