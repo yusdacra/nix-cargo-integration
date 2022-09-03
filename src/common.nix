@@ -232,10 +232,12 @@
     overrideEnv = l.foldl' l.recursiveUpdate {} (l.map (v: v.propagatedEnv or {}) crateOverridesEmpty);
 
     # Put the overrides that other files may use (eg. build.nix, shell.nix).
-    overrides = {
-      shell = overrides.shell or (_: _: {});
-      build = overrides.build or (_: _: {});
-    };
+    overrides =
+      {
+        shell = overrides.shell or (_: _: {});
+        build = overrides.build or (_: _: {});
+      }
+      // (perCrateOverrides.${cargoPkg.name} or {});
 
     # nci private attributes. can change at any time without warning!
     internal =
@@ -285,8 +287,9 @@
         mkRuntimeLibsOv = (l.length runtimeLibs) > 0;
         # Utility for generating a script to patch binaries with libraries.
         mkRuntimeLibsScript = libs: ''
+          source ${nci-pkgs.pkgs.makeWrapper}/nix-support/setup-hook
           for f in $out/bin/*; do
-            patchelf --set-rpath "${libs}" "$f"
+            wrapProgram "$f" --prefix LD_LIBRARY_PATH : "${libs}"
           done
         '';
       }
