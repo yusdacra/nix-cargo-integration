@@ -10,7 +10,7 @@
   # The common we got from `./common.nix` for this package
   common,
 }: let
-  inherit (common) builder root desktopFileMetadata cargoPkg;
+  inherit (common) builder root desktopFileMetadata cargoPkg overrides;
   inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
   inherit (common.internal.nci-pkgs) pkgs utils rustToolchain;
 
@@ -38,20 +38,33 @@
   # Specify --release if release profile is enabled
   releaseFlag = l.optional release "--release";
 
-  # Override that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
-  runtimeLibsOv = prev:
-    l.optionalAttrs mkRuntimeLibsOv {
-      postFixup = ''
-        ${prev.postFixup or ""}
+  # Wrapper that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
+  runtimeLibsWrapper = old:
+    if mkRuntimeLibsOv
+    then
+      utils.wrapDerivation old {} ''
+        rm -rf $out/bin
+        mkdir -p $out/bin
+        ln -sf ${old}/bin/* $out/bin
         ${mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
-      '';
-    };
-  # Override that adds the desktop item for this package.
-  desktopItemOv = prev:
-    l.optionalAttrs mkDesktopFile {
-      nativeBuildInputs = l.concatLists (prev.nativeBuildInputs or []) [pkgs.copyDesktopItems];
-      desktopItems = l.concatLists (prev.desktopItems or []) [desktopFile];
-    };
+      ''
+    else old;
+  # Wrapper that adds the desktop item for this package.
+  desktopItemWrapper = old:
+    if mkDesktopFile
+    then
+      utils.wrapDerivation old
+      {desktopItems = [desktopFile];}
+      ''
+        shopt -s extglob
+        rm -rf $out/share
+        mkdir -p $out/share/applications
+        ln -sf ${old}/share/!(applications) $out/share/
+        ln -sf ${old}/share/applications/* $out/share/applications/
+        source ${pkgs.copyDesktopItems}/nix-support/setup-hook
+        copyDesktopItems
+      ''
+    else old;
   # Override that adds dependencies and env from common
   commonDepsOv = prev:
     common.env
@@ -127,8 +140,6 @@
           buildPhase = buildPhase false;
           checkPhase = checkPhase false;
         })
-        desktopItemOv
-        runtimeLibsOv
         commonDepsOv
         common.internal.mainOverrides
       ];
@@ -165,8 +176,6 @@
           cargoBuildType = profile;
           cargoCheckType = profile;
         })
-        desktopItemOv
-        runtimeLibsOv
         commonDepsOv
         common.internal.crateOverridesCombined
         common.internal.mainOverrides
@@ -198,12 +207,21 @@
   overrideConfig = config:
     config // (common.overrides.build common config);
 
-  config = overrideConfig baseConfig;
-in {
+  _config = overrideConfig baseConfig;
+in rec {
   config =
-    config
+    _config
     // {
       inherit release features doCheck;
     };
-  package = utils.buildCrate config;
+  package = let
+    userWrapper = overrides.wrapper or (_: _: old: old);
+    unwrapped = utils.buildCrate _config;
+    wrapped = l.pipe unwrapped [
+      desktopItemWrapper
+      runtimeLibsWrapper
+      (userWrapper common config)
+    ];
+  in
+    wrapped;
 }

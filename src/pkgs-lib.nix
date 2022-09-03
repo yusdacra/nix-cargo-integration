@@ -99,4 +99,19 @@ in {
 
   # dream2nix build crate.
   buildCrate = args: (dream2nix.realizeProjects args).packages.${args.pname};
+
+  wrapDerivation = old: args: script:
+    pkgs.runCommand old.name
+    (
+      {
+        inherit (old) pname version meta;
+        passthru = old.passthru or {};
+      }
+      // args
+    )
+    ''
+      mkdir -p $out
+      ln -sf ${old}/* $out/
+      ${script}
+    '';
 }
