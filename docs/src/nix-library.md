@@ -42,6 +42,8 @@ Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaul
         and will be used as the new C compiler.
         - if the returned attribute set has `useCCompilerBintools`, this will be used to decide
         whether or not to add the C compiler's `bintools` to the build environment.
+- `perCrateOverrides.crateName`: overrides that are crate namespaced (type: attrset)
+    - `wrapper`: a function that produces a derivation. this can be used to wrap packages. (type: `common: buildConfig: package: derivation`)
 
 [devshell]: https://github.com/numtide/devshell "devshell"
 [dream2nix]: https://github.com/nix-community/dream2nix "dream2nix"
