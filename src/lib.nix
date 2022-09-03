@@ -36,7 +36,9 @@ in
     ];
     # Tries to convert a cargo license to nixpkgs license.
     cargoLicenseToNixpkgs = _license: let
-      license = l.toLower _license;
+      # we should list all licenses here but picking the first one
+      # seems reasonable enough?
+      license = l.toLower (l.head (l.splitString " " _license));
       licensesIds =
         l.mapAttrs'
         (
