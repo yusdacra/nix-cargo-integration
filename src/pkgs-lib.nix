@@ -28,7 +28,10 @@ in {
     rawTomlOverrides ? {},
     cCompiler ? pkgs.gcc,
     useCCompilerBintools ? true,
+    crateNames ? [],
   }: let
+    depsOverrides = l.genAttrs crateNames (name: _: {});
+
     # base inputs for each crate.
     # this includes settting the stdenv and adding a C compiler
     baseConf = prev: {
@@ -95,6 +98,7 @@ in {
     [
       (l.dbgX "tomlOverrides" tomlOverrides)
       extraOverrides
+      depsOverrides
     ];
 
   # dream2nix build crate.

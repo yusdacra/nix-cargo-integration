@@ -109,16 +109,26 @@
       "${cargoPkg.name} ${cargoPkg.version}"
     )
   );
+  depNames =
+    packageDependencies
+    ++ [
+      cargoPkg.name
+      "${cargoPkg.name}-deps"
+    ];
   # Collect crate overrides
   _crateOverrides = let
     # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
     baseRaw = nci-pkgs.utils.makeCrateOverrides {
       inherit cCompiler useCCompilerBintools;
+      crateNames = depNames;
       rawTomlOverrides =
         l.foldl'
         l.recursiveUpdate
         {}
-        [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
+        [
+          (workspaceMetadata.crateOverride or {})
+          (packageMetadata.crateOverride or {})
+        ];
     };
     userOverrides =
       (overrides.crateOverrides or overrides.crates or (_: _: {}))
@@ -140,12 +150,6 @@
       );
   in
     base;
-  depNames =
-    packageDependencies
-    ++ [
-      cargoPkg.name
-      "${cargoPkg.name}-deps"
-    ];
   # Filter out unneeded overrides, using the dep names we got earlier.
   crateOverrides =
     l.filterAttrs
