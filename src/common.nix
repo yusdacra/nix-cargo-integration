@@ -120,13 +120,26 @@
         {}
         [(workspaceMetadata.crateOverride or {}) (packageMetadata.crateOverride or {})];
     };
-  in
-    baseRaw
-    // (
+    userOverrides =
       (overrides.crateOverrides or overrides.crates or (_: _: {}))
       overrideDataCrates
+      baseRaw;
+    base =
       baseRaw
-    );
+      // (
+        l.mapAttrs
+        (
+          name: ov: (
+            prev:
+              l.computeOverridesResult
+              prev
+              [(baseRaw.${name} or (_: {})) ov]
+          )
+        )
+        userOverrides
+      );
+  in
+    base;
   depNames =
     packageDependencies
     ++ [
