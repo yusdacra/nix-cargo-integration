@@ -218,6 +218,7 @@ in rec {
     userWrapper = overrides.wrapper or (_: _: old: old);
     unwrapped = utils.buildCrate _config;
     wrapped = l.pipe unwrapped [
+      (old: old // {passthru = (old.passthru or {}) // {unwrapped = old;};})
       desktopItemWrapper
       runtimeLibsWrapper
       (userWrapper common config)
