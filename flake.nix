@@ -35,7 +35,7 @@
 
       sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
       lib = import ./src/lib.nix {
-        lib = import "${nixpkgs}/lib";
+        inherit (nixpkgs) lib;
       };
       l = lib;
 
@@ -153,6 +153,7 @@
     in {
       lib = {
         inherit makeOutputs;
+        nci-lib = lib;
       };
       inherit craneTests brpTests;
       inherit (cliOutputs) packages;
