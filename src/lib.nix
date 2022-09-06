@@ -177,4 +177,7 @@ in
         else lock.${p.name}.${p.version}.${p.source};
     in
       pkg.dependencies or [];
+    addItemsToList = name: attrs: items: (attrs.${name} or []) ++ items;
+    addBuildInputs = addItemsToList "buildInputs";
+    addNativeBuildInputs = addItemsToList "nativeBuildInputs";
   }
