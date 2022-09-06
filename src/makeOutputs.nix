@@ -25,6 +25,7 @@
   systems ? lib.defaultSystems,
   # nixpkgs overlays to use for the package set
   pkgsOverlays ? [],
+  disableVendoredCrateOverrides ? false,
   ...
 } @ attrs: let
   l = lib // builtins;
@@ -111,6 +112,7 @@
         isRootMember
         builder
         pkgsOverlays
+        disableVendoredCrateOverrides
         ;
     };
 

@@ -22,6 +22,7 @@
   pkgsOverlays ? [],
   # Whether to enable pre commit hooks
   enablePreCommitHooks ? false,
+  disableVendoredCrateOverrides ? false,
   ...
 } @ attrs: let
   # Extract the metadata we will need.
@@ -119,7 +120,11 @@
   _crateOverrides = let
     # Get the names of all our dependencies. This is done so that we can filter out unneeded overrides.
     baseRaw = nci-pkgs.utils.makeCrateOverrides {
-      inherit cCompiler useCCompilerBintools;
+      inherit
+        cCompiler
+        useCCompilerBintools
+        disableVendoredCrateOverrides
+        ;
       crateNames = depNames;
       rawTomlOverrides =
         l.foldl'

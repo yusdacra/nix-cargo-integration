@@ -29,6 +29,7 @@ in {
     cCompiler ? pkgs.gcc,
     useCCompilerBintools ? true,
     crateNames ? [],
+    disableVendoredCrateOverrides ? false,
   }: let
     depsOverrides = l.genAttrs crateNames (name: _: {});
 
@@ -95,11 +96,11 @@ in {
         (collectOverride acc el)
     )
     {}
-    [
+    (l.flatten [
       (l.dbgX "tomlOverrides" tomlOverrides)
-      extraOverrides
+      (l.optional (! disableVendoredCrateOverrides) extraOverrides)
       depsOverrides
-    ];
+    ]);
 
   # dream2nix build crate.
   buildCrate = args: (dream2nix.realizeProjects args).packages.${args.pname};
