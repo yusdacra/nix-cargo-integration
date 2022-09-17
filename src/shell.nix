@@ -1,8 +1,31 @@
-common: let
-  inherit (common) workspaceMetadata packageMetadata;
-  inherit (common.internal.nci-pkgs) pkgs rustToolchain makeDevshell;
+{common}: let
+  inherit
+    (common.internal)
+    workspaceMetadata
+    packageMetadata
+    root
+    runtimeLibs
+    overrides
+    crateOverrides
+    sources
+    cargoPkg
+    cCompiler
+    ;
+  inherit (common.internal.pkgsSet) pkgs rustToolchain makeDevshell;
 
   l = common.internal.lib;
+
+  depsOvDiff = (crateOverrides."${cargoPkg.name}-deps" or (_: {})) {};
+  mainOvDiff = (crateOverrides.${cargoPkg.name} or (_: {})) {};
+  ovEnvVars =
+    (depsOvDiff.passthru.env or {})
+    // (mainOvDiff.passthru.env or {});
+  ovInputs = l.unique (
+    (depsOvDiff.buildInputs or [])
+    ++ (depsOvDiff.nativeBuildInputs or [])
+    ++ (mainOvDiff.buildInputs or [])
+    ++ (mainOvDiff.nativeBuildInputs or [])
+  );
 
   # Extract cachix metadata
   cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
@@ -64,23 +87,23 @@ common: let
   # Create a base devshell config
   baseConfig =
     {
-      language = {
+      language = l.optionalAttrs (cCompiler != null) {
         c = let
           inputs =
-            common.buildInputs
-            ++ common.overrideBuildInputs
-            ++ (with pkgs; l.optionals stdenv.isDarwin [libiconv]);
+            ovInputs ++ (with pkgs; l.optional stdenv.isDarwin libiconv);
         in {
-          compiler = common.cCompiler;
+          compiler = cCompiler.package;
           libraries = inputs;
           includes = inputs;
         };
       };
       packages =
-        common.nativeBuildInputs
-        ++ common.buildInputs
-        ++ common.overrideNativeBuildInputs
-        ++ common.overrideBuildInputs;
+        ovInputs
+        ++ (
+          l.optional
+          (cCompiler.useCompilerBintools or false)
+          cCompiler.package.bintools
+        );
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
@@ -126,7 +149,7 @@ common: let
             command =
               buildFlakeExpr
               "--no-link"
-              ''b.removeAttrs flake.checks.\"${common.system}\" [ \"preCommitChecks\" ]'';
+              ''b.removeAttrs flake.checks.\"${pkgs.system}\" [ \"preCommitChecks\" ]'';
           }
           {
             name = "fmt";
@@ -161,7 +184,7 @@ common: let
             help = "Build all packages and push results to cachix";
             command = ''
               function build {
-                ${buildFlakeExpr "" ''flake.packages.\"${common.system}\"''}
+                ${buildFlakeExpr "" ''flake.packages.\"${pkgs.system}\"''}
               }
               cachix watch-exec build
             '';
@@ -178,20 +201,20 @@ common: let
             name = "build-all";
             category = "flake tools";
             help = "Build all packages";
-            command = buildFlakeExpr "" ''flake.packages.\"${common.system}\"'';
+            command = buildFlakeExpr "" ''flake.packages.\"${pkgs.system}\"'';
           }
         ]
         ++ l.optional (l.hasAttr "preCommitChecks" common.internal) {
           name = "check-pre-commit";
           category = "tools";
           help = "Runs the pre commit checks";
-          command = "nix build -L --show-trace --no-link --impure --expr '(builtins.getFlake (toString ./.)).checks.${common.system}.preCommitChecks'";
+          command = buildFlakeExpr "" ''flake.checks.\"${system}\".preCommitChecks'';
         };
       env =
         [
           {
             name = "LD_LIBRARY_PATH";
-            eval = "$DEVSHELL_DIR/lib:${l.makeLibraryPath common.runtimeLibs}";
+            prefix = "${l.makeLibraryPath runtimeLibs}";
           }
           {
             name = "LIBRARY_PATH";
@@ -211,7 +234,7 @@ common: let
             name = n;
             eval = v;
           })
-          (common.env // common.overrideEnv)
+          ovEnvVars
         );
       startup.setupPreCommitHooks.text = ''
         echo "pre-commit hooks are disabled."
@@ -236,11 +259,11 @@ common: let
   packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
 
   # Import the devshell specified in devshell.toml if it exists
-  devshellFilePath = "${toString common.root}/devshell.toml";
+  devshellFilePath = "${toString root}/devshell.toml";
   importedDevshell =
     l.thenOrNull
     (l.pathExists devshellFilePath)
-    (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;});
+    (import "${sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;});
 
   # Helper functions to combine devshell configs without loss
   combineWith = base: config: let
@@ -271,7 +294,7 @@ common: let
   devshellConfig = combineWith workspaceConfig packageConfig;
 
   # Collect final config
-  resultConfig = {
+  realizeConfig = devshellConfig: {
     configuration = let
       c =
         if importedDevshell == null
@@ -288,9 +311,18 @@ common: let
       # Override the config with user provided override
       c
       // {
-        config = c.config // (common.overrides.shell common c.config);
-        imports = c.imports ++ ["${common.sources.devshell}/extra/language/c.nix"];
+        config = c.config // (overrides.shell common c.config);
+        imports = c.imports ++ ["${sources.devshell}/extra/language/c.nix"];
       };
   };
+  resultConfig = realizeConfig devshellConfig;
 in
   (makeDevshell resultConfig).shell
+  // {
+    configuration = resultConfig.configuration;
+    combineWith = otherShell:
+      (makeDevshell (realizeConfig (
+        combineWith resultConfig.configuration otherShell.configuration
+      )))
+      .shell;
+  }

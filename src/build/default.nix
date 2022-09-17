@@ -10,15 +10,28 @@
   # The common we got from `./common.nix` for this package
   common,
 }: let
-  inherit (common) builder root desktopFileMetadata cargoPkg overrides;
-  inherit (common.internal) mkRuntimeLibsScript mkDesktopItemConfig mkRuntimeLibsOv mkDesktopFile;
-  inherit (common.internal.nci-pkgs) pkgs utils rustToolchain;
+  inherit
+    (common.internal)
+    runtimeLibs
+    builder
+    root
+    cargoPkg
+    packageMetadata
+    overrides
+    memberName
+    cCompiler
+    ;
+  inherit (common.internal.pkgsSet) pkgs utils rustToolchain;
 
   l = common.internal.lib;
 
   # Actual package name to use for the derivation.
   pkgName = l.thenOr (renamePkgTo == null) cargoPkg.name renamePkgTo;
 
+  pkgOverrides = overrides.crates.${cargoPkg.name} or {};
+  depsOverrides = overrides.crates."${cargoPkg.name}-deps" or {};
+
+  desktopFileMetadata = packageMetadata.desktopFile or null;
   # Desktop file to put in the package derivation.
   desktopFile = let
     desktopFilePath = root + "/${l.removePrefix "./" desktopFileMetadata}";
@@ -29,10 +42,21 @@
         mkdir -p $out/share/applications
         ln -sf ${desktopFilePath} $out/share/applications
       ''
-    else pkgs.makeDesktopItem (mkDesktopItemConfig pkgName);
+    else
+      pkgs.makeDesktopItem (
+        pkgs.callPackage ./desktopItem.nix {
+          inherit desktopFileMetadata pkgName;
+          inherit
+            (common.internal)
+            root
+            cargoPkg
+            packageMetadata
+            ;
+        }
+      );
 
   # Specify --package if we are building in a workspace
-  packageFlag = l.optional (common.memberName != null) "--package ${cargoPkg.name}";
+  packageFlag = l.optional (memberName != null) "--package ${cargoPkg.name}";
   # Specify --features if we have enabled features other than the default ones
   featuresFlags = l.optional ((l.length features) > 0) "--no-default-features --features ${(l.concatStringsSep "," features)}";
   # Specify --release if release profile is enabled
@@ -40,38 +64,27 @@
 
   # Wrapper that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
   runtimeLibsWrapper = old:
-    if mkRuntimeLibsOv
+    if l.length runtimeLibs > 0
     then
       utils.wrapDerivation old {} ''
-        rm -rf $out/bin
-        mkdir -p $out/bin
-        ln -sf ${old}/bin/* $out/bin
-        ${mkRuntimeLibsScript (l.makeLibraryPath common.runtimeLibs)}
+        ${
+          pkgs.callPackage ./runtimeLibs.nix {
+            libs = runtimeLibs;
+          }
+        }
       ''
     else old;
   # Wrapper that adds the desktop item for this package.
   desktopItemWrapper = old:
-    if mkDesktopFile
+    if desktopFileMetadata != null
     then
       utils.wrapDerivation old
       {desktopItems = [desktopFile];}
       ''
-        shopt -s extglob
-        rm -rf $out/share
-        mkdir -p $out/share/applications
-        ln -sf ${old}/share/!(applications) $out/share/
-        ln -sf ${old}/share/applications/* $out/share/applications/
         source ${pkgs.copyDesktopItems}/nix-support/setup-hook
         copyDesktopItems
       ''
     else old;
-  # Override that adds dependencies and env from common
-  commonDepsOv = prev:
-    common.env
-    // {
-      buildInputs = l.concatAttrLists prev common "buildInputs";
-      nativeBuildInputs = l.concatAttrLists prev common "nativeBuildInputs";
-    };
   set-toolchain.overrideRustToolchain = _: {inherit (rustToolchain) rustc cargo;};
 
   # Overrides for the crane builder
@@ -121,43 +134,34 @@
       l.dbgX "${l.optionalString isDeps "deps-"}checkPhase" p;
 
     # Overrides for the dependency only drv
-    depsOverride = prev:
-      l.computeOverridesResult prev [
-        (prev: {
-          buildPhase = buildPhase true;
-          checkPhase = checkPhase true;
-        })
-        commonDepsOv
-        common.internal.crateOverridesCombined
-      ];
+    depsOverride = prev: {
+      buildPhase = buildPhase true;
+      checkPhase = checkPhase true;
+    };
     # Overrides for the main drv
-    mainOverride = prev:
-      l.computeOverridesResult prev [
-        (prev: {
-          inherit doCheck;
-          meta = common.meta;
-          dontFixup = !release;
-          buildPhase = buildPhase false;
-          checkPhase = checkPhase false;
-        })
-        commonDepsOv
-        common.internal.mainOverrides
-      ];
+    mainOverride = prev: {
+      inherit doCheck;
+      dontFixup = !release;
+      buildPhase = buildPhase false;
+      checkPhase = checkPhase false;
+    };
   in {
-    "${cargoPkg.name}-deps" = {
-      inherit set-toolchain;
-      nci-overrides.overrideAttrs = prev: let
-        data = depsOverride prev;
-      in
-        l.dbgX "overrided deps drv" data;
-    };
-    ${cargoPkg.name} = {
-      inherit set-toolchain;
-      nci-overrides.overrideAttrs = prev: let
-        data = mainOverride prev;
-      in
-        l.dbgX "overrided main drv" data;
-    };
+    "${cargoPkg.name}-deps" =
+      {
+        nci-overrides.overrideAttrs = prev: let
+          data = depsOverride prev;
+        in
+          l.dbgX "overrided deps drv" data;
+      }
+      // depsOverrides;
+    ${cargoPkg.name} =
+      {
+        nci-overrides.overrideAttrs = prev: let
+          data = mainOverride prev;
+        in
+          l.dbgX "overrided main drv" data;
+      }
+      // pkgOverrides;
   };
 
   # Overrides for the build rust package builder
@@ -165,41 +169,60 @@
     flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
     profile = l.thenOr release "release" "debug";
     # Overrides for the drv
-    overrides = prev:
-      l.computeOverridesResult prev [
-        (prev: {
-          inherit doCheck;
-          meta = common.meta;
-          dontFixup = !release;
-          cargoBuildFlags = flags;
-          cargoCheckFlags = flags;
-          cargoBuildType = profile;
-          cargoCheckType = profile;
-        })
-        commonDepsOv
-        common.internal.crateOverridesCombined
-        common.internal.mainOverrides
-      ];
-  in {
-    ${cargoPkg.name} = {
-      inherit set-toolchain;
-      nci-overrides.overrideAttrs = prev: let
-        data = overrides prev;
-      in
-        l.dbgX "overrided drv" data;
+    overrides = prev: {
+      inherit doCheck;
+      dontFixup = !release;
+      cargoBuildFlags = flags;
+      cargoCheckFlags = flags;
+      cargoBuildType = profile;
+      cargoCheckType = profile;
     };
+  in {
+    ${cargoPkg.name} =
+      {
+        nci-overrides.overrideAttrs = prev: let
+          data = overrides prev;
+        in
+          l.dbgX "overrided drv" data;
+      }
+      // pkgOverrides;
   };
+
+  _packageOverrides =
+    if builder == "crane"
+    then craneOverrides
+    else if builder == "build-rust-package"
+    then brpOverrides
+    else throw "unsupported builder";
 
   baseConfig = {
     pname = cargoPkg.name;
     source = root;
 
     packageOverrides =
-      if builder == "crane"
-      then craneOverrides
-      else if builder == "build-rust-package"
-      then brpOverrides
-      else throw "unsupported builder";
+      _packageOverrides
+      // {
+        "^.*" = {
+          inherit set-toolchain;
+          set-stdenv.overrideAttrs = old: {
+            CC = "cc";
+            stdenv = pkgs.stdenvNoCC;
+            nativeBuildInputs = let
+              cCompilerPkgs =
+                if cCompiler != null
+                then
+                  [cCompiler.package]
+                  ++ (
+                    l.optional
+                    cCompiler.useCompilerBintools
+                    cCompiler.package.bintools
+                  )
+                else [];
+            in
+              (old.nativeBuildInputs or []) ++ cCompilerPkgs;
+          };
+        };
+      };
 
     settings = [{inherit builder;}];
   };
@@ -216,7 +239,7 @@ in rec {
     };
   package = let
     userWrapper = overrides.wrapper or (_: _: old: old);
-    unwrapped = utils.buildCrate _config;
+    unwrapped = (utils.mkCrateOutputs _config).packages.${cargoPkg.name};
     wrapped = l.pipe unwrapped [
       (old: old // {passthru = (old.passthru or {}) // {unwrapped = old;};})
       desktopItemWrapper

@@ -16,7 +16,9 @@
     attrs = l.filter l.isString (l.split "\\." key);
     op = sum: attr: sum.${attr} or (throw "package \"${key}\" not found");
   in
-    l.foldl' op pkgs attrs;
+    if l.isString key
+    then l.foldl' op pkgs attrs
+    else key;
   # Resolves a list of string keys to packages.
   resolveToPkgs = l.map resolveToPkg;
   evalPkgs = expr: l.eval expr {inherit pkgs;};
@@ -24,86 +26,30 @@ in {
   inherit resolveToPkg resolveToPkgs evalPkgs;
 
   # Creates crate overrides.
-  makeCrateOverrides = {
-    rawTomlOverrides ? {},
-    cCompiler ? pkgs.gcc,
-    useCCompilerBintools ? true,
-    crateNames ? [],
-    disableVendoredCrateOverrides ? false,
-  }: let
-    depsOverrides = l.genAttrs crateNames (name: _: {});
-
-    # base inputs for each crate.
-    # this includes settting the stdenv and adding a C compiler
-    baseConf = prev: {
-      # No CC since we provide our own compiler
-      stdenv =
-        pkgs.stdenvNoCC
-        // {
-          cc = cCompiler;
-        };
-      nativeBuildInputs = l.unique (
-        (prev.nativeBuildInputs or [])
-        ++ [cCompiler]
-        ++ (l.optional useCCompilerBintools cCompiler.bintools)
-      );
-      # Set CC to "cc" to workaround some weird issues (and to not bother with finding exact compiler path)
-      CC = "cc";
-    };
-
-    # Overrides from `rawTomlOverrides`
-    tomlOverrides =
-      l.mapAttrs
-      (_: crate: prev: let
-        envsEvaled =
-          l.mapAttrs
-          (_: value: evalPkgs value)
-          (crate.env or {});
-      in
-        {
-          nativeBuildInputs = l.unique (
-            (prev.nativeBuildInputs or [])
-            ++ (resolveToPkgs (crate.nativeBuildInputs or []))
-          );
-          buildInputs = l.unique (
-            (prev.buildInputs or [])
-            ++ (resolveToPkgs (crate.buildInputs or []))
-          );
-        }
-        // envsEvaled
-        // {propagatedEnv = envsEvaled;})
-      (l.dbgX "rawTomlOverrides" rawTomlOverrides);
-
-    # Our overrides (+ default crate overrides from nixpkgs)
-    extraOverrides =
-      import ./extra-crate-overrides.nix {inherit pkgs rustToolchain lib;};
-
-    collectOverride = acc: el: name: let
-      getOverride = x: x.${name} or (_: {});
-      accOverride = getOverride acc;
-      elOverride = getOverride el;
+  makeTomlOverrides = rawTomlOverrides:
+    l.mapAttrs
+    (_: crate: prev: let
+      envsEvaled =
+        l.mapAttrs
+        (_: value: evalPkgs value)
+        (crate.env or {});
     in
-      attrs:
-        l.computeOverridesResult
-        attrs
-        [baseConf accOverride elOverride];
-  in
-    l.foldl'
-    (
-      acc: el:
-        l.genAttrs
-        (l.unique ((l.attrNames acc) ++ (l.attrNames el)))
-        (collectOverride acc el)
-    )
-    {}
-    (l.flatten [
-      (l.dbgX "tomlOverrides" tomlOverrides)
-      (l.optional (! disableVendoredCrateOverrides) extraOverrides)
-      depsOverrides
-    ]);
+      {
+        nativeBuildInputs = l.unique (
+          (prev.nativeBuildInputs or [])
+          ++ (resolveToPkgs (crate.nativeBuildInputs or []))
+        );
+        buildInputs = l.unique (
+          (prev.buildInputs or [])
+          ++ (resolveToPkgs (crate.buildInputs or []))
+        );
+      }
+      // envsEvaled
+      // {propagatedEnv = envsEvaled;})
+    (l.dbgX "rawTomlOverrides" rawTomlOverrides);
 
   # dream2nix build crate.
-  buildCrate = args: (dream2nix.realizeProjects args).packages.${args.pname};
+  mkCrateOutputs = dream2nix.realizeProjects;
 
   wrapDerivation = old: args: script:
     pkgs.runCommand old.name
@@ -115,8 +61,7 @@ in {
       // args
     )
     ''
-      mkdir -p $out
-      ln -sf ${old}/* $out/
+      cp -r --no-preserve=mode,ownership $out/
       ${script}
     '';
 }

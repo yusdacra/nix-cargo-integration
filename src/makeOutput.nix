@@ -2,21 +2,28 @@
 {
   # A common gotten from `./common.nix`
   common,
-  # Rename outputs in flake structure
-  renameOutputs ? {},
 }: let
   inherit
-    (common)
+    (common.internal)
     cargoToml
     cargoPkg
     packageMetadata
-    system
+    workspaceMetadata
     memberName
     root
-    features
+    lib
+    pkgsSet
     ;
 
-  l = common.internal.lib;
+  l = lib;
+
+  system = pkgsSet.pkgs.system;
+
+  features = packageMetadata.buildFeatures or {};
+  renameOutputs =
+    workspaceMetadata.outputs.rename
+    or packageMetadata.outputs.rename
+    or {};
 
   # Metadata we will use later. Defaults should be the same as Cargo defaults.
   name = renameOutputs.${cargoPkg.name} or cargoPkg.name;
@@ -57,7 +64,7 @@
 
   # Helper function to use build.nix
   mkBuild = f: r: c:
-    import ./build.nix {
+    import ./build {
       inherit common;
       features = f;
       doCheck = c;
@@ -87,6 +94,7 @@
       program = "${drv}${exePath}";
     };
   };
+  mkShell = import ./shell.nix;
 
   # "raw" packages that will be proccesed.
   # It's called so since `build.nix` generates an attrset containing the config and the package.
@@ -96,11 +104,7 @@
   };
   # Packages set to be put in the outputs.
   packages = {
-    ${system} =
-      (l.mapAttrs (_: v: v.package) packagesRaw)
-      // {
-        "${name}-derivation" = import ./createNixpkgsDrv.nix common;
-      };
+    ${system} = l.mapAttrs (_: v: v.package) packagesRaw;
   };
   # Checks to be put in outputs.
   checks = {
@@ -119,10 +123,14 @@
         (l.dbg "binaries for ${name}: ${l.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
       );
   };
+  devShells = {
+    ${system}.${name} = mkShell {inherit common;};
+  };
 in
-  l.optionalAttrs (packageMetadata.build or false) ({
-      inherit packages checks;
-    }
+  {inherit devShells;}
+  // l.optionalAttrs (packageMetadata.build or false) (
+    {inherit packages checks;}
     // l.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
-    })
+    }
+  )
