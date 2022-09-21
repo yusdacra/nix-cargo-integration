@@ -8,10 +8,6 @@ and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options
 (like `renameOutputs`, `defaultOutputs` etc.)
-- Can generate nixpkgs-compatible Nix expressions that captures all your packages
-dependencies / env vars and so on.
-You don't need to maintain a seperate derivation for nixpkgs!
-(see `Generating a nixpkgs-compatible package expression` in manual)
 - A CLI tool that let's you compile and run arbitrary Rust repositories directly
 without messing with any files or setting up overlays (see `Using the nci CLI` in manual)
 

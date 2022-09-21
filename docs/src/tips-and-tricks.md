@@ -28,12 +28,6 @@ variable to `1` and passing `--impure` to `nix`. Example:
 NCI_DEBUG=1 nix build --impure .
 ```
 
-## Generating a nixpkgs-compatible package expression
-
-`nix-cargo-integration` will generate outputs named `<packageOutputName>-derivation`.
-You can `nix build` these, and it will result in a `.nix` text file. After generating one,
-be sure to review it and change anything broken, such as source fetching.
-
 ## Using the `nci` CLI
 
 This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:
