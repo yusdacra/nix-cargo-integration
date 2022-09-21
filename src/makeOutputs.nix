@@ -9,16 +9,14 @@
 {
   # Path to the root of a cargo workspace or crate
   root,
-  # Systems to generate outputs for
-  systems ? lib.defaultSystems,
-  # All overrides
-  overrides ? {},
-  # All crate namespaced overrides
-  perCrateOverrides ? {},
+  # Config that will be applied to workspace
+  config ? (_: {}),
+  # All per crate overrides
+  overrides ? (_: {}),
   # nixpkgs overlays to use for the package set
   pkgsOverlays ? [],
   ...
-} @ attrs: let
+}: let
   l = lib // builtins;
 
   # Helper function to import a Cargo.toml from a root.
@@ -64,21 +62,21 @@
     )
     (name: importCargoTOML "${toString root}/${name}");
 
+  _config = config {};
   # Get the metadata we will use from the root package attributes if it exists.
   rootPackageMetadata =
     l.recursiveUpdate
     (rootPkg.metadata.nix or {})
-    (perCrateOverrides.${rootPkg.name}.config or {});
+    _config;
   # Get the metadata we will use from the workspace attributes if it exists.
   workspaceMetadata =
     l.recursiveUpdate
     (workspaceToml.metadata.nix or {})
-    (overrides.workspaceConfig or {});
+    _config;
 
   # Decide which systems we will generate outputs for. This can be overrided.
   systems =
-    attrs.systems
-    or workspaceMetadata.systems
+    workspaceMetadata.systems
     or rootPackageMetadata.systems
     or l.defaultSystems;
 
@@ -106,15 +104,31 @@
     l.genAttrs
     systems
     (
-      system:
+      system: let
+        pkgsSet = pkgsSets.${system};
+      in
         import ./common.nix {
-          pkgsSet = pkgsSets.${system};
-          inherit
-            lib
+          workspaceMetadata =
             workspaceMetadata
+            // (
+              config {
+                inherit (pkgsSet) pkgs rustToolchain;
+                internal = {
+                  inherit
+                    pkgsSet
+                    lib
+                    overrides
+                    sources
+                    root
+                    ;
+                };
+              }
+            );
+          inherit
+            pkgsSet
+            lib
             root
             overrides
-            perCrateOverrides
             sources
             ;
         }

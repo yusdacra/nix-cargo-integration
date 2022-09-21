@@ -1,4 +1,7 @@
-{common}: let
+{
+  common,
+  rawShell,
+}: let
   inherit
     (common.internal)
     workspaceMetadata
@@ -6,26 +9,11 @@
     root
     runtimeLibs
     overrides
-    crateOverrides
     sources
-    cargoPkg
-    cCompiler
     ;
-  inherit (common.internal.pkgsSet) pkgs rustToolchain makeDevshell;
+  inherit (common.internal.pkgsSet) pkgs makeDevshell;
 
   l = common.internal.lib;
-
-  depsOvDiff = (crateOverrides."${cargoPkg.name}-deps" or (_: {})) {};
-  mainOvDiff = (crateOverrides.${cargoPkg.name} or (_: {})) {};
-  ovEnvVars =
-    (depsOvDiff.passthru.env or {})
-    // (mainOvDiff.passthru.env or {});
-  ovInputs = l.unique (
-    (depsOvDiff.buildInputs or [])
-    ++ (depsOvDiff.nativeBuildInputs or [])
-    ++ (mainOvDiff.buildInputs or [])
-    ++ (mainOvDiff.nativeBuildInputs or [])
-  );
 
   # Extract cachix metadata
   cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
@@ -87,23 +75,6 @@
   # Create a base devshell config
   baseConfig =
     {
-      language = l.optionalAttrs (cCompiler != null) {
-        c = let
-          inputs =
-            ovInputs ++ (with pkgs; l.optional stdenv.isDarwin libiconv);
-        in {
-          compiler = cCompiler.package;
-          libraries = inputs;
-          includes = inputs;
-        };
-      };
-      packages =
-        ovInputs
-        ++ (
-          l.optional
-          (cCompiler.useCompilerBintools or false)
-          cCompiler.package.bintools
-        );
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
@@ -118,20 +89,6 @@
         '';
       in
         [
-          {
-            package = rustToolchain.rustc;
-            name = "rustc";
-            category = "rust";
-            command = "rustc $@";
-            help = "The Rust compiler";
-          }
-          {
-            package = rustToolchain.cargo;
-            name = "cargo";
-            category = "rust";
-            command = "cargo $@";
-            help = "Rust's package manager";
-          }
           {
             package = alejandra;
             category = "formatting";
@@ -227,14 +184,6 @@
             substituters = https://cache.nixos.org https://${cachixName}.cachix.org
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
           '')
-        )
-        ++ (
-          l.mapAttrsToList
-          (n: v: {
-            name = n;
-            eval = v;
-          })
-          ovEnvVars
         );
       startup.setupPreCommitHooks.text = ''
         echo "pre-commit hooks are disabled."
@@ -294,35 +243,23 @@
   devshellConfig = combineWith workspaceConfig packageConfig;
 
   # Collect final config
-  realizeConfig = devshellConfig: {
-    configuration = let
-      c =
-        if importedDevshell == null
-        then {
-          config = combineWithBase devshellConfig;
-          imports = [];
-        }
-        # Add values from the imported devshell if it exists
-        else {
-          config = combineWithBase importedDevshell.config;
-          inherit (importedDevshell) _file imports;
-        };
-    in
-      # Override the config with user provided override
-      c
-      // {
-        config = c.config // (overrides.shell common c.config);
-        imports = c.imports ++ ["${sources.devshell}/extra/language/c.nix"];
+  finalConfig = let
+    c =
+      if importedDevshell == null
+      then {
+        config = combineWithBase devshellConfig;
+        imports = [];
+      }
+      # Add values from the imported devshell if it exists
+      else {
+        config = combineWithBase importedDevshell.config;
+        inherit (importedDevshell) _file imports;
       };
-  };
-  resultConfig = realizeConfig devshellConfig;
+  in
+    # Override the config with user provided override
+    c
+    // {
+      config = c.config // ((overrides.shell or (_: {})) c.config);
+    };
 in
-  (makeDevshell resultConfig).shell
-  // {
-    configuration = resultConfig.configuration;
-    combineWith = otherShell:
-      (makeDevshell (realizeConfig (
-        combineWith resultConfig.configuration otherShell.configuration
-      )))
-      .shell;
-  }
+  rawShell.combineWith {passthru.config = finalConfig;}

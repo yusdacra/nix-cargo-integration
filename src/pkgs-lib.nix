@@ -26,27 +26,48 @@ in {
   inherit resolveToPkg resolveToPkgs evalPkgs;
 
   # Creates crate overrides.
-  makeTomlOverrides = rawTomlOverrides:
-    l.mapAttrs
-    (_: crate: prev: let
+  processOverrides = rawOverrides: let
+    makeFromAttrs = crate: prev: let
       envsEvaled =
         l.mapAttrs
         (_: value: evalPkgs value)
         (crate.env or {});
+      getInputs = name:
+        l.unique (
+          (prev.${name} or []) ++ (resolveToPkgs (crate.${name} or []))
+        );
     in
-      {
-        nativeBuildInputs = l.unique (
-          (prev.nativeBuildInputs or [])
-          ++ (resolveToPkgs (crate.nativeBuildInputs or []))
-        );
-        buildInputs = l.unique (
-          (prev.buildInputs or [])
-          ++ (resolveToPkgs (crate.buildInputs or []))
-        );
-      }
+      (l.removeAttrs crate ["env"])
+      // (
+        l.genAttrs
+        [
+          "buildInputs"
+          "nativeBuildInputs"
+          "propagatedBuildInputs"
+        ]
+        getInputs
+      )
       // envsEvaled
-      // {propagatedEnv = envsEvaled;})
-    (l.dbgX "rawTomlOverrides" rawTomlOverrides);
+      // {
+        passthru =
+          (prev.passthru or {})
+          // (crate.passthru or {})
+          // {env = envsEvaled;};
+      };
+  in
+    l.mapAttrs
+    (
+      crateName: overrides:
+        l.mapAttrs
+        (
+          overrideName: override:
+            if ! override ? overrideAttrs
+            then {overrideAttrs = makeFromAttrs override;}
+            else override
+        )
+        overrides
+    )
+    (l.dbgX "rawOverrides" rawOverrides);
 
   # dream2nix build crate.
   mkCrateOutputs = dream2nix.realizeProjects;
@@ -61,7 +82,7 @@ in {
       // args
     )
     ''
-      cp -r --no-preserve=mode,ownership $out/
+      cp -rs --no-preserve=mode,ownership ${old} $out/
       ${script}
     '';
 }

@@ -20,6 +20,7 @@
     overrides
     memberName
     cCompiler
+    crateOverrides
     ;
   inherit (common.internal.pkgsSet) pkgs utils rustToolchain;
 
@@ -28,8 +29,8 @@
   # Actual package name to use for the derivation.
   pkgName = l.thenOr (renamePkgTo == null) cargoPkg.name renamePkgTo;
 
-  pkgOverrides = overrides.crates.${cargoPkg.name} or {};
-  depsOverrides = overrides.crates."${cargoPkg.name}-deps" or {};
+  pkgOverrides = crateOverrides.${cargoPkg.name} or {};
+  depsOverrides = crateOverrides."${cargoPkg.name}-deps" or {};
 
   desktopFileMetadata = packageMetadata.desktopFile or null;
   # Desktop file to put in the package derivation.
@@ -185,7 +186,12 @@
         in
           l.dbgX "overrided drv" data;
       }
-      // pkgOverrides;
+      // pkgOverrides
+      // (
+        l.mapAttrs'
+        (n: l.nameValuePair "${n}-deps")
+        depsOverrides
+      );
   };
 
   _packageOverrides =
@@ -228,9 +234,12 @@
   };
 
   overrideConfig = config:
-    config // (common.overrides.build common config);
+    config // ((overrides.build or (_: {})) config);
 
   _config = overrideConfig baseConfig;
+  _outputs = utils.mkCrateOutputs _config;
+  unwrappedPackage = _outputs.packages.${cargoPkg.name};
+  shell = _outputs.devShells.${cargoPkg.name};
 in rec {
   config =
     _config
@@ -238,13 +247,21 @@ in rec {
       inherit release features doCheck;
     };
   package = let
-    userWrapper = overrides.wrapper or (_: _: old: old);
-    unwrapped = (utils.mkCrateOutputs _config).packages.${cargoPkg.name};
-    wrapped = l.pipe unwrapped [
-      (old: old // {passthru = (old.passthru or {}) // {unwrapped = old;};})
+    userWrapper = overrides.wrapper or (_: old: old);
+    wrapped = l.pipe unwrappedPackage [
+      (old:
+        old
+        // {
+          passthru =
+            (old.passthru or {})
+            // {
+              inherit shell;
+              unwrapped = old;
+            };
+        })
       desktopItemWrapper
       runtimeLibsWrapper
-      (userWrapper common config)
+      (userWrapper config)
     ];
   in
     wrapped;

@@ -76,11 +76,7 @@
   mkApp = bin: n: v: let
     ex = {
       exeName = bin.exeName or bin.name;
-      name = "${bin.name}${
-        if v.config.release
-        then ""
-        else "-debug"
-      }";
+      name = "${bin.name}${l.thenOr v.config.release "" "-debug"}";
     };
     drv =
       if (l.length (bin.required-features or [])) < 1
@@ -124,7 +120,10 @@
       );
   };
   devShells = {
-    ${system}.${name} = mkShell {inherit common;};
+    ${system}.${name} = mkShell {
+      inherit common;
+      rawShell = packages.${system}.${name}.passthru.shell;
+    };
   };
 in
   {inherit devShells;}

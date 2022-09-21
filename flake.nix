@@ -16,7 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";
-      inputs.node2nix.follows = "nixpkgs";
       inputs.poetry2nix.follows = "nixpkgs";
       inputs.alejandra.follows = "nixpkgs";
       inputs.pre-commit-hooks.follows = "nixpkgs";
@@ -43,12 +42,15 @@
 
       cliOutputs = makeOutputs {
         root = ./cli;
-        overrides = {
-          crates = common: _: {
-            nci-cli = prev: {
+        config = common: {
+          crateOverrides = {
+            nci-cli.add-src.overrideAttrs = old: {
               NCI_SRC = builtins.toString inputs.self;
               # Make sure the src doesnt get garbage collected
-              postInstall = "ln -s $NCI_SRC $out/nci_src";
+              postInstall = ''
+                ${old.postInstall or ""}
+                ln -s $NCI_SRC $out/nci_src
+              '';
             };
           };
         };
@@ -64,8 +66,8 @@
           else null) (builtins.readDir ./tests));
         tests = l.genAttrs testNames (test:
           makeOutputs {
-            inherit builder;
             root = ./tests + "/${test}";
+            config = _: {inherit builder;};
           });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:

@@ -17,18 +17,7 @@ The attributes described here go in a `Cargo.toml` file.
 runtimeLibs = ["vulkan-loader", "xorg.libXi"]
 ```
 
-### `env` attributes
-
-Key-value pairings that are put here will be exported into the development and build environment.
-
-#### Example
-
-```toml
-[package.metadata.nix.env]
-PROTOC = "protoc"
-```
-
-### `crateOverride` attributes
+### `crateOverrides` attributes
 
 Key-value pairings that are put here will be used to override crates in build derivation.
 Dependencies / environment variables put here will also be exported to the development environment.
@@ -36,9 +25,10 @@ Dependencies / environment variables put here will also be exported to the devel
 #### Example
 
 ```toml
-[package.metadata.nix.crateOverride.xcb]
+[package.metadata.nix.crateOverrides.xcb.add-inputs]
 buildInputs = ["xorg.libxcb"]
-env.TEST_ENV = "test"
+# [package.metadata.nix.crateOverrides.xcb.some-override-name]
+# env.TEST_ENV = "test"
 ```
 
 ## `package.metadata.nix` attributes
