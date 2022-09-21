@@ -77,7 +77,7 @@ in
         l.isString _cCompiler
         || (_cCompiler ? type && _cCompiler.type == "derivation")
       then {
-        package = _cCompiler;
+        package = pkgsSet.utils.resolveToPkg _cCompiler;
         useCompilerBintools = true;
       }
       else if l.isAttrs _cCompiler
