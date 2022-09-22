@@ -73,17 +73,20 @@
           l.mapAttrsToList (n: v:
             l.mapAttrs (_:
               l.mapAttrs' (n:
-                l.nameValuePair (n
+                l.nameValuePair (
+                  n
+                  + "-${attrs}"
                   + (
                     if l.hasInfix "workspace" n
                     then "-${n}"
                     else ""
-                  ))))
+                  )
+                )))
             v.${attrs})
           tests;
-        checks = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");
-        packages = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "packages");
-        shells = l.mapAttrsToList (name: test: l.mapAttrs (_: drv: {"${name}-shell" = drv;}) test.devShell) tests;
+        checks = flattenAttrs "checks";
+        packages = flattenAttrs "packages";
+        shells = flattenAttrs "devShells";
       in {
         checks = l.foldAttrs l.recursiveUpdate {} checks;
         packages = l.foldAttrs l.recursiveUpdate {} packages;
