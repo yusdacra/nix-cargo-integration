@@ -10,6 +10,7 @@
     runtimeLibs
     overrides
     sources
+    cCompiler
     ;
   inherit (common.internal.pkgsSet) pkgs makeDevshell;
 
@@ -75,6 +76,13 @@
   # Create a base devshell config
   baseConfig =
     {
+      packages =
+        l.optional
+        cCompiler.useCompilerBintools
+        cCompiler.package.bintools;
+      language.c = {
+        compiler = cCompiler.package;
+      };
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }

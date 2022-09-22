@@ -103,12 +103,16 @@
           pkgs = inputs.nixpkgs.legacyPackages.${system};
           flakeSrc = "path:${inputs.self.outPath}?narHash=${inputs.self.narHash}";
           script =
-            pkgs.writeScript
+            pkgs.writeShellScript
             "test-${l.replaceStrings ["."] ["-"] outputsPath}.sh"
             ''
-              #!${pkgs.stdenv.shell}
-              nix build -L --show-trace --keep-failed --keep-going \
-              --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}"
+              if [ "''${1:-""}" = "" ]; then
+                nix build -L --show-trace --keep-failed --keep-going \
+                --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}"
+              else
+                nix build -L --show-trace --keep-failed --keep-going \
+                --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}.''${1}"
+              fi
             '';
         in {
           type = "app";
