@@ -2,8 +2,6 @@
 {
   # an imported nixpkgs package set
   pkgs,
-  # the rust toolchain we use
-  rustToolchain,
   # an NCI library
   lib,
   # dream2nix tools
