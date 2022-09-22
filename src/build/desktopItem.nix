@@ -7,7 +7,6 @@
   packageMetadata,
   desktopFileMetadata,
   pkgName,
-  # nixpkgs
   lib,
   ...
 }: let

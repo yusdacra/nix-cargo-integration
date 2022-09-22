@@ -45,10 +45,11 @@
       ''
     else
       pkgs.makeDesktopItem (
-        pkgs.callPackage ./desktopItem.nix {
+        import ./desktopItem.nix {
           inherit desktopFileMetadata pkgName;
           inherit
             (common.internal)
+            lib
             root
             cargoPkg
             packageMetadata
