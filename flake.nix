@@ -177,11 +177,18 @@
         (l.mapAttrs (_: d: {default = d;}) devShell)
         (l.mapAttrs (_: d: {cli = d.default;}) cliOutputs.devShells);
 
-      templates = {
-        default = {
+      templates = let
+        simple = {
           description = "a simple flake using nci";
           path = ./templates/simple;
         };
+        full = {
+          description = "a flake with all options that nci defines";
+          path = ./templates/full;
+        };
+      in {
+        inherit simple full;
+        default = simple;
       };
     };
 }
