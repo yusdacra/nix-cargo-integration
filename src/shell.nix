@@ -8,7 +8,6 @@
     packageMetadata
     root
     runtimeLibs
-    overrides
     sources
     cCompiler
     ;

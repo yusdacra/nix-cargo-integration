@@ -6,10 +6,6 @@ The attributes described here go in a `Cargo.toml` file.
 - `package.metadata.nix` attributes only apply to the package declared
   in the same `Cargo.toml` the attributes were defined in.
 
-## `package.metadata.nix` and `workspace.metadata.nix` shared attributes
-
-- `runtimeLibs`: libraries that will be put in `LD_LIBRARY_PRELOAD` for both dev and build env (type: list)
-
 #### Example
 
 ```toml
@@ -17,25 +13,13 @@ The attributes described here go in a `Cargo.toml` file.
 runtimeLibs = ["vulkan-loader", "xorg.libXi"]
 ```
 
-### `crateOverrides` attributes
-
-Key-value pairings that are put here will be used to override crates in build derivation.
-Dependencies / environment variables put here will also be exported to the development environment.
-
-#### Example
-
-```toml
-[package.metadata.nix.crateOverrides.xcb.add-inputs]
-buildInputs = ["xorg.libxcb"]
-# [package.metadata.nix.crateOverrides.xcb.some-override-name]
-# env.TEST_ENV = "test"
-```
-
 ## `package.metadata.nix` attributes
 
 - `build`: whether to enable outputs which build the package (type: boolean) (default: `false`)
 - `app`: whether to enable the application output (type: boolean) (default: `false`)
 - `longDescription`: a longer description (type: string)
+- `runtimeLibs`: libraries that will be put in `LD_LIBRARY_PRELOAD` environment variable for the dev env (type: list)
+  - these will also be added to the resulting package when you build it, as a wrapper that adds the env variable.
 
 #### Example
 
@@ -45,6 +29,26 @@ build = true
 app = true
 longDescription = "blablabla..."
 ```
+
+### `overrides` attributes
+
+Key value map used to specify overrides for this package.
+Dependencies / environment variables put here will also be exported to the development environment.
+
+#### Example
+
+```toml
+[package.metadata.nix.overrides.add-inputs]
+buildInputs = ["xorg.libxcb"]
+[package.metadata.nix.overrides.add-env.env]
+TEST_ENV = "true"
+PROTOC = "eval (builtins.toString pkgs.protoc)"
+```
+
+### `depsOverrides` attributes
+
+Same as `overrides`, but only applicable to the `crane` builder (the default).
+Allows you to specify overrides for the dependencies derivation.
 
 ### `desktopFile` attributes
 
@@ -95,8 +99,7 @@ will be available in `package.metadata.nix`.
 - `systems`: systems to enable for the flake (type: list)
     - defaults to `nixpkgs` [`supportedSystems` and `limitedSupportSystems`](https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14)
 - `toolchain`: rust toolchain to use (type: one of "stable", "beta" or "nightly") (default: "stable")
-    - if the `rust-toolchain` or `rust-toolchain.toml` file exists at project
-    root, it will be used instead of this attribute
+    - if the `rust-toolchain` or `rust-toolchain.toml` file exists at project root, it will be used instead of this attribute
 
 #### Example
 
