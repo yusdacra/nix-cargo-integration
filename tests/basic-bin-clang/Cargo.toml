@@ -6,4 +6,4 @@ edition = "2018"
 
 [package.metadata.nix]
 build = true
-cCompiler = "clang"
+cCompiler.package = "clang"
