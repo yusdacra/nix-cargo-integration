@@ -7,6 +7,6 @@ edition = "2018"
 [package.metadata.nix]
 build = true
 
-[package.metadata.nix.crateOverrides.basic-override.ov]
+[package.metadata.nix.overrides.ov]
 buildInputs = ["hello"]
 env.PROTOC = "protoc"
