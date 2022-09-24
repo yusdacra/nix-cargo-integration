@@ -5,7 +5,8 @@ Any API that is not documented here **IS NOT** counted as "public" and therefore
 This does not mean that changes will be done without any notice. You can check `CHANGELOG.md` for breaking changes.
 You are still welcome to create issues / discussions about them.
 Upstream projects such as [devshell], [dream2nix] etc. can have breaking changes.
-These breakages will be limited to `config.shell` and `pkgConfig.crateName.build` in the public API, since these directly modify [devshell] / [dream2nix] builder configs.
+These breakages will be limited to `config.shell` `pkgConfig.crateName.dream2nixSettings` in the public API,
+since these directly modify [devshell] / [dream2nix] builder configs.
 
 ## The `common` attribute set
 
