@@ -142,7 +142,6 @@
 <li>Allows configuration from <code>Cargo.toml</code> file(s) via <code>package.metadata.nix</code> and <code>workspace.metadata.nix</code> attributes.</li>
 <li>Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).</li>
 <li>Aims to offload work from the user; comes with useful configuration options (like <code>renameOutputs</code>, <code>defaultOutputs</code> etc.)</li>
-<li>A CLI tool that let's you compile and run arbitrary Rust repositories directly without messing with any files or setting up overlays (see <code>Using the nci CLI</code> in manual)</li>
 </ul>
 <p>NOTE: <code>nix-cargo-integration</code> should work with any Nix version above 2.4+, but
 the experience may not be smooth if you aren't using the newest version of Nix.</p>
@@ -698,24 +697,6 @@ error: A Cargo.lock file must be present, please make sure it's at least staged 
 <p>Traces in the library can be enabled by setting the <code>NCI_DEBUG</code> environment
 variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>. Example:</p>
 <pre><code>NCI_DEBUG=1 nix build --impure .
-</code></pre>
-<h2 id="using-the-nci-cli"><a class="header" href="#using-the-nci-cli">Using the <code>nci</code> CLI</a></h2>
-<p>This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:</p>
-<pre><code class="language-bash">alias nci=&quot;nix run github:yusdacra/nix-cargo-integration --&quot;
-# Show the outputs of this (flake) source
-nci show github:owner/repo
-# Run the default app of this source
-nci run github:owner/repo
-# Run a specific app of this source
-nci run github:owner/repo app-name
-# Build the default package of this source
-nci build github:owner/repo
-# Build a specific package of this source
-nci build github:owner/repo package-name
-# Show the flake metadata for this source
-nci metadata github:owner/repo
-# Update the source
-nci update github:owner/repo
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="recent-important-changes"><a class="header" href="#recent-important-changes">Recent important changes</a></h1>
 <p>This is a list of important (mostly breaking) changes. The dates are from

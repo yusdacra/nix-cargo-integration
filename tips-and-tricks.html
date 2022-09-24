@@ -155,24 +155,6 @@ error: A Cargo.lock file must be present, please make sure it's at least staged 
 variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>. Example:</p>
 <pre><code>NCI_DEBUG=1 nix build --impure .
 </code></pre>
-<h2 id="using-the-nci-cli"><a class="header" href="#using-the-nci-cli">Using the <code>nci</code> CLI</a></h2>
-<p>This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:</p>
-<pre><code class="language-bash">alias nci=&quot;nix run github:yusdacra/nix-cargo-integration --&quot;
-# Show the outputs of this (flake) source
-nci show github:owner/repo
-# Run the default app of this source
-nci run github:owner/repo
-# Run a specific app of this source
-nci run github:owner/repo app-name
-# Build the default package of this source
-nci build github:owner/repo
-# Build a specific package of this source
-nci build github:owner/repo package-name
-# Show the flake metadata for this source
-nci metadata github:owner/repo
-# Update the source
-nci update github:owner/repo
-</code></pre>
 
                     </main>
 
