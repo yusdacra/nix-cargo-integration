@@ -62,6 +62,15 @@
         # This applies to both dev env and built packages.
         # Note that you can also specify this per package under `pkgConfig`.
         runtimeLibs = [common.pkgs.ffmpeg];
+        # Set the C compiler that will be used.
+        cCompiler = {
+          # Whether to include the C compiler (enabled by default).
+          enable = true;
+          # The C compiler package.
+          package = common.pkgs.clang;
+          # Whether to use the bintools from the C compiler package (enabled by default).
+          useCCompilerBintools = true;
+        };
       };
       # Configuration that is applied per package.
       pkgConfig = common: {
