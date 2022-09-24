@@ -267,7 +267,7 @@
     # Override the config with user provided override
     c
     // {
-      config = c.config // ((overrides.shell or (_: {})) c.config);
+      config = c.config // ((workspaceMetadata.shell or (_: {})) c.config);
     };
 in
   rawShell.combineWith {passthru.config = finalConfig;}

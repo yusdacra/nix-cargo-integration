@@ -1,6 +1,6 @@
 {
   # Overrides to use
-  overrides ? (_: {}),
+  pkgConfig ? (_: {}),
   # the NCI packages set
   pkgsSet,
   # the sources
@@ -9,7 +9,7 @@
   workspaceMetadata ? null,
   ...
 } @ topAttrs: let
-  overrideData = {
+  pkgConfig = topAttrs.pkgConfig {
     inherit (pkgsSet) pkgs rustToolchain;
     internal = {
       inherit
@@ -19,7 +19,6 @@
         ;
     };
   };
-  allOverrides = overrides overrideData;
 in
   {
     # The member name for this package, if it is in a workspace
@@ -34,7 +33,7 @@ in
     # Extract the metadata we will need.
     cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
 
-    overrides = allOverrides.${cargoPkg.name} or {};
+    overrides = pkgConfig.${cargoPkg.name} or {};
 
     packageMetadata =
       l.recursiveUpdate
@@ -57,13 +56,11 @@ in
       l.dbgX "root is" p;
 
     # Collect crate overrides
-    crateOverrides = pkgsSet.utils.processOverrides (
-      l.foldl' l.recursiveUpdate {} [
-        (workspaceMetadata.crateOverrides or {})
-        (packageMetadata.crateOverrides or {})
-      ]
-    );
-    noPropagatedEnvOverrides = l.removePropagatedEnv crateOverrides;
+    _crateOverrides = pkgsSet.utils.processOverrides {
+      ${cargoPkg.name} = packageMetadata.overrides or {};
+      "${cargoPkg.name}-deps" = packageMetadata.depsOverrides or {};
+    };
+    crateOverrides = l.removePropagatedEnv _crateOverrides;
 
     _cCompiler =
       workspaceMetadata.cCompiler
@@ -106,7 +103,6 @@ in
           inherit
             pkgsSet
             crateOverrides
-            noPropagatedEnvOverrides
             isRootMember
             builder
             root

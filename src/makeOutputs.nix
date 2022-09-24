@@ -12,9 +12,7 @@
   # Config that will be applied to workspace
   config ? (_: {}),
   # All per crate overrides
-  overrides ? (_: {}),
-  # nixpkgs overlays to use for the package set
-  pkgsOverlays ? [],
+  pkgConfig ? (_: {}),
   ...
 }: let
   l = lib // builtins;
@@ -93,7 +91,7 @@
         else if l.pathExists rustTomlToolchain
         then rustTomlToolchain
         else workspaceMetadata.toolchain or rootPackageMetadata.toolchain or "stable";
-      overlays = pkgsOverlays;
+      overlays = config.pkgsOverlays or [];
       lib = l;
     };
   # systems mapped to package sets
@@ -117,8 +115,8 @@
                   inherit
                     pkgsSet
                     lib
-                    overrides
                     sources
+                    pkgConfig
                     root
                     ;
                 };
@@ -128,8 +126,8 @@
             pkgsSet
             lib
             root
-            overrides
             sources
+            pkgConfig
             ;
         }
     );
