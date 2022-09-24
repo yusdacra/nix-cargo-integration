@@ -42,16 +42,14 @@
 
       cliOutputs = makeOutputs {
         root = ./cli;
-        config = common: {
-          crateOverrides = {
-            nci-cli.add-src.overrideAttrs = old: {
-              NCI_SRC = builtins.toString inputs.self;
-              # Make sure the src doesnt get garbage collected
-              postInstall = ''
-                ${old.postInstall or ""}
-                ln -s $NCI_SRC $out/nci_src
-              '';
-            };
+        pkgConfig = common: {
+          nci-cli.overrides.add-src.overrideAttrs = old: {
+            NCI_SRC = builtins.toString inputs.self;
+            # Make sure the src doesnt get garbage collected
+            postInstall = ''
+              ${old.postInstall or ""}
+              ln -s $NCI_SRC $out/nci_src
+            '';
           };
         };
       };

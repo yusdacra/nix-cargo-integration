@@ -30,34 +30,30 @@
           # Set the `defaultApp` output to the "example` app from `apps`.
           app = "example";
         };
-        # Development shell overrides.
-        shell = prev: {
+        # Development shell config.
+        shell = {
           # Packages to be put in $PATH.
-          packages = prev.packages ++ [common.pkgs.hello];
+          packages = [common.pkgs.hello];
           # Commands that will be shown in the `menu`. These also get added
           # to packages.
-          commands =
-            prev.commands
-            ++ [
-              {package = common.pkgs.git;}
-              {
-                name = "helloworld";
-                command = "echo 'Hello world'";
-              }
-            ];
+          commands = [
+            {package = common.pkgs.git;}
+            {
+              name = "helloworld";
+              command = "echo 'Hello world'";
+            }
+          ];
           # Environment variables to be exported.
-          env =
-            prev.env
-            ++ [
-              {
-                name = "PROTOC";
-                value = "protoc";
-              }
-              {
-                name = "HOME_DIR";
-                eval = "$HOME";
-              }
-            ];
+          env = [
+            {
+              name = "PROTOC";
+              value = "protoc";
+            }
+            {
+              name = "HOME_DIR";
+              eval = "$HOME";
+            }
+          ];
         };
       };
       # Configuration that is applied per package.

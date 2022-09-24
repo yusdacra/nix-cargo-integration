@@ -211,8 +211,8 @@
     (pushUpDevshellOptions (l.removeAttrs attrs ["imports"]));
 
   # Make configs work workspace and package
-  workspaceConfig = mkDevshellConfig (workspaceMetadata.devshell or null);
-  packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
+  workspaceConfig = mkDevshellConfig (workspaceMetadata.shell or null);
+  packageConfig = mkDevshellConfig (packageMetadata.shell or null);
 
   # Import the devshell specified in devshell.toml if it exists
   devshellFilePath = "${toString root}/devshell.toml";
@@ -249,6 +249,10 @@
   # Workspace and package combined config
   devshellConfig = combineWith workspaceConfig packageConfig;
 
+  shellOverride =
+    if l.isFunction (workspaceMetadata.shell or null)
+    then workspaceMetadata.shell or (_: {})
+    else (_: {});
   # Collect final config
   finalConfig = let
     c =
@@ -266,7 +270,7 @@
     # Override the config with user provided override
     c
     // {
-      config = c.config // ((workspaceMetadata.shell or (_: {})) c.config);
+      config = c.config // (shellOverride c.config);
     };
 in
   rawShell.combineWith {passthru.config = finalConfig;}
