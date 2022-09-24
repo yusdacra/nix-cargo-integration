@@ -59,20 +59,6 @@
 
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
-      cliOutputs = makeOutputs {
-        root = ./cli;
-        pkgConfig = common: {
-          nci-cli.overrides.add-src.overrideAttrs = old: {
-            NCI_SRC = builtins.toString inputs.self;
-            # Make sure the src doesnt get garbage collected
-            postInstall = ''
-              ${old.postInstall or ""}
-              ln -s $NCI_SRC $out/nci_src
-            '';
-          };
-        };
-      };
-
       mkTestOutputs = builder: let
         testNames = l.remove null (l.mapAttrsToList (name: type:
           if type == "directory"
@@ -114,7 +100,7 @@
       brpTests = mkTestOutputs "build-rust-package";
 
       testsApps = let
-        systems = ["x86_64-linux"];
+        systems = l.defaultSystems;
         outputsNames = ["craneTests" "brpTests"];
         _mkTestsApp = system: outputsPath: let
           pkgs = inputs.nixpkgs.legacyPackages.${system};
@@ -158,7 +144,7 @@
         outputs;
 
       devShell = let
-        systems = ["x86_64-linux"];
+        systems = l.defaultSystems;
         mkShell = system: let
           mkShell =
             import
@@ -174,8 +160,6 @@
           shell.shell;
       in
         l.genAttrs systems mkShell;
-
-      allApps = l.recursiveUpdate cliOutputs.apps testsApps;
     in {
       lib = {
         inherit makeOutputs;
@@ -184,19 +168,13 @@
       inherit craneTests brpTests;
 
       packages =
-        l.mapAttrs
-        (system: pkgs: pkgs // {docs = mkDocs system;})
-        cliOutputs.packages;
+        l.genAttrs
+        l.defaultSystems
+        (system: {docs = mkDocs system;});
 
-      apps =
-        l.mapAttrs
-        (_: apps: apps // {default = apps.nci-cli;})
-        allApps;
+      apps = testsApps;
 
-      devShells =
-        l.recursiveUpdate
-        (l.mapAttrs (_: d: {default = d;}) devShell)
-        (l.mapAttrs (_: d: {cli = d.default;}) cliOutputs.devShells);
+      devShells = l.mapAttrs (_: d: {default = d;}) devShell;
 
       templates = let
         simple = {

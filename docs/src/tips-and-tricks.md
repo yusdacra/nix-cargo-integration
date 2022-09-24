@@ -27,24 +27,3 @@ variable to `1` and passing `--impure` to `nix`. Example:
 ```
 NCI_DEBUG=1 nix build --impure .
 ```
-
-## Using the `nci` CLI
-
-This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:
-```bash
-alias nci="nix run github:yusdacra/nix-cargo-integration --"
-# Show the outputs of this (flake) source
-nci show github:owner/repo
-# Run the default app of this source
-nci run github:owner/repo
-# Run a specific app of this source
-nci run github:owner/repo app-name
-# Build the default package of this source
-nci build github:owner/repo
-# Build a specific package of this source
-nci build github:owner/repo package-name
-# Show the flake metadata for this source
-nci metadata github:owner/repo
-# Update the source
-nci update github:owner/repo
-```
