@@ -5,12 +5,24 @@
     mkOption
     mkEnableOption
     ;
-  cCompilerOptions = {
-    options = {
+in {
+  options = {
+    cCompiler = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+        example = false;
+        description = "Whether to add the C compiler set to the dev env / build env.";
+      };
       package = mkOption {
-        type = types.package;
+        type = types.either types.str types.package;
         description = "The C compiler package.";
+        default = "gcc";
         example = ''
+          ```
+          "clang"
+          ```
+          or
           ```
           pkgs.clang
           ```
@@ -22,45 +34,6 @@
         example = false;
         description = "Whether to use the bintools from the C compiler or not.";
       };
-    };
-  };
-in {
-  options = {
-    cCompiler = mkOption {
-      type = types.oneOf [
-        types.str
-        types.package
-        (
-          types.submoduleWith {
-            modules = [cCompilerOptions];
-          }
-        )
-      ];
-      default = "gcc";
-      description = "The C compiler that will be used.";
-      example = ''
-        ''\nSet via specifying compiler attr name:
-        ```nix
-        {
-          cCompiler = "clang";
-        }
-        ```
-        Set via specifying compiler package:
-        ```nix
-        {
-          cCompiler = pkgs.clang;
-        }
-        ```
-        Set via specifying attrset:
-        ```nix
-        {
-          cCompiler = {
-            package = pkgs.clang;
-            useCCompilerBintools = false;
-          };
-        }
-        ```
-      '';
     };
     preCommitHooks.enable = mkEnableOption "pre-commit hooks";
     builder = mkOption {

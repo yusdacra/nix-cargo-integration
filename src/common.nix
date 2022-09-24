@@ -69,22 +69,9 @@ in
       "${cargoPkg.name}-deps" = packageMetadata.depsOverrides or {};
     };
 
-    _cCompiler =
-      workspaceMetadata.cCompiler
-      or packageMetadata.cCompiler
-      or {
-        package = pkgsSet.pkgs.gcc;
-        useCompilerBintools = true;
-      };
+    _cCompiler = workspaceMetadata.cCompiler or packageMetadata.cCompiler;
     cCompiler =
-      if
-        l.isString _cCompiler
-        || (_cCompiler ? type && _cCompiler.type == "derivation")
-      then {
-        package = pkgsSet.utils.resolveToPkg _cCompiler;
-        useCompilerBintools = true;
-      }
-      else if l.isAttrs _cCompiler
+      if _cCompiler.enable
       then {
         package = pkgsSet.utils.resolveToPkg _cCompiler.package;
         useCompilerBintools = _cCompiler.useCompilerBintools;
