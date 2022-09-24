@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html" class="active">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html" class="active">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -138,20 +138,11 @@
 <p>Library to easily and effortlessly integrate Cargo projects with Nix.</p>
 <ul>
 <li>Uses <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> to build Cargo packages and <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> to provide a development shell.</li>
-<li>Allows configuration from <code>Cargo.toml</code> file(s) via <code>package.metadata.nix</code>
-and <code>workspace.metadata.nix</code> attributes.</li>
+<li>Allows configuration from <code>Cargo.toml</code> file(s) via <code>package.metadata.nix</code> and <code>workspace.metadata.nix</code> attributes.</li>
 <li>Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).</li>
-<li>Aims to offload work from the user; comes with useful configuration options
-(like <code>renameOutputs</code>, <code>defaultOutputs</code> etc.)</li>
-<li>Can generate nixpkgs-compatible Nix expressions that captures all your packages
-dependencies / env vars and so on.
-You don't need to maintain a seperate derivation for nixpkgs!
-(see <code>Generating a nixpkgs-compatible package expression</code> in manual)</li>
-<li>A CLI tool that let's you compile and run arbitrary Rust repositories directly
-without messing with any files or setting up overlays (see <code>Using the nci CLI</code> in manual)</li>
+<li>Aims to offload work from the user; comes with useful configuration options (like <code>renameOutputs</code>, <code>defaultOutputs</code> etc.)</li>
+<li>A CLI tool that let's you compile and run arbitrary Rust repositories directly without messing with any files or setting up overlays (see <code>Using the nci CLI</code> in manual)</li>
 </ul>
-<p>Check out <a href="https://github.com/yusdacra/rust-nix-templater">rust-nix-templater</a>
-if you want an easy way to generate nix-specific boilerplate for your projects!</p>
 <p>NOTE: <code>nix-cargo-integration</code> should work with any Nix version above 2.4+, but
 the experience may not be smooth if you aren't using the newest version of Nix.</p>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>

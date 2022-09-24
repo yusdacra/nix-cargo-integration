@@ -1,0 +1,6 @@
+[book]
+authors = ["Yusuf Bera Ertan"]
+language = "en"
+multilingual = false
+src = "."
+title = "NCI Documentation"

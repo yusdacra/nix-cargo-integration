@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html" class="active"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html" class="active"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -135,63 +135,25 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="nix-library-documentation"><a class="header" href="#nix-library-documentation">Nix library documentation</a></h1>
-<p><strong>IMPORTANT</strong> public API promises: Any API that is not documented here <strong>IS NOT</strong> counted
-as &quot;public&quot; and therefore can be changed without breaking SemVer. This does not mean that
-changes will be done without any notice. You are still welcome to create issues / discussions
-about them. Upstream projects such as <a href="https://github.com/numtide/devshell" title="devshell">devshell</a>, <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> etc. can have breaking changes,
-these breakages will be limited to <code>overrides.shell</code> and <code>overrides.build</code> in the public API,
+<p><strong>IMPORTANT</strong> public API promises:
+Any API that is not documented here <strong>IS NOT</strong> counted as &quot;public&quot; and therefore can be changed without breaking SemVer.
+This does not mean that changes will be done without any notice. You can check <code>CHANGELOG.md</code> for breaking changes.
+You are still welcome to create issues / discussions about them.
+Upstream projects such as <a href="https://github.com/numtide/devshell" title="devshell">devshell</a>, <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> etc. can have breaking changes.
+These breakages will be limited to <code>config.shell</code> <code>pkgConfig.crateName.dream2nixSettings</code> in the public API,
 since these directly modify <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> / <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> builder configs.</p>
 <h2 id="the-common-attribute-set"><a class="header" href="#the-common-attribute-set">The <code>common</code> attribute set</a></h2>
-<p>This attribute set is passed to (almost) all overrides. It contains everything you may
-need for adding stuff, such as the nixpkgs package set (<code>common.pkgs</code>) and other shared
-data between build and development shell (<code>common.buildInputs</code>, <code>common.env</code> etc.). For
-more information on what <code>common</code> actually exports, please check the bottom of <a href="./src/common.nix">common.nix</a>.</p>
+<p>This attribute set is passed to <code>config</code> and <code>pkgConfig</code>.
+It contains attributes you may need for adding stuff to overrides / config, such as the nixpkgs package set (<code>common.pkgs</code>).
+NCI internal values are kept under <code>internal</code> attribute.</p>
 <h2 id="makeoutputs"><a class="header" href="#makeoutputs"><code>makeOutputs</code></a></h2>
-<p>Generates outputs for all systems specified in <code>Cargo.toml</code> (defaults to <code>defaultSystems</code> of <code>nixpkgs</code>).</p>
+<p>Generates outputs for the systems specified.</p>
 <h3 id="arguments"><a class="header" href="#arguments">Arguments</a></h3>
 <ul>
 <li><code>root</code>: directory where <code>Cargo.lock</code> and <code>Cargo.toml</code> (workspace or package manifest) is in (type: path)</li>
-<li><code>systems</code>: override the list of systems to generate outputs for (type: <code>def: [ ]</code>)</li>
-<li><code>builder</code>: which dream2nix builder to use (type: string) (default: <code>&quot;crane&quot;</code>)</li>
-<li><code>enablePreCommitHooks</code>: whether to enable pre-commit hooks (type: boolean) (default: <code>false</code>)</li>
-<li><code>pkgsOverlays</code>: overlays to apply to the nixpkgs package set (type: list of nixpkgs overlays)</li>
-<li><code>renameOutputs</code>: which crates to rename in package names and output names (type: attrset) (default: <code>{ }</code>)</li>
-<li><code>defaultOutputs</code>: which outputs to set as default (type: attrset) (default: <code>{ }</code>)
-<ul>
-<li><code>defaultOutputs.app</code>: app output name to set as default app (<code>defaultApp</code>) output (type: string)</li>
-<li><code>defaultOutputs.package</code>: package output name to set as default package (<code>defaultPackage</code>) output (type: string)</li>
-</ul>
-</li>
-<li><code>overrides</code>: overrides for devshell, crates, build and common (type: attrset) (default: <code>{ }</code>)
-<ul>
-<li><code>overrides.sources</code>: override for the sources used by common (type: <code>common: prev: { }</code>)</li>
-<li><code>overrides.crates</code>: override for changing crate overrides (type: <code>common: prev: { }</code>)</li>
-<li><code>overrides.common</code>: override for common (type: <code>prev: { }</code>)
-<ul>
-<li>this will override <em>all</em> common attribute set(s), refer to <a href="./src/common.nix">common.nix</a> for more information</li>
-</ul>
-</li>
-<li><code>overrides.shell</code>: override for devshell (type: <code>common: prev: { }</code>)
-<ul>
-<li>this will override <em>all</em> <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> configuration(s), refer to <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> for more information</li>
-</ul>
-</li>
-<li><code>overrides.build</code>: override for build config (type: <code>common: prev: { }</code>)</li>
-<li><code>overrides.cCompiler</code>: override what C compiler will be used (type: <code>common: { ... }</code>)
-<ul>
-<li>if the returned attribute set has <code>cCompiler</code>, this is assumed to be a <em>package</em>
-and will be used as the new C compiler.</li>
-<li>if the returned attribute set has <code>useCCompilerBintools</code>, this will be used to decide
-whether or not to add the C compiler's <code>bintools</code> to the build environment.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><code>perCrateOverrides.crateName</code>: overrides that are crate namespaced (type: attrset)
-<ul>
-<li><code>wrapper</code>: a function that produces a derivation. this can be used to wrap packages. (type: <code>common: buildConfig: package: derivation</code>)</li>
-</ul>
-</li>
+<li><code>systems</code>: systems to generate outputs for (type: list of strings) (default: nixpkgs' <code>defaultSystems</code> and <code>limitedSupportSystems</code>)</li>
+<li><code>config</code>: general configuration, corresponds to <code>workspace.metadata.nix</code> OR <code>package.metadata.nix</code> if this isn't a workspace (type: <code>common: {}</code>)</li>
+<li><code>pkgConfig</code>: namespaced configuration, corresponds to <code>package.metadata.nix</code> (type: <code>common: {}</code>)</li>
 </ul>
 
                     </main>
@@ -201,7 +163,7 @@ whether or not to add the C compiler's <code>bintools</code> to the build enviro
                             <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="cargo-toml-attributes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="config-options.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -213,7 +175,7 @@ whether or not to add the C compiler's <code>bintools</code> to the build enviro
                     <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="cargo-toml-attributes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="config-options.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

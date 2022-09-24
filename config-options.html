@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Cargo.toml attributes - NCI Documentation</title>
+        <title>config options - NCI Documentation</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html" class="active"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html" class="active"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -134,131 +134,167 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="cargotoml-attributes-documentation"><a class="header" href="#cargotoml-attributes-documentation"><code>Cargo.toml</code> attributes documentation</a></h1>
-<p>The attributes described here go in a <code>Cargo.toml</code> file.</p>
-<ul>
-<li><code>workspace.metadata.nix</code> attributes apply to <em>the whole workspace</em>.</li>
-<li><code>package.metadata.nix</code> attributes only apply to the package declared
-in the same <code>Cargo.toml</code> the attributes were defined in.</li>
-</ul>
-<h2 id="packagemetadatanix-and-workspacemetadatanix-shared-attributes"><a class="header" href="#packagemetadatanix-and-workspacemetadatanix-shared-attributes"><code>package.metadata.nix</code> and <code>workspace.metadata.nix</code> shared attributes</a></h2>
-<ul>
-<li><code>runtimeLibs</code>: libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> for both dev and build env (type: list)</li>
-</ul>
-<h4 id="example"><a class="header" href="#example">Example</a></h4>
-<pre><code class="language-toml">[package.metadata.nix]
-runtimeLibs = [&quot;vulkan-loader&quot;, &quot;xorg.libXi&quot;]
+                        <p>These are options that can be set under <code>workspace.metadata.nix</code> or <code>package.metadata.nix</code>.
+They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</code>:</p>
+<pre><code class="language-nix">{
+  config = common: { /* options go here */ };
+}
 </code></pre>
-<h3 id="env-attributes"><a class="header" href="#env-attributes"><code>env</code> attributes</a></h3>
-<p>Key-value pairings that are put here will be exported into the development and build environment.</p>
-<h4 id="example-1"><a class="header" href="#example-1">Example</a></h4>
-<pre><code class="language-toml">[package.metadata.nix.env]
-PROTOC = &quot;protoc&quot;
+<h2 id="builder"><a class="header" href="#builder"><code>builder</code></a></h2>
+<p>The dream2nix builder that will be used for building packages.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">crane
 </code></pre>
-<h3 id="crateoverride-attributes"><a class="header" href="#crateoverride-attributes"><code>crateOverride</code> attributes</a></h3>
-<p>Key-value pairings that are put here will be used to override crates in build derivation.
-Dependencies / environment variables put here will also be exported to the development environment.</p>
-<h4 id="example-2"><a class="header" href="#example-2">Example</a></h4>
-<pre><code class="language-toml">[package.metadata.nix.crateOverride.xcb]
-buildInputs = [&quot;xorg.libxcb&quot;]
-env.TEST_ENV = &quot;test&quot;
+<p><strong>Type</strong>: one of &quot;crane&quot;, &quot;build-rust-package&quot;</p>
+<p><strong>Example value</strong>:</p>
+<pre><code>build-rust-package
 </code></pre>
-<h2 id="packagemetadatanix-attributes"><a class="header" href="#packagemetadatanix-attributes"><code>package.metadata.nix</code> attributes</a></h2>
+<p>Declared in:</p>
 <ul>
-<li><code>build</code>: whether to enable outputs which build the package (type: boolean) (default: <code>false</code>)</li>
-<li><code>app</code>: whether to enable the application output (type: boolean) (default: <code>false</code>)</li>
-<li><code>longDescription</code>: a longer description (type: string)</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h4 id="example-3"><a class="header" href="#example-3">Example</a></h4>
-<pre><code class="language-toml">[package.metadata.nix]
-build = true
-app = true
-longDescription = &quot;blablabla...&quot;
+<h2 id="ccompilerenable"><a class="header" href="#ccompilerenable"><code>cCompiler.enable</code></a></h2>
+<p>Whether to add the C compiler set to the dev env / build env.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">true
 </code></pre>
-<h3 id="desktopfile-attributes"><a class="header" href="#desktopfile-attributes"><code>desktopFile</code> attributes</a></h3>
-<p>If this is set to a string specifying a path, the path will be treated as a desktop file and will be used.
-The path must start with &quot;./&quot; and specify a path relative ro <code>root</code>. </p>
-<ul>
-<li><code>icon</code>: icon string according to XDG (type: string)
-<ul>
-<li>strings starting with &quot;./&quot; will be treated as relative to <code>root</code></li>
-<li>everything else will be put into the desktop file as-is</li>
-</ul>
-</li>
-<li><code>comment</code>: comment for the desktop file (type: string) (default: <code>package.description</code>)</li>
-<li><code>name</code>: desktop name for the desktop file (type: string) (default: <code>package.name</code>)</li>
-<li><code>genericName</code>: generic name for the desktop file (type: string)</li>
-<li><code>categories</code>: categories for the desktop file according to XDG specification (type: list of strings)</li>
-</ul>
-<h4 id="example-4"><a class="header" href="#example-4">Example</a></h4>
-<pre><code class="language-toml">[package.metadata.nix.desktopFile]
-name = &quot;My App&quot;
-comment = &quot;This app is for blabla&quot;
-icon = &quot;./resources/myapp.ico&quot;
-genericName = &quot;App&quot;
-categories = [&quot;Something&quot;]
+<p><strong>Type</strong>: boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">false
 </code></pre>
-<h3 id="features-attributes"><a class="header" href="#features-attributes"><code>features</code> attributes</a></h3>
-<p>Allows you to set which Cargo features will be enable while building this crate.</p>
+<p>Declared in:</p>
 <ul>
-<li><code>release</code>: features to enable while building release builds (type: list of strings) (default: <code>[]</code>)</li>
-<li><code>debug</code>: features to enable while building debug builds (type: list of strings) (default: <code>[]</code>)</li>
-<li><code>test</code>: features to enable while building test builds (type: list of strings) (default: <code>[]</code>)</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h4 id="example-5"><a class="header" href="#example-5">Example</a></h4>
-<pre><code class="language-toml">[package.metadate.nix.features]
-release = [&quot;default-publish&quot;]
-debug = [&quot;default-dev&quot;]
-test = [&quot;default-publish&quot;, &quot;testing&quot;]
+<h2 id="ccompilerpackage"><a class="header" href="#ccompilerpackage"><code>cCompiler.package</code></a></h2>
+<p>The C compiler package.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">&quot;gcc&quot;
 </code></pre>
-<h2 id="workspacemetadatanix-attributes"><a class="header" href="#workspacemetadatanix-attributes"><code>workspace.metadata.nix</code> attributes</a></h2>
-<p>NOTE: If <code>root</code> does not point to a workspace, all of the attributes listed here
-will be available in <code>package.metadata.nix</code>.</p>
-<ul>
-<li><code>systems</code>: systems to enable for the flake (type: list)
-<ul>
-<li>defaults to <code>nixpkgs</code> <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14"><code>supportedSystems</code> and <code>limitedSupportSystems</code></a></li>
-</ul>
-</li>
-<li><code>toolchain</code>: rust toolchain to use (type: one of &quot;stable&quot;, &quot;beta&quot; or &quot;nightly&quot;) (default: &quot;stable&quot;)
-<ul>
-<li>if the <code>rust-toolchain</code> or <code>rust-toolchain.toml</code> file exists at project
-root, it will be used instead of this attribute</li>
-</ul>
-</li>
-</ul>
-<h4 id="example-6"><a class="header" href="#example-6">Example</a></h4>
-<pre><code class="language-toml">[workspace.metadata.nix]
-systems = [&quot;x86_64-linux&quot;, &quot;aarch64-linux&quot;]
-toolchain = &quot;beta&quot;
+<p><strong>Type</strong>: string or package</p>
+<p><strong>Example value</strong>:</p>
+<pre><code>&quot;clang&quot;
 </code></pre>
-<h3 id="precommithooks-attributes"><a class="header" href="#precommithooks-attributes"><code>preCommitHooks</code> attributes</a></h3>
+<p>or</p>
+<pre><code>pkgs.clang
+</code></pre>
+<p>Declared in:</p>
 <ul>
-<li><code>enable</code>: whether to enable pre commit hooks (type: boolean) (default: <code>false</code>)</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h4 id="example-7"><a class="header" href="#example-7">Example</a></h4>
-<pre><code class="language-toml">[workspace.metadata.nix]
-preCommitHooks.enable = true
+<h2 id="ccompilerusecompilerbintools"><a class="header" href="#ccompilerusecompilerbintools"><code>cCompiler.useCompilerBintools</code></a></h2>
+<p>Whether to use the bintools from the C compiler or not.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">true
 </code></pre>
-<h3 id="cachix-attributes"><a class="header" href="#cachix-attributes"><code>cachix</code> attributes</a></h3>
+<p><strong>Type</strong>: boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">false
+</code></pre>
+<p>Declared in:</p>
 <ul>
-<li><code>name</code>: name of the cachix cache (type: string)</li>
-<li><code>key</code>: public key of the cachix cache (type: string)</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h4 id="example-8"><a class="header" href="#example-8">Example</a></h4>
-<pre><code class="language-toml">[workspace.metadata.nix.cachix]
-name = &quot;mycachix&quot;
-key = &quot;mycachixpublickey&quot;
+<h2 id="cachixkey"><a class="header" href="#cachixkey"><code>cachix.key</code></a></h2>
+<p>Public key of the cachix cache.</p>
+<p><strong>Type</strong>: null or string</p>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="cachixname"><a class="header" href="#cachixname"><code>cachix.name</code></a></h2>
+<p>Name of the cachix cache.</p>
+<p><strong>Type</strong>: null or string</p>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="outputsdefaults"><a class="header" href="#outputsdefaults"><code>outputs.defaults</code></a></h2>
+<p>Default outputs to set in outputs.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">{}
 </code></pre>
-<h3 id="devshell-attributes"><a class="header" href="#devshell-attributes"><code>devshell</code> attributes</a></h3>
-<p>Anything put here will be used to configure the devshell.
-Refer to [devshell] documentation for configuration options.</p>
-<p>NOTE: Attributes specified here <strong>will not</strong> be used if a top-level <code>devshell.toml</code> file exists.</p>
-<h4 id="example-9"><a class="header" href="#example-9">Example</a></h4>
-<pre><code class="language-toml">[workspace.metadata.nix.devshell]
-name = &quot;myshell&quot;
-packages = [&quot;gnumake&quot;]
+<p><strong>Type</strong>: attribute set of string</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">{
+  app = &quot;helix&quot;;
+  package = &quot;helix&quot;;
+}
 </code></pre>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="outputsrename"><a class="header" href="#outputsrename"><code>outputs.rename</code></a></h2>
+<p>Which package outputs to rename to what.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">{}
+</code></pre>
+<p><strong>Type</strong>: attribute set of string</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">{
+  &quot;helix-term&quot; = &quot;helix&quot;;
+}
+</code></pre>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="pkgsoverlays"><a class="header" href="#pkgsoverlays"><code>pkgsOverlays</code></a></h2>
+<p>Overlays to use for the nixpkgs package set.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">[]
+</code></pre>
+<p><strong>Type</strong>: list of ((path) or function that evaluates to a(n) function that evaluates to a(n) (attribute set))</p>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="precommithooksenable"><a class="header" href="#precommithooksenable"><code>preCommitHooks.enable</code></a></h2>
+<p>Whether to enable pre-commit hooks.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">false
+</code></pre>
+<p><strong>Type</strong>: boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">true
+</code></pre>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="runtimelibs"><a class="header" href="#runtimelibs"><code>runtimeLibs</code></a></h2>
+<p>Libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> environment variable for the dev env.
+These will also be added to the resulting package when you build it, as a wrapper that adds the env variable.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">[]
+</code></pre>
+<p><strong>Type</strong>: list of (string or package)</p>
+<p><strong>Example value</strong>:</p>
+<p>Set via specifying package attr names:</p>
+<pre><code class="language-nix">{
+  runtimeLibs = [&quot;ffmpeg&quot;];
+}
+</code></pre>
+<p>Set via specifying packages:</p>
+<pre><code class="language-nix">{
+  runtimeLibs = [pkgs.ffmpeg];
+}
+</code></pre>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="shell"><a class="header" href="#shell"><code>shell</code></a></h2>
+<p>Development shell configuration.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">{}
+</code></pre>
+<p><strong>Type</strong>: (attribute set) or function that evaluates to a(n) (attribute set)</p>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
 
                     </main>
 
@@ -267,7 +303,7 @@ packages = [&quot;gnumake&quot;]
                             <a rel="prev" href="nix-library.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="tips-and-tricks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="pkg-config-options.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -279,7 +315,7 @@ packages = [&quot;gnumake&quot;]
                     <a rel="prev" href="nix-library.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="tips-and-tricks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="pkg-config-options.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

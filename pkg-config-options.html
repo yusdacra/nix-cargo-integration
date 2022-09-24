@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>NCI Documentation</title>
-        <meta name="robots" content="noindex" />
+        <title>pkgConfig.crateName options - NCI Documentation</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -76,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html" class="active"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -135,78 +134,40 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="nix-cargo-integration"><a class="header" href="#nix-cargo-integration">nix-cargo-integration</a></h1>
-<p>Library to easily and effortlessly integrate Cargo projects with Nix.</p>
-<ul>
-<li>Uses <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> to build Cargo packages and <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> to provide a development shell.</li>
-<li>Allows configuration from <code>Cargo.toml</code> file(s) via <code>package.metadata.nix</code> and <code>workspace.metadata.nix</code> attributes.</li>
-<li>Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).</li>
-<li>Aims to offload work from the user; comes with useful configuration options (like <code>renameOutputs</code>, <code>defaultOutputs</code> etc.)</li>
-<li>A CLI tool that let's you compile and run arbitrary Rust repositories directly without messing with any files or setting up overlays (see <code>Using the nci CLI</code> in manual)</li>
-</ul>
-<p>NOTE: <code>nix-cargo-integration</code> should work with any Nix version above 2.4+, but
-the experience may not be smooth if you aren't using the newest version of Nix.</p>
-<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
-<h3 id="with-flakes"><a class="header" href="#with-flakes">With flakes</a></h3>
-<p>Run <code>nix flake init -t github:yusdacra/nix-cargo-integration</code>.</p>
-<p>Or add:</p>
+                        <p>These are options that can be set under <code>package.metadata.nix</code>. They are package specific.
+They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutputs</code>:</p>
 <pre><code class="language-nix">{
-  inputs = {
-    nci.url = &quot;github:yusdacra/nix-cargo-integration&quot;;
+  pkgConfig = common: {
+    example-package = { /* options go here */ };
   };
-  outputs = inputs: inputs.nci.lib.makeOutputs { root = ./.; };
 }
 </code></pre>
-<p>to your <code>flake.nix</code>.</p>
-<h3 id="without-flakes"><a class="header" href="#without-flakes">Without flakes</a></h3>
-<p>You can use <a href="https://github.com/edolstra/flake-compat" title="flake-compat">flake-compat</a> to provide the default outputs of the flake for non-flake users.</p>
-<p>If you aren't using flakes, you can do (in your <code>default.nix</code> file for example):</p>
-<pre><code class="language-nix">let
-  nciSrc = fetchTarball {
-    url = &quot;https://github.com/yusdacra/nix-cargo-integration/archive/&lt;rev&gt;.tar.gz&quot;;
-    sha256 = &quot;&lt;hash&gt;&quot;;
-  };
-  nci = import nciSrc;
-in nci.makeOutputs { root = ./.; }
+<h2 id="app"><a class="header" href="#app"><code>app</code></a></h2>
+<p>Whether to enable app outputs.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">false
 </code></pre>
-<p>You can also couple it with <a href="https://github.com/nmattia/niv">niv</a>:</p>
+<p><strong>Type</strong>: boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">true
+</code></pre>
+<p>Declared in:</p>
 <ul>
-<li>First run <code>niv add yusdacra/nix-cargo-integration</code></li>
-<li>Then you can write in your <code>default.nix</code> file:
-<pre><code class="language-nix">let
-  sources = import ./sources.nix;
-  nci = import sources.nix-cargo-integration;
-in nci.makeOutputs { root = ./.; }
-</code></pre>
-</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="nix-library-documentation"><a class="header" href="#nix-library-documentation">Nix library documentation</a></h1>
-<p><strong>IMPORTANT</strong> public API promises:
-Any API that is not documented here <strong>IS NOT</strong> counted as &quot;public&quot; and therefore can be changed without breaking SemVer.
-This does not mean that changes will be done without any notice. You can check <code>CHANGELOG.md</code> for breaking changes.
-You are still welcome to create issues / discussions about them.
-Upstream projects such as <a href="https://github.com/numtide/devshell" title="devshell">devshell</a>, <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> etc. can have breaking changes.
-These breakages will be limited to <code>config.shell</code> <code>pkgConfig.crateName.dream2nixSettings</code> in the public API,
-since these directly modify <a href="https://github.com/numtide/devshell" title="devshell">devshell</a> / <a href="https://github.com/nix-community/dream2nix" title="dream2nix">dream2nix</a> builder configs.</p>
-<h2 id="the-common-attribute-set"><a class="header" href="#the-common-attribute-set">The <code>common</code> attribute set</a></h2>
-<p>This attribute set is passed to <code>config</code> and <code>pkgConfig</code>.
-It contains attributes you may need for adding stuff to overrides / config, such as the nixpkgs package set (<code>common.pkgs</code>).
-NCI internal values are kept under <code>internal</code> attribute.</p>
-<h2 id="makeoutputs"><a class="header" href="#makeoutputs"><code>makeOutputs</code></a></h2>
-<p>Generates outputs for the systems specified.</p>
-<h3 id="arguments"><a class="header" href="#arguments">Arguments</a></h3>
+<h2 id="build"><a class="header" href="#build"><code>build</code></a></h2>
+<p>Whether to enable package outputs.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">false
+</code></pre>
+<p><strong>Type</strong>: boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">true
+</code></pre>
+<p>Declared in:</p>
 <ul>
-<li><code>root</code>: directory where <code>Cargo.lock</code> and <code>Cargo.toml</code> (workspace or package manifest) is in (type: path)</li>
-<li><code>systems</code>: systems to generate outputs for (type: list of strings) (default: nixpkgs' <code>defaultSystems</code> and <code>limitedSupportSystems</code>)</li>
-<li><code>config</code>: general configuration, corresponds to <code>workspace.metadata.nix</code> OR <code>package.metadata.nix</code> if this isn't a workspace (type: <code>common: {}</code>)</li>
-<li><code>pkgConfig</code>: namespaced configuration, corresponds to <code>package.metadata.nix</code> (type: <code>common: {}</code>)</li>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><p>These are options that can be set under <code>workspace.metadata.nix</code> or <code>package.metadata.nix</code>.
-They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</code>:</p>
-<pre><code class="language-nix">{
-  config = common: { /* options go here */ };
-}
-</code></pre>
 <h2 id="builder"><a class="header" href="#builder"><code>builder</code></a></h2>
 <p>The dream2nix builder that will be used for building packages.</p>
 <p><strong>Default value</strong>:</p>
@@ -270,195 +231,6 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
 <h2 id="cachixname"><a class="header" href="#cachixname"><code>cachix.name</code></a></h2>
-<p>Name of the cachix cache.</p>
-<p><strong>Type</strong>: null or string</p>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="outputsdefaults"><a class="header" href="#outputsdefaults"><code>outputs.defaults</code></a></h2>
-<p>Default outputs to set in outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{}
-</code></pre>
-<p><strong>Type</strong>: attribute set of string</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{
-  app = &quot;helix&quot;;
-  package = &quot;helix&quot;;
-}
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="outputsrename"><a class="header" href="#outputsrename"><code>outputs.rename</code></a></h2>
-<p>Which package outputs to rename to what.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{}
-</code></pre>
-<p><strong>Type</strong>: attribute set of string</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{
-  &quot;helix-term&quot; = &quot;helix&quot;;
-}
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="pkgsoverlays"><a class="header" href="#pkgsoverlays"><code>pkgsOverlays</code></a></h2>
-<p>Overlays to use for the nixpkgs package set.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">[]
-</code></pre>
-<p><strong>Type</strong>: list of ((path) or function that evaluates to a(n) function that evaluates to a(n) (attribute set))</p>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="precommithooksenable"><a class="header" href="#precommithooksenable"><code>preCommitHooks.enable</code></a></h2>
-<p>Whether to enable pre-commit hooks.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">false
-</code></pre>
-<p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">true
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="runtimelibs"><a class="header" href="#runtimelibs"><code>runtimeLibs</code></a></h2>
-<p>Libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> environment variable for the dev env.
-These will also be added to the resulting package when you build it, as a wrapper that adds the env variable.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">[]
-</code></pre>
-<p><strong>Type</strong>: list of (string or package)</p>
-<p><strong>Example value</strong>:</p>
-<p>Set via specifying package attr names:</p>
-<pre><code class="language-nix">{
-  runtimeLibs = [&quot;ffmpeg&quot;];
-}
-</code></pre>
-<p>Set via specifying packages:</p>
-<pre><code class="language-nix">{
-  runtimeLibs = [pkgs.ffmpeg];
-}
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="shell"><a class="header" href="#shell"><code>shell</code></a></h2>
-<p>Development shell configuration.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{}
-</code></pre>
-<p><strong>Type</strong>: (attribute set) or function that evaluates to a(n) (attribute set)</p>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<div style="break-before: page; page-break-before: always;"></div><p>These are options that can be set under <code>package.metadata.nix</code>. They are package specific.
-They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutputs</code>:</p>
-<pre><code class="language-nix">{
-  pkgConfig = common: {
-    example-package = { /* options go here */ };
-  };
-}
-</code></pre>
-<h2 id="app"><a class="header" href="#app"><code>app</code></a></h2>
-<p>Whether to enable app outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">false
-</code></pre>
-<p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">true
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
-</ul>
-<h2 id="build"><a class="header" href="#build"><code>build</code></a></h2>
-<p>Whether to enable package outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">false
-</code></pre>
-<p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">true
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
-</ul>
-<h2 id="builder-1"><a class="header" href="#builder-1"><code>builder</code></a></h2>
-<p>The dream2nix builder that will be used for building packages.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">crane
-</code></pre>
-<p><strong>Type</strong>: one of &quot;crane&quot;, &quot;build-rust-package&quot;</p>
-<p><strong>Example value</strong>:</p>
-<pre><code>build-rust-package
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="ccompilerenable-1"><a class="header" href="#ccompilerenable-1"><code>cCompiler.enable</code></a></h2>
-<p>Whether to add the C compiler set to the dev env / build env.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">true
-</code></pre>
-<p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">false
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="ccompilerpackage-1"><a class="header" href="#ccompilerpackage-1"><code>cCompiler.package</code></a></h2>
-<p>The C compiler package.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">&quot;gcc&quot;
-</code></pre>
-<p><strong>Type</strong>: string or package</p>
-<p><strong>Example value</strong>:</p>
-<pre><code>&quot;clang&quot;
-</code></pre>
-<p>or</p>
-<pre><code>pkgs.clang
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="ccompilerusecompilerbintools-1"><a class="header" href="#ccompilerusecompilerbintools-1"><code>cCompiler.useCompilerBintools</code></a></h2>
-<p>Whether to use the bintools from the C compiler or not.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">true
-</code></pre>
-<p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">false
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="cachixkey-1"><a class="header" href="#cachixkey-1"><code>cachix.key</code></a></h2>
-<p>Public key of the cachix cache.</p>
-<p><strong>Type</strong>: null or string</p>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
-</ul>
-<h2 id="cachixname-1"><a class="header" href="#cachixname-1"><code>cachix.name</code></a></h2>
 <p>Name of the cachix cache.</p>
 <p><strong>Type</strong>: null or string</p>
 <p>Declared in:</p>
@@ -569,7 +341,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<h2 id="outputsdefaults-1"><a class="header" href="#outputsdefaults-1"><code>outputs.defaults</code></a></h2>
+<h2 id="outputsdefaults"><a class="header" href="#outputsdefaults"><code>outputs.defaults</code></a></h2>
 <p>Default outputs to set in outputs.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">{}
@@ -585,7 +357,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h2 id="outputsrename-1"><a class="header" href="#outputsrename-1"><code>outputs.rename</code></a></h2>
+<h2 id="outputsrename"><a class="header" href="#outputsrename"><code>outputs.rename</code></a></h2>
 <p>Which package outputs to rename to what.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">{}
@@ -610,7 +382,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<h2 id="pkgsoverlays-1"><a class="header" href="#pkgsoverlays-1"><code>pkgsOverlays</code></a></h2>
+<h2 id="pkgsoverlays"><a class="header" href="#pkgsoverlays"><code>pkgsOverlays</code></a></h2>
 <p>Overlays to use for the nixpkgs package set.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">[]
@@ -620,7 +392,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h2 id="precommithooksenable-1"><a class="header" href="#precommithooksenable-1"><code>preCommitHooks.enable</code></a></h2>
+<h2 id="precommithooksenable"><a class="header" href="#precommithooksenable"><code>preCommitHooks.enable</code></a></h2>
 <p>Whether to enable pre-commit hooks.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">false
@@ -633,7 +405,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h2 id="runtimelibs-1"><a class="header" href="#runtimelibs-1"><code>runtimeLibs</code></a></h2>
+<h2 id="runtimelibs"><a class="header" href="#runtimelibs"><code>runtimeLibs</code></a></h2>
 <p>Libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> environment variable for the dev env.
 These will also be added to the resulting package when you build it, as a wrapper that adds the env variable.</p>
 <p><strong>Default value</strong>:</p>
@@ -655,7 +427,7 @@ These will also be added to the resulting package when you build it, as a wrappe
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
-<h2 id="shell-1"><a class="header" href="#shell-1"><code>shell</code></a></h2>
+<h2 id="shell"><a class="header" href="#shell"><code>shell</code></a></h2>
 <p>Development shell configuration.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">{}
@@ -678,80 +450,29 @@ along with variables like <code>release</code>, <code>doCheck</code> etc.</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="tips-and-tricks"><a class="header" href="#tips-and-tricks">Tips and tricks</a></h1>
-<h2 id="ignoring-cargolock-in-rust-libraries"><a class="header" href="#ignoring-cargolock-in-rust-libraries">Ignoring <code>Cargo.lock</code> in Rust libraries</a></h2>
-<p>The <a href="https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html">official recommendation</a>
-for Rust libraries is to add <code>Cargo.lock</code> to the <code>.gitignore</code>. This conflicts
-with the way paths are evaluated when using a <code>flake.nix</code>. Only files tracked
-by the version control system (i.e. git) can be accessed during evaluation.
-This will manifest in the following error:</p>
-<pre><code class="language-console">$ nix build
-error: A Cargo.lock file must be present, please make sure it's at least staged in git.
-(use '--show-trace' to show detailed location information)
-</code></pre>
-<p>A neat fix for that is to track the path to <code>Cargo.lock</code> without staging it
-(<a href="https://github.com/yusdacra/nix-cargo-integration/issues/46#issuecomment-962589582">thanks to @bew</a>).</p>
-<pre><code class="language-console">$ git add --intent-to-add Cargo.lock
-</code></pre>
-<p>Add <code>--force</code> if your <code>Cargo.lock</code> is listed in <code>.gitignore</code>.</p>
-<h2 id="enabling-trace"><a class="header" href="#enabling-trace">Enabling trace</a></h2>
-<p>Traces in the library can be enabled by setting the <code>NCI_DEBUG</code> environment
-variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>. Example:</p>
-<pre><code>NCI_DEBUG=1 nix build --impure .
-</code></pre>
-<h2 id="using-the-nci-cli"><a class="header" href="#using-the-nci-cli">Using the <code>nci</code> CLI</a></h2>
-<p>This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:</p>
-<pre><code class="language-bash">alias nci=&quot;nix run github:yusdacra/nix-cargo-integration --&quot;
-# Show the outputs of this (flake) source
-nci show github:owner/repo
-# Run the default app of this source
-nci run github:owner/repo
-# Run a specific app of this source
-nci run github:owner/repo app-name
-# Build the default package of this source
-nci build github:owner/repo
-# Build a specific package of this source
-nci build github:owner/repo package-name
-# Show the flake metadata for this source
-nci metadata github:owner/repo
-# Update the source
-nci update github:owner/repo
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="recent-important-changes"><a class="header" href="#recent-important-changes">Recent important changes</a></h1>
-<p>This is a list of important (mostly breaking) changes. The dates are from
-most recent to least recent.</p>
-<p><code>nix:</code> means that the change was related to the Nix library part of <code>nci</code>.
-<code>cargo-toml:</code> means that the change was related to the <code>Cargo.toml</code> attribute part of <code>nci</code>.</p>
-<h2 id="24-09-2022"><a class="header" href="#24-09-2022">24-09-2022</a></h2>
-<ul>
-<li>nix and cargo-toml: the whole interface was changed! Please refer to the documentation and the example flake.</li>
-</ul>
-<h2 id="20-06-2022"><a class="header" href="#20-06-2022">20-06-2022</a></h2>
-<ul>
-<li>nix: the <code>rustOverlay</code> input was changed to <code>rust-overlay</code> @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830</li>
-<li>nix: <code>common.pkgsWithRust</code> is removed, you can now access the Rust toolchain via <code>common.rustToolchain</code> @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830</li>
-</ul>
-<h2 id="19-05-2022"><a class="header" href="#19-05-2022">19-05-2022</a></h2>
-<ul>
-<li>nix: <code>overrides.pkgsOverlays</code> and <code>overrides.systems</code> were moved to <code>pkgsOverlays</code> and <code>systems</code> arguments to <code>makeOutputs</code> @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304</li>
-<li>nix: <code>systems</code> now just take a list of strings instead of a function taking default systems @ 3e733afea5b5533fc57d10bbd1c2d6b14d6ee304</li>
-</ul>
-<h2 id="12-03-2022"><a class="header" href="#12-03-2022">12-03-2022</a></h2>
-<ul>
-<li>cargo-toml: <code>library</code> option in <code>package.metadata.nix</code> is removed and will no longer be used @ 11f26a1aa9aeddfb2ca32b3441091d4d8dc4cf0c</li>
-<li>nix: <code>overrides.crateOverrides</code> was renamed to <code>overrides.crates</code> @ 11f26a1aa9aeddfb2ca32b3441091d4d8dc4cf0c</li>
-</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="config-options.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="tips-and-tricks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         <div style="clear: both"></div>
                     </nav>
                 </div>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="config-options.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="tips-and-tricks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>
@@ -767,10 +488,5 @@ most recent to least recent.</p>
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
-        <script type="text/javascript">
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
     </body>
 </html>

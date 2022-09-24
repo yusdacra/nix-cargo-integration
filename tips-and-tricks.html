@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html" class="active"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html" class="active"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -155,10 +155,6 @@ error: A Cargo.lock file must be present, please make sure it's at least staged 
 variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>. Example:</p>
 <pre><code>NCI_DEBUG=1 nix build --impure .
 </code></pre>
-<h2 id="generating-a-nixpkgs-compatible-package-expression"><a class="header" href="#generating-a-nixpkgs-compatible-package-expression">Generating a nixpkgs-compatible package expression</a></h2>
-<p><code>nix-cargo-integration</code> will generate outputs named <code>&lt;packageOutputName&gt;-derivation</code>.
-You can <code>nix build</code> these, and it will result in a <code>.nix</code> text file. After generating one,
-be sure to review it and change anything broken, such as source fetching.</p>
 <h2 id="using-the-nci-cli"><a class="header" href="#using-the-nci-cli">Using the <code>nci</code> CLI</a></h2>
 <p>This repo has a CLI program that can help you run arbitrary Rust repos. You can use it with:</p>
 <pre><code class="language-bash">alias nci=&quot;nix run github:yusdacra/nix-cargo-integration --&quot;
@@ -182,7 +178,7 @@ nci update github:owner/repo
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="cargo-toml-attributes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="pkg-config-options.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                             <a rel="next" href="CHANGELOG.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
@@ -194,7 +190,7 @@ nci update github:owner/repo
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="cargo-toml-attributes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="pkg-config-options.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                     <a rel="next" href="CHANGELOG.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">

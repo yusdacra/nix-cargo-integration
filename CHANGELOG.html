@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="cargo-toml-attributes.html"><strong aria-hidden="true">2.</strong> Cargo.toml attributes</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">3.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html" class="active"><strong aria-hidden="true">4.</strong> Changelog</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded "><a href="nix-library.html"><strong aria-hidden="true">1.</strong> Nix library documentation</a></li><li class="chapter-item expanded "><a href="config-options.html"><strong aria-hidden="true">2.</strong> config options</a></li><li class="chapter-item expanded "><a href="pkg-config-options.html"><strong aria-hidden="true">3.</strong> pkgConfig.crateName options</a></li><li class="chapter-item expanded "><a href="tips-and-tricks.html"><strong aria-hidden="true">4.</strong> Tips and Tricks</a></li><li class="chapter-item expanded "><a href="CHANGELOG.html" class="active"><strong aria-hidden="true">5.</strong> Changelog</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -138,8 +138,11 @@
 <p>This is a list of important (mostly breaking) changes. The dates are from
 most recent to least recent.</p>
 <p><code>nix:</code> means that the change was related to the Nix library part of <code>nci</code>.
-<code>cargo-toml:</code> means that the change was related to the <code>Cargo.toml</code>
-attribute part of <code>nci</code>.</p>
+<code>cargo-toml:</code> means that the change was related to the <code>Cargo.toml</code> attribute part of <code>nci</code>.</p>
+<h2 id="24-09-2022"><a class="header" href="#24-09-2022">24-09-2022</a></h2>
+<ul>
+<li>nix and cargo-toml: the whole interface was changed! Please refer to the documentation and the example flake.</li>
+</ul>
 <h2 id="20-06-2022"><a class="header" href="#20-06-2022">20-06-2022</a></h2>
 <ul>
 <li>nix: the <code>rustOverlay</code> input was changed to <code>rust-overlay</code> @ e3b4e564fc689c8e32d4b5e76f3cbbd055cb9830</li>
