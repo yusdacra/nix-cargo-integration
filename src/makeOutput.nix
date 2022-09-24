@@ -2,21 +2,32 @@
 {
   # A common gotten from `./common.nix`
   common,
-  # Rename outputs in flake structure
-  renameOutputs ? {},
 }: let
   inherit
-    (common)
+    (common.internal)
     cargoToml
     cargoPkg
     packageMetadata
-    system
+    workspaceMetadata
     memberName
     root
-    features
+    lib
+    pkgsSet
     ;
 
-  l = common.internal.lib;
+  l = lib;
+
+  system = pkgsSet.pkgs.system;
+
+  features = packageMetadata.buildFeatures or {};
+  renameOutputs =
+    workspaceMetadata.outputs.rename
+    or packageMetadata.outputs.rename
+    or {};
+  defaultOutputs =
+    workspaceMetadata.outputs.defaults
+    or packageMetadata.outputs.defaults
+    or {};
 
   # Metadata we will use later. Defaults should be the same as Cargo defaults.
   name = renameOutputs.${cargoPkg.name} or cargoPkg.name;
@@ -57,7 +68,7 @@
 
   # Helper function to use build.nix
   mkBuild = f: r: c:
-    import ./build.nix {
+    import ./build {
       inherit common;
       features = f;
       doCheck = c;
@@ -69,11 +80,7 @@
   mkApp = bin: n: v: let
     ex = {
       exeName = bin.exeName or bin.name;
-      name = "${bin.name}${
-        if v.config.release
-        then ""
-        else "-debug"
-      }";
+      name = "${bin.name}${l.thenOr v.config.release "" "-debug"}";
     };
     drv =
       if (l.length (bin.required-features or [])) < 1
@@ -87,6 +94,7 @@
       program = "${drv}${exePath}";
     };
   };
+  mkShell = import ./shell.nix;
 
   # "raw" packages that will be proccesed.
   # It's called so since `build.nix` generates an attrset containing the config and the package.
@@ -95,12 +103,15 @@
     "${name}-debug" = mkBuild (features.debug or []) false false;
   };
   # Packages set to be put in the outputs.
+  _packages = l.mapAttrs (_: v: v.package) packagesRaw;
   packages = {
     ${system} =
-      (l.mapAttrs (_: v: v.package) packagesRaw)
-      // {
-        "${name}-derivation" = import ./createNixpkgsDrv.nix common;
-      };
+      _packages
+      // (
+        l.optionalAttrs
+        (defaultOutputs ? package)
+        {default = _packages.${defaultOutputs.package};}
+      );
   };
   # Checks to be put in outputs.
   checks = {
@@ -108,21 +119,35 @@
       "${name}-tests" = (mkBuild (features.test or []) false true).package;
     };
   };
+  # Make apps for all binaries, and recursively combine them.
+  _apps =
+    l.foldAttrs l.recursiveUpdate {}
+    (
+      l.map
+      (exe: l.mapAttrs' (mkApp exe) packagesRaw)
+      (l.dbg "binaries for ${name}: ${l.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
+    );
   # Apps to be put in outputs.
   apps = {
     ${system} =
-      # Make apps for all binaries, and recursively combine them.
-      l.foldAttrs l.recursiveUpdate {}
-      (
-        l.map
-        (exe: l.mapAttrs' (mkApp exe) packagesRaw)
-        (l.dbg "binaries for ${name}: ${l.concatMapStringsSep ", " (bin: bin.name) allBins}" allBins)
+      _apps
+      // (
+        l.optionalAttrs
+        (defaultOutputs ? app)
+        {default = _apps.${defaultOutputs.app};}
       );
   };
+  devShells = {
+    ${system}.${name} = mkShell {
+      inherit common;
+      rawShell = packages.${system}.${name}.passthru.shell;
+    };
+  };
 in
-  l.optionalAttrs (packageMetadata.build or false) ({
-      inherit packages checks;
-    }
+  {inherit devShells;}
+  // l.optionalAttrs (packageMetadata.build or false) (
+    {inherit packages checks;}
     // l.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
-    })
+    }
+  )

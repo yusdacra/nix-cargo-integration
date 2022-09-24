@@ -24,6 +24,7 @@
 in
   l
   // (mkDbg "")
+  // (import ./validateOptions.nix {inherit lib;})
   // rec {
     inherit mkDbg;
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
@@ -96,8 +97,6 @@ in
     concatLists = list: olist: l.unique (list ++ olist);
     # Concats lists from two attribute sets.
     concatAttrLists = attrs: oattrs: name: concatLists (attrs.${name} or []) (oattrs.${name} or []);
-    # Removes `propagatedEnv` attributes from some `crateOverride`s.
-    removePropagatedEnv = l.mapAttrs (_: v: (prev: l.removeAttrs (v prev) ["propagatedEnv"]));
     # If the condition is true, evaluates to ifTrue,
     # otherwise evalutes to ifFalse.
     thenOr = cond: ifTrue: ifFalse:
@@ -115,68 +114,6 @@ in
       if parsed != null
       then imp ''args: with args; ${l.elemAt parsed 0}'' args
       else _expr;
-    parseDepEntry = entry: let
-      split = l.splitString " " entry;
-      hasVersion = l.length split > 1;
-      hasSource = l.length split > 2;
-    in {
-      name = l.head split;
-      version =
-        if hasSource
-        then l.elemAt split 1
-        else if hasVersion
-        then l.last split
-        else null;
-      source =
-        if hasSource
-        then l.removePrefix "(" (l.removeSuffix ")" (l.last split))
-        else null;
-    };
-    makeDepsAttrset = lockPackages: let
-      makeAttrset = dep: {
-        ${dep.name}.${dep.version}.${dep.source or ""} = dep;
-      };
-    in
-      l.foldl' l.recursiveUpdate {} (l.map makeAttrset lockPackages);
-    # gets a crate's transitive dependencies
-    getTransitiveDependencies = lock: entry:
-      _getTransitiveDependencies
-      (getDependencies lock)
-      {
-        inherit entry;
-        depth = 0;
-      };
-    _getTransitiveDependencies = getDeps: {
-      entry,
-      depth,
-    }: let
-      deps = getDeps entry;
-      _get = e:
-        _getTransitiveDependencies
-        getDeps
-        {
-          entry = e;
-          depth = depth + 1;
-        };
-    in
-      # ideally we would have proper cyclic dependency detection
-      # even more ideally we wouldn't need to do all this when a
-      # granular builder lands on d2n
-      # but for now this should let us avoid infinite recursion
-      if depth < 10
-      then (l.flatten (l.map _get deps)) ++ deps
-      else deps;
-    # gets a crate's direct dependencies
-    getDependencies = lock: entry: let
-      p = parseDepEntry entry;
-      pkg =
-        if p.version == null
-        then l.head (l.collect (a: a ? name && a ? version) lock.${p.name})
-        else if p.source == null
-        then l.head (l.attrValues lock.${p.name}.${p.version})
-        else lock.${p.name}.${p.version}.${p.source};
-    in
-      pkg.dependencies or [];
     addItemsToList = name: attrs: items: (attrs.${name} or []) ++ items;
     addBuildInputs = addItemsToList "buildInputs";
     addNativeBuildInputs = addItemsToList "nativeBuildInputs";

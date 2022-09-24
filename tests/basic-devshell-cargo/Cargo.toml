@@ -7,8 +7,5 @@ edition = "2018"
 [package.metadata.nix]
 build = true
 
-[workspace.metadata.nix.devshell]
-name = "basic-devshell-cargo"
-
-[workspace.metadata.nix.devshell.devshell] # Should issue a warning
+[workspace.metadata.nix.shell]
 name = "basic-devshell-cargo"

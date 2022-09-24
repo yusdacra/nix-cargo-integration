@@ -16,7 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.gomod2nix.follows = "nixpkgs";
       inputs.mach-nix.follows = "nixpkgs";
-      inputs.node2nix.follows = "nixpkgs";
       inputs.poetry2nix.follows = "nixpkgs";
       inputs.alejandra.follows = "nixpkgs";
       inputs.pre-commit-hooks.follows = "nixpkgs";
@@ -34,22 +33,42 @@
       };
 
       sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
-      lib = import ./src/lib.nix {
+      lib = import ./src/lib {
         inherit (nixpkgs) lib;
       };
       l = lib;
+
+      mkDocs = system: let
+        pkgs = inputs.nixpkgs.legacyPackages.${system};
+        generateDocsForModule = module:
+          (
+            l.evalModules
+            {
+              modules = [module ./src/lib/modules-docs.nix];
+              specialArgs = {inherit lib pkgs;};
+            }
+          )
+          .config
+          .modules-docs
+          .markdown;
+      in
+        pkgs.callPackage ./docs {
+          configDocs = generateDocsForModule ./src/lib/configModule.nix;
+          pkgConfigDocs = generateDocsForModule ./src/lib/pkgConfigModule.nix;
+        };
 
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
       cliOutputs = makeOutputs {
         root = ./cli;
-        overrides = {
-          crates = common: _: {
-            nci-cli = prev: {
-              NCI_SRC = builtins.toString inputs.self;
-              # Make sure the src doesnt get garbage collected
-              postInstall = "ln -s $NCI_SRC $out/nci_src";
-            };
+        pkgConfig = common: {
+          nci-cli.overrides.add-src.overrideAttrs = old: {
+            NCI_SRC = builtins.toString inputs.self;
+            # Make sure the src doesnt get garbage collected
+            postInstall = ''
+              ${old.postInstall or ""}
+              ln -s $NCI_SRC $out/nci_src
+            '';
           };
         };
       };
@@ -64,24 +83,27 @@
           else null) (builtins.readDir ./tests));
         tests = l.genAttrs testNames (test:
           makeOutputs {
-            inherit builder;
             root = ./tests + "/${test}";
+            config = _: {inherit builder;};
           });
         flattenAttrs = attrs:
           l.mapAttrsToList (n: v:
             l.mapAttrs (_:
               l.mapAttrs' (n:
-                l.nameValuePair (n
+                l.nameValuePair (
+                  n
+                  + "-${attrs}"
                   + (
                     if l.hasInfix "workspace" n
                     then "-${n}"
                     else ""
-                  ))))
+                  )
+                )))
             v.${attrs})
           tests;
-        checks = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "checks");
-        packages = builtins.map (l.mapAttrs (n: attrs: builtins.removeAttrs attrs [])) (flattenAttrs "packages");
-        shells = l.mapAttrsToList (name: test: l.mapAttrs (_: drv: {"${name}-shell" = drv;}) test.devShell) tests;
+        checks = flattenAttrs "checks";
+        packages = flattenAttrs "packages";
+        shells = flattenAttrs "devShells";
       in {
         checks = l.foldAttrs l.recursiveUpdate {} checks;
         packages = l.foldAttrs l.recursiveUpdate {} packages;
@@ -98,12 +120,16 @@
           pkgs = inputs.nixpkgs.legacyPackages.${system};
           flakeSrc = "path:${inputs.self.outPath}?narHash=${inputs.self.narHash}";
           script =
-            pkgs.writeScript
+            pkgs.writeShellScript
             "test-${l.replaceStrings ["."] ["-"] outputsPath}.sh"
             ''
-              #!${pkgs.stdenv.shell}
-              nix build -L --show-trace --keep-failed --keep-going \
-              --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}"
+              if [ "''${1:-""}" = "" ]; then
+                nix build -L --show-trace --keep-failed --keep-going \
+                --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}"
+              else
+                nix build -L --show-trace --keep-failed --keep-going \
+                --expr "(builtins.getFlake "${flakeSrc}").${outputsPath}.''${1}"
+              fi
             '';
         in {
           type = "app";
@@ -156,7 +182,11 @@
         nci-lib = lib;
       };
       inherit craneTests brpTests;
-      inherit (cliOutputs) packages;
+
+      packages =
+        l.mapAttrs
+        (system: pkgs: pkgs // {docs = mkDocs system;})
+        cliOutputs.packages;
 
       apps =
         l.mapAttrs
@@ -166,13 +196,20 @@
       devShells =
         l.recursiveUpdate
         (l.mapAttrs (_: d: {default = d;}) devShell)
-        (l.mapAttrs (_: d: {cli = d;}) cliOutputs.devShell);
+        (l.mapAttrs (_: d: {cli = d.default;}) cliOutputs.devShells);
 
-      templates = {
-        default = {
+      templates = let
+        simple = {
           description = "a simple flake using nci";
           path = ./templates/simple;
         };
+        full = {
+          description = "a flake with all options that nci defines";
+          path = ./templates/full;
+        };
+      in {
+        inherit simple full;
+        default = simple;
       };
     };
 }

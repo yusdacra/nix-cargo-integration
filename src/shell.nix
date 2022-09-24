@@ -1,86 +1,35 @@
-common: let
-  inherit (common) workspaceMetadata packageMetadata;
-  inherit (common.internal.nci-pkgs) pkgs rustToolchain makeDevshell;
+{
+  common,
+  rawShell,
+}: let
+  inherit
+    (common.internal)
+    workspaceMetadata
+    packageMetadata
+    root
+    runtimeLibs
+    sources
+    cCompiler
+    ;
+  inherit (common.internal.pkgsSet) pkgs;
 
   l = common.internal.lib;
 
   # Extract cachix metadata
-  cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
-  cachixName = cachixMetadata.name or null;
-  cachixKey = cachixMetadata.key or null;
-
-  # Get all the options' name declared immediately under `config.devshell` by
-  # devshell's modules.
-  devshellOptions =
-    l.filterAttrs
-    (_: l.isType "option")
-    (makeDevshell {configuration = {};}).options.devshell;
-
-  # A helper function moving all options defined in the root of the config
-  # (which name matches ones in `devshellOptions`) under a `devshell` attribute
-  # set in the resulting config.
-  #
-  # devshellOptions = { foo = ...; bar = ...; };
-  # pushUpDevshellOptions { foo = "foo"; baz = "baz"; }
-  # -> { devhsell.foo = "foo"; baz = "baz"; }
-  #
-  # Issues a warning if it would override an exisiting option:
-  #
-  # pushUpDevshellOptions { foo = "foo"; devshell.foo = "oof"; }
-  # -> { devhsell.foo = "foo"; }
-  # trace: warning: Option 'foo' defined twice, both under 'config' and
-  #   'config.devshell'. This likely happens when defining both in `Cargo.toml`:
-  #   ```toml
-  #   [workspace.metadata.nix.devshell]
-  #   name = "example"
-  #   [workspace.metadata.nix.devshell.devshell]
-  #   name = "example"
-  #   ```
-  pushUpDevshellOptions = config: let
-    movedOpts = l.flip l.filterAttrs config (
-      name: _:
-        l.warnIf
-        (l.hasAttr name (config.devshell or {}))
-        (l.concatStrings [
-          "Option '${name}' defined twice, both under 'config' and "
-          "'config.devshell'. This likely happens when defining both in "
-          ''
-            `Cargo.toml`:
-            ```toml
-            [workspace.metadata.nix.devshell]
-            name = "example"
-            [workspace.metadata.nix.devshell.devshell]
-            name = "example"
-            ```
-          ''
-        ])
-        (l.hasAttr name devshellOptions)
-    );
-  in
-    l.recursiveUpdate
-    (l.removeAttrs config (l.attrNames movedOpts))
-    {devshell = movedOpts;};
+  cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix;
+  cachixName = cachixMetadata.name;
+  cachixKey = cachixMetadata.key;
 
   # Create a base devshell config
   baseConfig =
     {
-      language = {
-        c = let
-          inputs =
-            common.buildInputs
-            ++ common.overrideBuildInputs
-            ++ (with pkgs; l.optionals stdenv.isDarwin [libiconv]);
-        in {
-          compiler = common.cCompiler;
-          libraries = inputs;
-          includes = inputs;
-        };
-      };
       packages =
-        common.nativeBuildInputs
-        ++ common.buildInputs
-        ++ common.overrideNativeBuildInputs
-        ++ common.overrideBuildInputs;
+        l.optional
+        cCompiler.useCompilerBintools
+        cCompiler.package.bintools;
+      language.c = {
+        compiler = cCompiler.package;
+      };
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
@@ -95,20 +44,6 @@ common: let
         '';
       in
         [
-          {
-            package = rustToolchain.rustc;
-            name = "rustc";
-            category = "rust";
-            command = "rustc $@";
-            help = "The Rust compiler";
-          }
-          {
-            package = rustToolchain.cargo;
-            name = "cargo";
-            category = "rust";
-            command = "cargo $@";
-            help = "Rust's package manager";
-          }
           {
             package = alejandra;
             category = "formatting";
@@ -126,7 +61,7 @@ common: let
             command =
               buildFlakeExpr
               "--no-link"
-              ''b.removeAttrs flake.checks.\"${common.system}\" [ \"preCommitChecks\" ]'';
+              ''b.removeAttrs flake.checks.\"${pkgs.system}\" [ \"preCommitChecks\" ]'';
           }
           {
             name = "fmt";
@@ -161,7 +96,7 @@ common: let
             help = "Build all packages and push results to cachix";
             command = ''
               function build {
-                ${buildFlakeExpr "" ''flake.packages.\"${common.system}\"''}
+                ${buildFlakeExpr "" ''flake.packages.\"${pkgs.system}\"''}
               }
               cachix watch-exec build
             '';
@@ -178,20 +113,20 @@ common: let
             name = "build-all";
             category = "flake tools";
             help = "Build all packages";
-            command = buildFlakeExpr "" ''flake.packages.\"${common.system}\"'';
+            command = buildFlakeExpr "" ''flake.packages.\"${pkgs.system}\"'';
           }
         ]
         ++ l.optional (l.hasAttr "preCommitChecks" common.internal) {
           name = "check-pre-commit";
           category = "tools";
           help = "Runs the pre commit checks";
-          command = "nix build -L --show-trace --no-link --impure --expr '(builtins.getFlake (toString ./.)).checks.${common.system}.preCommitChecks'";
+          command = buildFlakeExpr "" ''flake.checks.\"${system}\".preCommitChecks'';
         };
       env =
         [
           {
             name = "LD_LIBRARY_PATH";
-            eval = "$DEVSHELL_DIR/lib:${l.makeLibraryPath common.runtimeLibs}";
+            prefix = "${l.makeLibraryPath runtimeLibs}";
           }
           {
             name = "LIBRARY_PATH";
@@ -204,14 +139,6 @@ common: let
             substituters = https://cache.nixos.org https://${cachixName}.cachix.org
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
           '')
-        )
-        ++ (
-          l.mapAttrsToList
-          (n: v: {
-            name = n;
-            eval = v;
-          })
-          (common.env // common.overrideEnv)
         );
       startup.setupPreCommitHooks.text = ''
         echo "pre-commit hooks are disabled."
@@ -229,18 +156,18 @@ common: let
   mkDevshellConfig = attrs:
     l.optionalAttrs
     (l.isAttrs attrs)
-    (pushUpDevshellOptions (l.removeAttrs attrs ["imports"]));
+    (l.removeAttrs attrs ["imports"]);
 
   # Make configs work workspace and package
-  workspaceConfig = mkDevshellConfig (workspaceMetadata.devshell or null);
-  packageConfig = mkDevshellConfig (packageMetadata.devshell or null);
+  workspaceConfig = mkDevshellConfig (workspaceMetadata.shell or null);
+  packageConfig = mkDevshellConfig (packageMetadata.shell or null);
 
   # Import the devshell specified in devshell.toml if it exists
-  devshellFilePath = "${toString common.root}/devshell.toml";
+  devshellFilePath = "${toString root}/devshell.toml";
   importedDevshell =
     l.thenOrNull
     (l.pathExists devshellFilePath)
-    (import "${common.sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;});
+    (import "${sources.devshell}/nix/importTOML.nix" devshellFilePath {lib = pkgs.lib;});
 
   # Helper functions to combine devshell configs without loss
   combineWith = base: config: let
@@ -270,27 +197,28 @@ common: let
   # Workspace and package combined config
   devshellConfig = combineWith workspaceConfig packageConfig;
 
+  shellOverride =
+    if l.isFunction (workspaceMetadata.shell or null)
+    then workspaceMetadata.shell or (_: {})
+    else (_: {});
   # Collect final config
-  resultConfig = {
-    configuration = let
-      c =
-        if importedDevshell == null
-        then {
-          config = combineWithBase devshellConfig;
-          imports = [];
-        }
-        # Add values from the imported devshell if it exists
-        else {
-          config = combineWithBase importedDevshell.config;
-          inherit (importedDevshell) _file imports;
-        };
-    in
-      # Override the config with user provided override
-      c
-      // {
-        config = c.config // (common.overrides.shell common c.config);
-        imports = c.imports ++ ["${common.sources.devshell}/extra/language/c.nix"];
+  finalConfig = let
+    c =
+      if importedDevshell == null
+      then {
+        config = combineWithBase devshellConfig;
+        imports = [];
+      }
+      # Add values from the imported devshell if it exists
+      else {
+        config = combineWithBase importedDevshell.config;
+        inherit (importedDevshell) _file imports;
       };
-  };
+  in
+    # Override the config with user provided override
+    c
+    // {
+      config = c.config // (shellOverride c.config);
+    };
 in
-  (makeDevshell resultConfig).shell
+  rawShell.combineWith {passthru.config = finalConfig;}

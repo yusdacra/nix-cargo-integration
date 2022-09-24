@@ -68,10 +68,8 @@ in rec {
     config.projectRoot = root;
     config.disableIfdWarning = true;
   };
-  # devshell
-  makeDevshell = import "${sources.devshell}/modules" pkgs;
   # nci library utilities
-  utils = import ./pkgs-lib.nix {inherit pkgs rustToolchain lib dream2nix;};
+  utils = import ./pkgs-lib.nix {inherit pkgs lib dream2nix;};
   # pre commit hooks
   makePreCommitHooks = let
     tools =

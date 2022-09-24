@@ -9,25 +9,14 @@
 {
   # Path to the root of a cargo workspace or crate
   root,
-  # All overrides
-  overrides ? {},
-  # All crate namespaced overrides
-  perCrateOverrides ? {},
-  # Rename outputs in flake structure
-  renameOutputs ? {},
-  # Default output for apps / packages
-  defaultOutputs ? {},
-  # Any valid dream2nix builder for Rust
-  builder ? "crane",
-  # Whether to enable pre commit hooks
-  enablePreCommitHooks ? false,
-  # Systems to generate outputs for
+  # The systems to generate outputs for
   systems ? lib.defaultSystems,
-  # nixpkgs overlays to use for the package set
-  pkgsOverlays ? [],
-  disableVendoredCrateOverrides ? false,
+  # Config that will be applied to workspace
+  config ? (_: {}),
+  # All per crate overrides
+  pkgConfig ? (_: {}),
   ...
-} @ attrs: let
+}: let
   l = lib // builtins;
 
   # Helper function to import a Cargo.toml from a root.
@@ -35,12 +24,6 @@
 
   # Import the "main" Cargo.toml we will use. This Cargo.toml can either be a workspace manifest, or a package manifest.
   cargoToml = importCargoTOML (l.dbg "root at: ${toString root}" root);
-  # Import the Cargo.lock file.
-  cargoLockPath = "${toString root}/Cargo.lock";
-  cargoLock =
-    if l.pathExists cargoLockPath
-    then l.fromTOML (l.readFile cargoLockPath)
-    else throw "A Cargo.lock file must be present, please make sure it's at least staged in git.";
 
   # This is the "root package" that might or might not exist.
   # For example, the manifest might both specify a workspace *and* have a package in it.
@@ -79,42 +62,89 @@
     )
     (name: importCargoTOML "${toString root}/${name}");
 
-  # Get the metadata we will use from the root package attributes if it exists.
-  packageMetadata = rootPkg.metadata.nix or null;
   # Get the metadata we will use from the workspace attributes if it exists.
-  workspaceMetadata = workspaceToml.metadata.nix or null;
+  workspaceMetadata = workspaceToml.metadata.nix or {};
 
-  # Get all the dependencies in Cargo.lock.
-  dependencies = cargoLock.package;
-  # Decide which systems we will generate outputs for. This can be overrided.
-  systems =
-    attrs.systems
-    or workspaceMetadata.systems
-    or packageMetadata.systems
-    or l.defaultSystems;
+  # helper function to create a packages set for NCI
+  mkPkgsSet = system:
+    import ./pkgs-set.nix {
+      inherit root system sources;
+      toolchainChannel = let
+        rustToolchain = "${toString root}/rust-toolchain";
+        rustTomlToolchain = "${toString root}/rust-toolchain.toml";
+      in
+        if l.pathExists rustToolchain
+        then rustToolchain
+        else if l.pathExists rustTomlToolchain
+        then rustTomlToolchain
+        else "stable";
+      overlays = config.pkgsOverlays or [];
+      lib = l;
+    };
+  # systems mapped to package sets
+  pkgsSets = l.genAttrs systems mkPkgsSet;
 
+  # common creation function mapped to systems, we do this to memoize some stuff
+  mkCommons =
+    l.genAttrs
+    systems
+    (
+      system: let
+        pkgsSet = pkgsSets.${system};
+      in
+        import ./common.nix {
+          workspaceMetadata = let
+            nixConfig =
+              if l.isFunction config
+              then
+                config {
+                  inherit (pkgsSet) pkgs rustToolchain;
+                  internal = {
+                    inherit
+                      pkgsSet
+                      lib
+                      sources
+                      pkgConfig
+                      root
+                      ;
+                  };
+                }
+              else
+                throw ''
+                  `config` must be a function that takes one argument.
+                  Please refer to the documentation.
+                '';
+            c = l.recursiveUpdate workspaceMetadata nixConfig;
+          in
+            l.validateConfig c;
+          inherit
+            pkgsSet
+            lib
+            root
+            sources
+            pkgConfig
+            ;
+        }
+    );
   # Helper function to construct a "commons" from a member name, the cargo toml, and the system.
   mkCommon = memberName: cargoToml: isRootMember: system:
-    import ./common.nix {
+    mkCommons.${system} {
       inherit
-        lib
-        dependencies
         memberName
-        members
         cargoToml
-        workspaceMetadata
-        system
-        root
-        overrides
-        perCrateOverrides
-        sources
-        enablePreCommitHooks
         isRootMember
-        builder
-        pkgsOverlays
-        disableVendoredCrateOverrides
         ;
     };
+
+  mergeShells = shellAttrs: let
+    shells = l.attrValues shellAttrs;
+    baseShell = l.head shells;
+    otherShells = l.drop 1 shells;
+  in
+    l.foldl'
+    (all: el: all.combineWith el)
+    baseShell
+    otherShells;
 
   # Whether the package is declared in the same `Cargo.toml` as the workspace.
   isRootMember = (l.length workspaceMembers) > 0;
@@ -132,92 +162,25 @@
   allCommons' =
     memberCommons' ++ (l.optional (rootCommons != null) rootCommons);
 
-  # Helper function used to "combine" two "commons".
-  updateCommon = prev: final: let
-    combinedLists =
-      l.genAttrs
-      [
-        "runtimeLibs"
-        "buildInputs"
-        "nativeBuildInputs"
-        "overrideBuildInputs"
-        "overrideNativeBuildInputs"
-      ]
-      (name: l.concatAttrLists prev final name);
-  in
-    prev
-    // final
-    // combinedLists
-    // {
-      env = (prev.env or {}) // final.env;
-      overrideEnv = (prev.overrideEnv or {}) // final.overrideEnv;
-      overrides = {
-        shell = common: prevShell: let
-          overrides = [
-            ((prev.overrides.shell or (_: _: {})) common)
-            ((final.overrides.shell or (_: _: {})) common)
-          ];
-        in
-          l.applyOverrides prevShell overrides;
-      };
-    };
-  # Recursively go through each "commons", and "combine" them. We will use this for our devshell.
-  commonsCombined =
-    l.mapAttrs
-    (_: l.foldl' updateCommon {})
-    (
-      l.foldl'
-      (acc: ele: l.mapAttrs (n: v: acc.${n} ++ [v]) ele)
-      (l.genAttrs systems (_: []))
-      allCommons'
-    );
-
   # Generate outputs from all "commons".
   allOutputs' = l.flatten (
     l.map
     (
       l.mapAttrsToList
-      (_: common: import ./makeOutput.nix {inherit common renameOutputs;})
+      (_: common: import ./makeOutput.nix {inherit common;})
     )
     allCommons'
   );
   # Recursively combine all outputs we have.
   combinedOutputs = l.foldAttrs lib.recursiveUpdate {} allOutputs';
   # Create the "final" output set.
-  # This also creates the devshell, puts in pre commit checks if the user has enabled it,
-  # and changes default outputs according to `defaultOutputs`.
   finalOutputs =
     combinedOutputs
     // {
-      devShell = l.mapAttrs (_: import ./shell.nix) commonsCombined;
-      checks = l.recursiveUpdate (combinedOutputs.checks or {}) (
+      devShells =
         l.mapAttrs
-        (
-          _: common:
-            l.optionalAttrs (l.hasAttr "preCommitChecks" common) {
-              "preCommitChecks" = common.preCommitChecks;
-            }
-        )
-        commonsCombined
-      );
-    }
-    // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-      packages =
-        l.mapAttrs
-        (
-          _: packages:
-            packages // {default = packages.${defaultOutputs.package};}
-        )
-        combinedOutputs.packages;
-    }
-    // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
-      apps =
-        l.mapAttrs
-        (
-          _: apps:
-            apps // {default = apps.${defaultOutputs.app};}
-        )
-        combinedOutputs.apps;
+        (_: s: s // {default = mergeShells s;})
+        combinedOutputs.devShells;
     };
   checkedOutputs =
     l.warnIf
