@@ -11,17 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
+      - name: Install nix
+        uses: cachix/install-nix-action@v17
         with:
-          mdbook-version: 'latest'
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Setup cachix
+        uses: cachix/cachix-action@v10
+        with:
+          name: nix-cargo-integration
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - run: mdbook build docs
+      - run: nix build .#docs
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/book
+          publish_dir: ./result

@@ -9,6 +9,8 @@
 {
   # Path to the root of a cargo workspace or crate
   root,
+  # The systems to generate outputs for
+  systems ? lib.defaultSystems,
   # Config that will be applied to workspace
   config ? (_: {}),
   # All per crate overrides
@@ -60,23 +62,8 @@
     )
     (name: importCargoTOML "${toString root}/${name}");
 
-  _config = config {};
-  # Get the metadata we will use from the root package attributes if it exists.
-  rootPackageMetadata =
-    l.recursiveUpdate
-    (rootPkg.metadata.nix or {})
-    _config;
   # Get the metadata we will use from the workspace attributes if it exists.
-  workspaceMetadata =
-    l.recursiveUpdate
-    (workspaceToml.metadata.nix or {})
-    _config;
-
-  # Decide which systems we will generate outputs for. This can be overrided.
-  systems =
-    workspaceMetadata.systems
-    or rootPackageMetadata.systems
-    or l.defaultSystems;
+  workspaceMetadata = workspaceToml.metadata.nix or {};
 
   # helper function to create a packages set for NCI
   mkPkgsSet = system:
@@ -90,7 +77,7 @@
         then rustToolchain
         else if l.pathExists rustTomlToolchain
         then rustTomlToolchain
-        else workspaceMetadata.toolchain or rootPackageMetadata.toolchain or "stable";
+        else "stable";
       overlays = config.pkgsOverlays or [];
       lib = l;
     };
@@ -106,22 +93,30 @@
         pkgsSet = pkgsSets.${system};
       in
         import ./common.nix {
-          workspaceMetadata =
-            workspaceMetadata
-            // (
-              config {
-                inherit (pkgsSet) pkgs rustToolchain;
-                internal = {
-                  inherit
-                    pkgsSet
-                    lib
-                    sources
-                    pkgConfig
-                    root
-                    ;
-                };
-              }
-            );
+          workspaceMetadata = let
+            nixConfig =
+              if l.isFunction config
+              then
+                config {
+                  inherit (pkgsSet) pkgs rustToolchain;
+                  internal = {
+                    inherit
+                      pkgsSet
+                      lib
+                      sources
+                      pkgConfig
+                      root
+                      ;
+                  };
+                }
+              else
+                throw ''
+                  `config` must be a function that takes one argument.
+                  Please refer to the documentation.
+                '';
+            c = l.recursiveUpdate workspaceMetadata nixConfig;
+          in
+            l.validateConfig c;
           inherit
             pkgsSet
             lib
@@ -179,40 +174,13 @@
   # Recursively combine all outputs we have.
   combinedOutputs = l.foldAttrs lib.recursiveUpdate {} allOutputs';
   # Create the "final" output set.
-  # This also creates the devshell, puts in pre commit checks if the user has enabled it,
-  # and changes default outputs according to `defaultOutputs`.
-  defaultOutputs =
-    workspaceMetadata.outputs.defaults
-    or rootPackageMetadata.outputs.defaults
-    or {};
   finalOutputs =
     combinedOutputs
     // {
       devShells =
         l.mapAttrs
-        (
-          _: devshells:
-            devshells // {default = mergeShells devshells;}
-        )
+        (_: s: s // {default = mergeShells s;})
         combinedOutputs.devShells;
-    }
-    // l.optionalAttrs (l.hasAttr "package" defaultOutputs) {
-      packages =
-        l.mapAttrs
-        (
-          _: packages:
-            packages // {default = packages.${defaultOutputs.package};}
-        )
-        combinedOutputs.packages;
-    }
-    // l.optionalAttrs (l.hasAttr "app" defaultOutputs) {
-      apps =
-        l.mapAttrs
-        (
-          _: apps:
-            apps // {default = apps.${defaultOutputs.app};}
-        )
-        combinedOutputs.apps;
     };
   checkedOutputs =
     l.warnIf

@@ -2,5 +2,5 @@
 authors = ["Yusuf Bera Ertan"]
 language = "en"
 multilingual = false
-src = "src"
+src = "."
 title = "NCI Documentation"

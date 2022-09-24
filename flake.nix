@@ -33,10 +33,29 @@
       };
 
       sources = {inherit rust-overlay devshell nixpkgs dream2nix preCommitHooks;};
-      lib = import ./src/lib.nix {
+      lib = import ./src/lib {
         inherit (nixpkgs) lib;
       };
       l = lib;
+
+      mkDocs = system: let
+        pkgs = inputs.nixpkgs.legacyPackages.${system};
+        generateDocsForModule = module:
+          (
+            l.evalModules
+            {
+              modules = [module ./src/lib/modules-docs.nix];
+              specialArgs = {inherit lib pkgs;};
+            }
+          )
+          .config
+          .modules-docs
+          .markdown;
+      in
+        pkgs.callPackage ./docs {
+          configDocs = generateDocsForModule ./src/lib/configModule.nix;
+          pkgConfigDocs = generateDocsForModule ./src/lib/pkgConfigModule.nix;
+        };
 
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
 
@@ -163,7 +182,11 @@
         nci-lib = lib;
       };
       inherit craneTests brpTests;
-      inherit (cliOutputs) packages;
+
+      packages =
+        l.mapAttrs
+        (system: pkgs: pkgs // {docs = mkDocs system;})
+        cliOutputs.packages;
 
       apps =
         l.mapAttrs

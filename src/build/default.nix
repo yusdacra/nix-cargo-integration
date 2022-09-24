@@ -17,7 +17,6 @@
     root
     cargoPkg
     packageMetadata
-    overrides
     memberName
     cCompiler
     crateOverrides
@@ -32,12 +31,15 @@
   pkgOverrides = crateOverrides.${cargoPkg.name} or {};
   depsOverrides = crateOverrides."${cargoPkg.name}-deps" or {};
 
-  desktopFileMetadata = packageMetadata.desktopFile or null;
+  desktopFileMetadata = packageMetadata.desktopFile;
   # Desktop file to put in the package derivation.
   desktopFile = let
-    desktopFilePath = root + "/${l.removePrefix "./" desktopFileMetadata}";
+    desktopFilePath =
+      if l.isPath desktopFileMetadata
+      then desktopFileMetadata
+      else root + "/${l.removePrefix "./" desktopFileMetadata}";
   in
-    if l.isString desktopFileMetadata
+    if l.isString desktopFileMetadata || l.isPath desktopFileMetadata
     then
       pkgs.runCommandLocal "${pkgName}-desktopFileLink" {} ''
         mkdir -p $out/share/applications
@@ -231,24 +233,15 @@
         };
       };
 
-    settings = [{inherit builder;}];
+    settings = [{inherit builder;}] ++ packageMetadata.dream2nixSettings;
   };
 
-  overrideConfig = config:
-    config // ((overrides.build or (_: {})) config);
-
-  _config = overrideConfig baseConfig;
-  _outputs = utils.mkCrateOutputs _config;
+  _outputs = utils.mkCrateOutputs baseConfig;
   unwrappedPackage = _outputs.packages.${cargoPkg.name};
   shell = _outputs.devShells.${cargoPkg.name};
 in rec {
-  config =
-    _config
-    // {
-      inherit release features doCheck;
-    };
+  config = baseConfig // {inherit release features doCheck;};
   package = let
-    userWrapper = overrides.wrapper or (_: old: old);
     wrapped = l.pipe unwrappedPackage [
       (old:
         old
@@ -262,7 +255,7 @@ in rec {
         })
       desktopItemWrapper
       runtimeLibsWrapper
-      (userWrapper config)
+      (packageMetadata.wrapper config)
     ];
   in
     wrapped;

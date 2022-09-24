@@ -9,16 +9,24 @@
   workspaceMetadata ? null,
   ...
 } @ topAttrs: let
-  pkgConfig = topAttrs.pkgConfig {
-    inherit (pkgsSet) pkgs rustToolchain;
-    internal = {
-      inherit
-        pkgsSet
-        sources
-        workspaceMetadata
-        ;
-    };
-  };
+  pkgConfig =
+    if topAttrs.lib.isFunction topAttrs.pkgConfig
+    then
+      topAttrs.pkgConfig {
+        inherit (pkgsSet) pkgs rustToolchain;
+        internal = {
+          inherit
+            pkgsSet
+            sources
+            workspaceMetadata
+            ;
+        };
+      }
+    else
+      throw ''
+        `pkgConfig` must be a function that receives one argument.
+        Please refer to the documentation.
+      '';
 in
   {
     # The member name for this package, if it is in a workspace
@@ -32,13 +40,13 @@ in
   }: let
     # Extract the metadata we will need.
     cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
-
-    overrides = pkgConfig.${cargoPkg.name} or {};
-
     packageMetadata =
-      l.recursiveUpdate
-      (cargoPkg.metadata.nix or {})
-      (overrides.config or {});
+      l.validatePkgConfig
+      (
+        l.recursiveUpdate
+        (cargoPkg.metadata.nix or {})
+        (pkgConfig.${cargoPkg.name} or {})
+      );
 
     l = topAttrs.lib // (topAttrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
@@ -86,7 +94,6 @@ in
     # Create the base config that will be overrided.
     # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
     baseConfig = {
-      inherit overrides;
       inherit (pkgsSet) pkgs rustToolchain;
 
       # nci private attributes. can change at any time without warning!
@@ -110,7 +117,6 @@ in
             cargoToml
             workspaceMetadata
             packageMetadata
-            overrides
             sources
             cCompiler
             ;

@@ -12,16 +12,16 @@ since these directly modify [devshell] / [dream2nix] builder configs.
 
 This attribute set is passed to `config` and `pkgConfig`.
 It contains attributes you may need for adding stuff to overrides / config, such as the nixpkgs package set (`common.pkgs`).
-Not all attributes (for example `common.pkgs`) are available for every option, eg. `common.pkgs` can't be used in `renameOutputs` or `defaultOutputs`.
-For more information on what `common` actually exports, please check the bottom of [common.nix](./src/common.nix).
+NCI internal values are kept under `internal` attribute.
 
 ## `makeOutputs`
 
-Generates outputs for all systems specified in `Cargo.toml` (defaults to `defaultSystems` of `nixpkgs`).
+Generates outputs for the systems specified.
 
 ### Arguments
 
 - `root`: directory where `Cargo.lock` and `Cargo.toml` (workspace or package manifest) is in (type: path)
+- `systems`: systems to generate outputs for (type: list of strings) (default: nixpkgs' `defaultSystems` and `limitedSupportSystems`)
 - `config`: general configuration, corresponds to `workspace.metadata.nix` OR `package.metadata.nix` if this isn't a workspace (type: `common: {}`)
 - `pkgConfig`: namespaced configuration, corresponds to `package.metadata.nix` (type: `common: {}`)
 

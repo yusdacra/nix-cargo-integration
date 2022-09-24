@@ -11,66 +11,14 @@
     sources
     cCompiler
     ;
-  inherit (common.internal.pkgsSet) pkgs makeDevshell;
+  inherit (common.internal.pkgsSet) pkgs;
 
   l = common.internal.lib;
 
   # Extract cachix metadata
-  cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix or null;
-  cachixName = cachixMetadata.name or null;
-  cachixKey = cachixMetadata.key or null;
-
-  # Get all the options' name declared immediately under `config.devshell` by
-  # devshell's modules.
-  devshellOptions =
-    l.filterAttrs
-    (_: l.isType "option")
-    (makeDevshell {configuration = {};}).options.devshell;
-
-  # A helper function moving all options defined in the root of the config
-  # (which name matches ones in `devshellOptions`) under a `devshell` attribute
-  # set in the resulting config.
-  #
-  # devshellOptions = { foo = ...; bar = ...; };
-  # pushUpDevshellOptions { foo = "foo"; baz = "baz"; }
-  # -> { devhsell.foo = "foo"; baz = "baz"; }
-  #
-  # Issues a warning if it would override an exisiting option:
-  #
-  # pushUpDevshellOptions { foo = "foo"; devshell.foo = "oof"; }
-  # -> { devhsell.foo = "foo"; }
-  # trace: warning: Option 'foo' defined twice, both under 'config' and
-  #   'config.devshell'. This likely happens when defining both in `Cargo.toml`:
-  #   ```toml
-  #   [workspace.metadata.nix.devshell]
-  #   name = "example"
-  #   [workspace.metadata.nix.devshell.devshell]
-  #   name = "example"
-  #   ```
-  pushUpDevshellOptions = config: let
-    movedOpts = l.flip l.filterAttrs config (
-      name: _:
-        l.warnIf
-        (l.hasAttr name (config.devshell or {}))
-        (l.concatStrings [
-          "Option '${name}' defined twice, both under 'config' and "
-          "'config.devshell'. This likely happens when defining both in "
-          ''
-            `Cargo.toml`:
-            ```toml
-            [workspace.metadata.nix.devshell]
-            name = "example"
-            [workspace.metadata.nix.devshell.devshell]
-            name = "example"
-            ```
-          ''
-        ])
-        (l.hasAttr name devshellOptions)
-    );
-  in
-    l.recursiveUpdate
-    (l.removeAttrs config (l.attrNames movedOpts))
-    {devshell = movedOpts;};
+  cachixMetadata = workspaceMetadata.cachix or packageMetadata.cachix;
+  cachixName = cachixMetadata.name;
+  cachixKey = cachixMetadata.key;
 
   # Create a base devshell config
   baseConfig =
@@ -208,7 +156,7 @@
   mkDevshellConfig = attrs:
     l.optionalAttrs
     (l.isAttrs attrs)
-    (pushUpDevshellOptions (l.removeAttrs attrs ["imports"]));
+    (l.removeAttrs attrs ["imports"]);
 
   # Make configs work workspace and package
   workspaceConfig = mkDevshellConfig (workspaceMetadata.shell or null);

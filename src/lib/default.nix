@@ -24,6 +24,7 @@
 in
   l
   // (mkDbg "")
+  // (import ./validateOptions.nix {inherit lib;})
   // rec {
     inherit mkDbg;
     # equal to `nixpkgs` `supportedSystems` and `limitedSupportSystems` https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/release.nix#L14
