@@ -5,7 +5,7 @@ Library to easily and effortlessly integrate Cargo projects with Nix.
 - Uses [dream2nix] to build Cargo packages and [devshell] to provide a development shell.
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
-- Aims to offload work from the user; comes with useful configuration options (like `renameOutputs`, `defaultOutputs` etc.)
+- Aims to offload work from the user; comes with useful configuration options
 
 NOTE: `nix-cargo-integration` should work with any Nix version above 2.4+, but
 the experience may not be smooth if you aren't using the newest version of Nix.
