@@ -28,7 +28,7 @@ in {
           ```
         '';
       };
-      useCCompilerBintools = mkOption {
+      useCompilerBintools = mkOption {
         type = types.bool;
         default = true;
         example = false;
