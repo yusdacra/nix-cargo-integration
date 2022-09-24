@@ -56,11 +56,10 @@ in
       l.dbgX "root is" p;
 
     # Collect crate overrides
-    _crateOverrides = pkgsSet.utils.processOverrides {
+    crateOverrides = pkgsSet.utils.processOverrides {
       ${cargoPkg.name} = packageMetadata.overrides or {};
       "${cargoPkg.name}-deps" = packageMetadata.depsOverrides or {};
     };
-    crateOverrides = l.removePropagatedEnv _crateOverrides;
 
     _cCompiler =
       workspaceMetadata.cCompiler

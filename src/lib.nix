@@ -96,17 +96,6 @@ in
     concatLists = list: olist: l.unique (list ++ olist);
     # Concats lists from two attribute sets.
     concatAttrLists = attrs: oattrs: name: concatLists (attrs.${name} or []) (oattrs.${name} or []);
-    # Removes `propagatedEnv` attributes from some `crateOverride`s.
-    removePropagatedEnv =
-      l.mapAttrs
-      (
-        _: overrides:
-          l.mapAttrs
-          (
-            _: override: prev: l.removeAttrs (override prev) ["propagatedEnv"]
-          )
-          overrides
-      );
     # If the condition is true, evaluates to ifTrue,
     # otherwise evalutes to ifFalse.
     thenOr = cond: ifTrue: ifFalse:
