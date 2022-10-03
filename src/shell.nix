@@ -24,12 +24,13 @@
   baseConfig =
     {
       packages =
-        l.optional
-        cCompiler.useCompilerBintools
-        cCompiler.package.bintools;
-      language.c = {
-        compiler = cCompiler.package;
-      };
+        runtimeLibs
+        ++ (
+          l.optional
+          cCompiler.useCompilerBintools
+          cCompiler.package.bintools
+        );
+      language.c = {compiler = cCompiler.package;};
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
@@ -126,19 +127,40 @@
         [
           {
             name = "LD_LIBRARY_PATH";
-            prefix = "${l.makeLibraryPath runtimeLibs}";
-          }
-          {
-            name = "LIBRARY_PATH";
             eval = "$DEVSHELL_DIR/lib";
           }
+          {
+            # On darwin for example enables finding of libiconv
+            name = "LIBRARY_PATH";
+            # append in case it needs to be modified
+            eval = "$DEVSHELL_DIR/lib";
+          }
+          {
+            # some *-sys crates require additional includes
+            name = "CFLAGS";
+            # append in case it needs to be modified
+            eval = "\"-I $DEVSHELL_DIR/include ${l.optionalString pkgs.stdenv.isDarwin "-iframework $DEVSHELL_DIR/Library/Frameworks"}\"";
+          }
         ]
-        ++ (
-          l.optional ((cachixName != null) && (cachixKey != null))
-          (l.nameValuePair "NIX_CONFIG" ''
+        ++ l.optionals pkgs.stdenv.isDarwin [
+          {
+            # On darwin for example required for some *-sys crate compilation
+            name = "RUSTFLAGS";
+            # append in case it needs to be modified
+            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+          }
+          {
+            # rustdoc uses a different set of flags
+            name = "RUSTDOCFLAGS";
+            # append in case it needs to be modified
+            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+          }
+        ]
+        ++ l.optional ((cachixName != null) && (cachixKey != null)) (
+          l.nameValuePair "NIX_CONFIG" ''
             substituters = https://cache.nixos.org https://${cachixName}.cachix.org
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= ${cachixKey}
-          '')
+          ''
         );
       startup.setupPreCommitHooks.text = ''
         echo "pre-commit hooks are disabled."
