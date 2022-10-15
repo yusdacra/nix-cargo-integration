@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "all-cabal-json": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1665552503,
+        "narHash": "sha256-r14RmRSwzv5c+bWKUDaze6pXM7nOsiz1H8nvFHJvufc=",
+        "owner": "nix-community",
+        "repo": "all-cabal-json",
+        "rev": "d7c0434eebffb305071404edcf9d5cd99703878e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "hackage",
+        "repo": "all-cabal-json",
+        "type": "github"
+      }
+    },
     "crane": {
       "flake": false,
       "locked": {
@@ -37,6 +54,7 @@
         "alejandra": [
           "nixpkgs"
         ],
+        "all-cabal-json": "all-cabal-json",
         "crane": "crane",
         "devshell": [
           "devshell"
@@ -61,11 +79,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1665700820,
-        "narHash": "sha256-+exkeoRYI3UjjNt1EAXnRuU0gcQhZqIrk+pUafSimuM=",
+        "lastModified": 1665786447,
+        "narHash": "sha256-JMU62aMWGTbD3PT16ACL+7So3GUqmnAm3zPhZckJyfs=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "5f937899e95bed20122f5e318163a79f77d9e36b",
+        "rev": "19b63ebd0a4a8d3bd3096b0d7dbe80d2b06f1cc2",
         "type": "github"
       },
       "original": {
@@ -101,11 +119,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1665716579,
-        "narHash": "sha256-ybfAkhNO8retZakg86t2kadnhcuo5s1eSlwSnMqHW+M=",
+        "lastModified": 1665802870,
+        "narHash": "sha256-02x6xx56WY6eDqamQUK7gIVSiKW14I25EMKozwtGf00=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "aa3bcc3fb5ff01cb1923ff36162e80582ac335db",
+        "rev": "f55e3d741c6fe357d1e1bea50f5916863c831fdc",
         "type": "github"
       },
       "original": {
