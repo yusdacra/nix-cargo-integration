@@ -103,13 +103,17 @@
           # A longer description of the app.
           longDescription = "Something.";
           # Overrides to be applied to the dependencies derivation of this package.
-          # This is the same as overrides, but only makes sense if you are using
+          # This is the same as `overrides`, but only makes sense if you are using
           # the `crane` builder, which is the default.
           depsOverrides = {
             # Add some inputs and an env variable.
-            example-override-name = {
-              buildInputs = old: old ++ [common.pkgs.hello];
+            override = {
+              nativeBuildInputs = old: old ++ [common.pkgs.hello];
               TEST_ENV = "test";
+            };
+            # Overrides can also be done via `overrideAttrs` style.
+            other-override.overrideAttrs = old: {
+              buildInputs = (old.buildInputs or []) ++ [common.pkgs.hello];
             };
           };
           # Overrides to be applied to this package.
@@ -118,7 +122,7 @@
           overrides = {
             # Add some inputs and an env variable.
             example-override-name = {
-              buildInputs = old: old ++ [common.pkgs.hello];
+              nativeBuildInputs = old: old ++ [common.pkgs.hello];
               TEST_ENV = "test";
             };
           };
