@@ -470,6 +470,17 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <pre><code class="language-nix">{}
 </code></pre>
 <p><strong>Type</strong>: attribute set of (attribute set)</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">{
+  add-inputs = {
+    buildInputs = [pkgs.hello];
+    TEST_ENV = &quot;1&quot;;
+    overrideAttrs = old: {
+      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];
+    };
+  };
+}
+</code></pre>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
@@ -605,6 +616,17 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <pre><code class="language-nix">{}
 </code></pre>
 <p><strong>Type</strong>: attribute set of (attribute set)</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">{
+  add-inputs = {
+    buildInputs = [pkgs.hello];
+    TEST_ENV = &quot;1&quot;;
+    overrideAttrs = old: {
+      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];
+    };
+  };
+}
+</code></pre>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
