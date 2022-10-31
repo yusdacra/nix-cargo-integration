@@ -1,3 +1,7 @@
+# NOTICE:
+# This template is not meant to be used as is.
+# It is meant to be a complete feature showcase, so please do not file bug reports
+# if you are using it as is.
 {
   inputs = {
     nci.url = "github:yusdacra/nix-cargo-integration";
