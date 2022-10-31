@@ -48,6 +48,19 @@
     mkOption {
       type = types.attrsOf types.attrs;
       default = {};
+      example = ''
+        ```nix
+        {
+          add-inputs = {
+            buildInputs = [pkgs.hello];
+            TEST_ENV = "1";
+            overrideAttrs = old: {
+              nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];
+            };
+          };
+        }
+        ```
+      '';
       inherit description;
     };
 in {
