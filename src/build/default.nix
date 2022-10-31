@@ -127,15 +127,9 @@
         "runHook post${hook}"
       ]);
     # Build phase for crane drvs
-    buildPhase = isDeps: let
-      p = fixupCargoCommand isDeps false;
-    in
-      l.dbgX "${l.optionalString isDeps "deps-"}buildPhase" p;
+    buildPhase = isDeps: fixupCargoCommand isDeps false;
     # Check phase for crane drvs
-    checkPhase = isDeps: let
-      p = fixupCargoCommand isDeps true;
-    in
-      l.dbgX "${l.optionalString isDeps "deps-"}checkPhase" p;
+    checkPhase = isDeps: fixupCargoCommand isDeps true;
 
     # Overrides for the dependency only drv
     depsOverride = prev: {
@@ -152,18 +146,12 @@
   in {
     "${cargoPkg.name}-deps" =
       {
-        nci-overrides.overrideAttrs = prev: let
-          data = depsOverride prev;
-        in
-          l.dbgX "overrided deps drv" data;
+        nci-overrides.overrideAttrs = depsOverride;
       }
       // depsOverrides;
     ${cargoPkg.name} =
       {
-        nci-overrides.overrideAttrs = prev: let
-          data = mainOverride prev;
-        in
-          l.dbgX "overrided main drv" data;
+        nci-overrides.overrideAttrs = mainOverride;
       }
       // pkgOverrides;
   };
@@ -184,10 +172,7 @@
   in {
     ${cargoPkg.name} =
       {
-        nci-overrides.overrideAttrs = prev: let
-          data = overrides prev;
-        in
-          l.dbgX "overrided drv" data;
+        nci-overrides.overrideAttrs = overrides;
       }
       // pkgOverrides
       // (
@@ -202,9 +187,9 @@
     then craneOverrides
     else if builder == "build-rust-package"
     then brpOverrides
-    else throw "unsupported builder";
+    else throw "unsupported builder: ${builder}";
 
-  baseConfig = {
+  baseConfig = l.dbgX "base d2n config" {
     pname = cargoPkg.name;
     source = root;
 
@@ -236,7 +221,7 @@
     settings = [{inherit builder;}] ++ packageMetadata.dream2nixSettings;
   };
 
-  _outputs = utils.mkCrateOutputs baseConfig;
+  _outputs = l.dbgX "outputs" (utils.mkCrateOutputs baseConfig);
   unwrappedPackage = _outputs.packages.${cargoPkg.name};
   shell = _outputs.devShells.${cargoPkg.name};
 in rec {

@@ -42,11 +42,11 @@ in
     cargoPkg = cargoToml.package or (throw "No package field found in the provided Cargo.toml.");
     packageMetadata =
       l.validatePkgConfig
-      (
+      (l.dbgX "pkgConfig" (
         l.recursiveUpdate
         (cargoPkg.metadata.nix or {})
         (pkgConfig.${cargoPkg.name} or {})
-      );
+      ));
 
     l = topAttrs.lib // (topAttrs.lib.mkDbg "${cargoPkg.name}-${cargoPkg.version}: ");
 
@@ -78,20 +78,21 @@ in
       }
       else null;
 
+    runtimeLibs = pkgsSet.utils.resolveToPkgs (
+      (workspaceMetadata.runtimeLibs or [])
+      ++ (packageMetadata.runtimeLibs or [])
+    );
+
     # Create the base config that will be overrided.
     # nativeBuildInputs, buildInputs, and env vars are collected here and they will be used in build / shell.
     baseConfig = {
       inherit (pkgsSet) pkgs rustToolchain;
+      inherit cCompiler runtimeLibs;
 
       # nci private attributes. can change at any time without warning!
       internal =
         {
           lib = l;
-
-          runtimeLibs = pkgsSet.utils.resolveToPkgs (
-            (workspaceMetadata.runtimeLibs or [])
-            ++ (packageMetadata.runtimeLibs or [])
-          );
 
           inherit
             pkgsSet
@@ -106,6 +107,7 @@ in
             packageMetadata
             sources
             cCompiler
+            runtimeLibs
             ;
         }
         // (

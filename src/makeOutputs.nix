@@ -116,7 +116,7 @@
                 '';
             c = l.recursiveUpdate workspaceMetadata nixConfig;
           in
-            l.validateConfig c;
+            l.validateConfig (l.dbgX "config" c);
           inherit
             pkgsSet
             lib
