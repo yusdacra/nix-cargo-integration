@@ -14,6 +14,8 @@
     then
       topAttrs.pkgConfig {
         inherit (pkgsSet) pkgs rustToolchain;
+        config = workspaceMetadata;
+
         internal = {
           inherit
             pkgsSet
