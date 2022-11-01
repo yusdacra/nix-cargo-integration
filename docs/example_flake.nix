@@ -108,7 +108,7 @@
           depsOverrides = {
             # Add some inputs and an env variable.
             override = {
-              nativeBuildInputs = old: old ++ [common.pkgs.hello];
+              nativeBuildInputs = [common.pkgs.hello];
               TEST_ENV = "test";
             };
             # Overrides can also be done via `overrideAttrs` style.
@@ -122,7 +122,7 @@
           overrides = {
             # Add some inputs and an env variable.
             example-override-name = {
-              nativeBuildInputs = old: old ++ [common.pkgs.hello];
+              nativeBuildInputs = [common.pkgs.hello];
               TEST_ENV = "test";
             };
           };
