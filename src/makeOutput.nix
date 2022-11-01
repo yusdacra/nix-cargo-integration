@@ -20,6 +20,7 @@
   system = pkgsSet.pkgs.system;
 
   features = packageMetadata.buildFeatures or {};
+  profiles = packageMetadata.profiles;
   renameOutputs =
     workspaceMetadata.outputs.rename
     or packageMetadata.outputs.rename
@@ -66,13 +67,14 @@
     )
   );
 
+  mkNameSuffix = profile: l.thenOr (profile == "release") "" "-${profile}";
   # Helper function to use build.nix
-  mkBuild = f: r: c:
+  mkBuild = f: p: c:
     import ./build {
       inherit common;
       features = f;
       doCheck = c;
-      release = r;
+      profile = p;
       renamePkgTo = name;
     };
   # Helper function to create an app output.
@@ -80,12 +82,12 @@
   mkApp = bin: n: v: let
     ex = {
       exeName = bin.exeName or bin.name;
-      name = "${bin.name}${l.thenOr v.config.release "" "-debug"}";
+      name = "${bin.name}${mkNameSuffix v.config.profile}";
     };
     drv =
       if (l.length (bin.required-features or [])) < 1
       then v.package
-      else (mkBuild (bin.required-features or []) v.config.release v.config.doCheck).package;
+      else (mkBuild (bin.required-features or []) v.config.profile v.config.doCheck).package;
     exePath = "/bin/${ex.exeName}";
   in {
     name = ex.name;
@@ -98,10 +100,21 @@
 
   # "raw" packages that will be proccesed.
   # It's called so since `build.nix` generates an attrset containing the config and the package.
-  packagesRaw = {
-    "${name}" = mkBuild (features.release or []) true true;
-    "${name}-debug" = mkBuild (features.debug or []) false false;
-  };
+  packagesRaw = l.listToAttrs (
+    l.map
+    (
+      profile:
+        l.nameValuePair
+        "${name}${mkNameSuffix profile}"
+        (
+          mkBuild
+          (features.${profile} or [])
+          profile
+          profiles.${profile}
+        )
+    )
+    (l.attrNames profiles)
+  );
   # Packages set to be put in the outputs.
   _packages = l.mapAttrs (_: v: v.package) packagesRaw;
   packages = {
@@ -116,7 +129,7 @@
   # Checks to be put in outputs.
   checks = {
     ${system} = {
-      "${name}-tests" = (mkBuild (features.test or []) false true).package;
+      "${name}-tests" = (mkBuild (features.test or []) "test" true).package;
     };
   };
   # Make apps for all binaries, and recursively combine them.

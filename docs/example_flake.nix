@@ -84,11 +84,17 @@
           build = true;
           # Enable apps outputs.
           app = true;
-          # Specify features to use for when building the release, debug or test package.
+          # Specify features to use when building with the specified profiles.
           features = {
             release = ["default-release"];
             debug = ["default"];
             test = ["default" "testing"];
+          };
+          # Specify profiles to generate outputs for. Setting to `true` or `false`
+          # controls whether or not to run tests for that profile.
+          profiles = {
+            release = true;
+            debug = false;
           };
           # add a desktop file to the package
           desktopFile = ./desktop/file/path.desktop;

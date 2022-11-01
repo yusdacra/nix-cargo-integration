@@ -33,17 +33,6 @@
       description = "The categories of this app.";
     };
   };
-  featuresOption = name:
-    mkOption {
-      type = types.listOf types.str;
-      default = [];
-      example = ''
-        ```nix
-        ["default" "some-feature"]
-        ```
-      '';
-      description = "Set features to enable when building with ${name} profile.";
-    };
   dream2nixOverridesOption = description:
     mkOption {
       type = types.attrsOf types.attrs;
@@ -114,10 +103,40 @@ in {
       '';
       description = "Desktop file";
     };
-    features = {
-      release = featuresOption "release";
-      debug = featuresOption "debug";
-      test = featuresOption "test";
+    features = mkOption {
+      type = types.attrsOf (types.listOf types.str);
+      default = [];
+      example = ''
+        ```nix
+        {
+          release = ["default" "some-feature"];
+          debug = ["default-debug"];
+          bench = ["default" "bench"];
+        }
+        ```
+      '';
+      description = "Set features to enable when building with a profile.";
+    };
+    profiles = mkOption {
+      type = types.attrsOf types.bool;
+      default = {
+        release = true;
+        debug = false;
+      };
+      description = ''
+        Profiles to generate packages for.
+        Set the profile to `true` to enable running tests, `false` to disable.
+      '';
+      example = ''
+        ```nix
+        {
+          release = true;
+          debug = false;
+          test = true;
+          bench = false;
+        }
+        ```
+      '';
     };
     overrides =
       dream2nixOverridesOption
