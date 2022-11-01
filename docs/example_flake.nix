@@ -108,7 +108,15 @@
           depsOverrides = {
             # Add some inputs and an env variable.
             override = {
+              # attributes declared this way (ones that take the old values)
+              # let you conveniently add stuff to attributes. Note that this
+              # only works if the attribute was declared before, otherwise
+              # doing this will result in an error. If you do not want to get
+              # an error incase the attribute doesn't exist, see `overrideAttrs`
+              # usage below.
               nativeBuildInputs = old: old ++ [common.pkgs.hello];
+              # attributes declared this way will completely override the
+              # old attribute if one exists.
               TEST_ENV = "test";
             };
             # Overrides can also be done via `overrideAttrs` style.
