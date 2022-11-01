@@ -168,10 +168,18 @@
       cargoBuildType = "debug";
       cargoCheckType = "debug";
       cargoBuildProfileFlag = profileFlag;
-      preInstall = ''
+      dontCargoInstall = true;
+      postBuild = ''
         export cargoBuildType="${profile}"
         export cargoCheckType="${profile}"
-        ${prev.preInstall or ""}
+        runHook cargoInstallPostBuildHook
+        ${prev.postBuild or ""}
+      '';
+      installPhase = ''
+        runHook preInstall
+        runHook cargoInstallHook
+        ${prev.installPhase or ""}
+        runHook postInstall
       '';
     };
   in {
