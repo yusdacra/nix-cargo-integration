@@ -110,7 +110,7 @@ in {
         ```nix
         {
           release = ["default" "some-feature"];
-          debug = ["default-debug"];
+          dev = ["default-dev"];
           bench = ["default" "bench"];
         }
         ```
@@ -121,7 +121,7 @@ in {
       type = types.attrsOf types.bool;
       default = {
         release = true;
-        debug = false;
+        dev = false;
       };
       description = ''
         Profiles to generate packages for.
@@ -131,7 +131,7 @@ in {
         ```nix
         {
           release = true;
-          debug = false;
+          dev = false;
           test = true;
           bench = false;
         }

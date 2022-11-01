@@ -94,7 +94,7 @@
           # controls whether or not to run tests for that profile.
           profiles = {
             release = true;
-            debug = false;
+            dev = false;
           };
           # add a desktop file to the package
           desktopFile = ./desktop/file/path.desktop;
