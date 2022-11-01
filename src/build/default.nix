@@ -165,9 +165,14 @@
       cargoBuildFlags = flags;
       cargoCheckFlags = flags;
       # we set this to debug so that `cargoBuildProfileFlag` is not declared
-      cargoBuildType = profile;
-      cargoCheckType = profile;
+      cargoBuildType = "debug";
+      cargoCheckType = "debug";
       cargoBuildProfileFlag = profileFlag;
+      preInstall = ''
+        export cargoBuildType="${profile}"
+        export cargoCheckType="${profile}"
+        ${prev.preInstall or ""}
+      '';
     };
   in {
     ${cargoPkg.name} =
