@@ -1,8 +1,8 @@
 {
-  # Whether to build this package using a release profile
-  release ? false,
-  # Whether to run package checks (eg. cargo tests)
+  # whether to run check phase
   doCheck ? false,
+  # The profile to use when compiling
+  profile ? "debug",
   # Features to enable for this package
   features ? [],
   # If non null, this string will be used as the derivation name
@@ -63,8 +63,9 @@
   packageFlag = l.optional (memberName != null) "--package ${cargoPkg.name}";
   # Specify --features if we have enabled features other than the default ones
   featuresFlags = l.optional ((l.length features) > 0) "--no-default-features --features ${(l.concatStringsSep "," features)}";
-  # Specify --release if release profile is enabled
-  releaseFlag = l.optional release "--release";
+  # Specify the --profile flag to set the profile we will use for compiling
+  profileFlag = "--profile ${profile}";
+  dontFixup = profile != "release";
 
   # Wrapper that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
   runtimeLibsWrapper = old:
@@ -102,7 +103,7 @@
         l.concatStringsSep " " (l.flatten [
           "cargo"
           subcmd
-          releaseFlag
+          profileFlag
           packageFlag
           featuresFlags
           (
@@ -138,8 +139,7 @@
     };
     # Overrides for the main drv
     mainOverride = prev: {
-      inherit doCheck;
-      dontFixup = !release;
+      inherit doCheck dontFixup;
       buildPhase = buildPhase false;
       checkPhase = checkPhase false;
     };
@@ -159,15 +159,33 @@
   # Overrides for the build rust package builder
   brpOverrides = let
     flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
-    profile = l.thenOr release "release" "debug";
+    brpProfile =
+      if profile == "dev"
+      then "debug"
+      else profile;
     # Overrides for the drv
     overrides = prev: {
-      inherit doCheck;
-      dontFixup = !release;
+      inherit doCheck dontFixup;
       cargoBuildFlags = flags;
       cargoCheckFlags = flags;
-      cargoBuildType = profile;
-      cargoCheckType = profile;
+      # we set this to debug so that `cargoBuildProfileFlag` is not declared
+      cargoBuildType = "debug";
+      cargoCheckType = "debug";
+      cargoBuildProfileFlag = profileFlag;
+      cargoCheckProfileFlag = profileFlag;
+      dontCargoInstall = true;
+      postBuild = ''
+        export cargoBuildType="${brpProfile}"
+        export cargoCheckType="${brpProfile}"
+        runHook cargoInstallPostBuildHook
+        ${prev.postBuild or ""}
+      '';
+      installPhase = ''
+        runHook preInstall
+        runHook cargoInstallHook
+        ${prev.installPhase or ""}
+        runHook postInstall
+      '';
     };
   in {
     ${cargoPkg.name} =
@@ -225,7 +243,7 @@
   unwrappedPackage = _outputs.packages.${cargoPkg.name};
   shell = _outputs.devShells.${cargoPkg.name};
 in rec {
-  config = baseConfig // {inherit release features doCheck;};
+  config = baseConfig // {inherit profile features doCheck;};
   package = let
     wrapped = l.pipe unwrappedPackage [
       (old:
