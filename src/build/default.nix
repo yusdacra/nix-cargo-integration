@@ -159,6 +159,10 @@
   # Overrides for the build rust package builder
   brpOverrides = let
     flags = l.concatStringsSep " " (packageFlag ++ featuresFlags);
+    brpProfile =
+      if profile == "dev"
+      then "debug"
+      else profile;
     # Overrides for the drv
     overrides = prev: {
       inherit doCheck dontFixup;
@@ -170,8 +174,8 @@
       cargoBuildProfileFlag = profileFlag;
       dontCargoInstall = true;
       postBuild = ''
-        export cargoBuildType="${profile}"
-        export cargoCheckType="${profile}"
+        export cargoBuildType="${brpProfile}"
+        export cargoCheckType="${brpProfile}"
         runHook cargoInstallPostBuildHook
         ${prev.postBuild or ""}
       '';
