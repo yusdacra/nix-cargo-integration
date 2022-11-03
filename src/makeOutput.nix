@@ -129,7 +129,7 @@
   # Checks to be put in outputs.
   checks = {
     ${system} = {
-      "${name}-tests" = (mkBuild (features.test or []) "test" true).package;
+      "${name}-tests" = (mkBuild (features.test or []) "release" true).package;
     };
   };
   # Make apps for all binaries, and recursively combine them.

@@ -172,6 +172,7 @@
       cargoBuildType = "debug";
       cargoCheckType = "debug";
       cargoBuildProfileFlag = profileFlag;
+      cargoCheckProfileFlag = profileFlag;
       dontCargoInstall = true;
       postBuild = ''
         export cargoBuildType="${brpProfile}"
