@@ -311,6 +311,7 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
   release = [&quot;default&quot; &quot;some-feature&quot;];
   dev = [&quot;default-dev&quot;];
   bench = [&quot;default&quot; &quot;bench&quot;];
+  test = [&quot;default&quot; &quot;tests&quot;];
 }
 </code></pre>
 <p>Declared in:</p>
@@ -416,8 +417,7 @@ Set the profile to <code>true</code> to enable running tests, <code>false</code>
 <pre><code class="language-nix">{
   release = true;
   dev = false;
-  test = true;
-  bench = false;
+  custom-profile = false;
 }
 </code></pre>
 <p>Declared in:</p>
