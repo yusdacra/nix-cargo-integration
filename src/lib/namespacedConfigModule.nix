@@ -112,6 +112,7 @@ in {
           release = ["default" "some-feature"];
           dev = ["default-dev"];
           bench = ["default" "bench"];
+          test = ["default" "tests"];
         }
         ```
       '';
@@ -132,8 +133,7 @@ in {
         {
           release = true;
           dev = false;
-          test = true;
-          bench = false;
+          custom-profile = false;
         }
         ```
       '';
