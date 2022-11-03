@@ -6,6 +6,11 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 `cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.
 
+## 04-11-2022
+
+- nix: the outputs prefixed with `-debug` are now named with the `-dev` prefix. @ https://github.com/yusdacra/nix-cargo-integration/pull/97
+  - This was done to have more consistency with Cargo profiles (eg. `profiles.dev` == `-dev` prefix).
+
 ## 24-09-2022
 
 - nix and cargo-toml: the whole interface was changed! Please refer to the documentation and the example flake.
