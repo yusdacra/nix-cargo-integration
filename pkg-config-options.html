@@ -300,40 +300,18 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
-<h2 id="featuresdebug"><a class="header" href="#featuresdebug"><code>features.debug</code></a></h2>
-<p>Set features to enable when building with debug profile.</p>
+<h2 id="features"><a class="header" href="#features"><code>features</code></a></h2>
+<p>Set features to enable when building with a profile.</p>
 <p><strong>Default value</strong>:</p>
 <pre><code class="language-nix">[]
 </code></pre>
-<p><strong>Type</strong>: list of string</p>
+<p><strong>Type</strong>: attribute set of list of string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">[&quot;default&quot; &quot;some-feature&quot;]
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
-</ul>
-<h2 id="featuresrelease"><a class="header" href="#featuresrelease"><code>features.release</code></a></h2>
-<p>Set features to enable when building with release profile.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">[]
-</code></pre>
-<p><strong>Type</strong>: list of string</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">[&quot;default&quot; &quot;some-feature&quot;]
-</code></pre>
-<p>Declared in:</p>
-<ul>
-<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
-</ul>
-<h2 id="featurestest"><a class="header" href="#featurestest"><code>features.test</code></a></h2>
-<p>Set features to enable when building with test profile.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">[]
-</code></pre>
-<p><strong>Type</strong>: list of string</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">[&quot;default&quot; &quot;some-feature&quot;]
+<pre><code class="language-nix">{
+  release = [&quot;default&quot; &quot;some-feature&quot;];
+  dev = [&quot;default-dev&quot;];
+  bench = [&quot;default&quot; &quot;bench&quot;];
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -426,6 +404,25 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="profiles"><a class="header" href="#profiles"><code>profiles</code></a></h2>
+<p>Profiles to generate packages for.
+Set the profile to <code>true</code> to enable running tests, <code>false</code> to disable.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">{&quot;dev&quot;:false,&quot;release&quot;:true}
+</code></pre>
+<p><strong>Type</strong>: attribute set of boolean</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">{
+  release = true;
+  dev = false;
+  test = true;
+  bench = false;
+}
+</code></pre>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
 <h2 id="runtimelibs"><a class="header" href="#runtimelibs"><code>runtimeLibs</code></a></h2>
 <p>Libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> environment variable for the dev env.
