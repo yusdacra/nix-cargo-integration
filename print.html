@@ -722,6 +722,14 @@ variable to <code>1</code> and passing <code>--impure</code> to <code>nix</code>
 most recent to least recent.</p>
 <p><code>nix:</code> means that the change was related to the Nix library part of <code>nci</code>.
 <code>cargo-toml:</code> means that the change was related to the <code>Cargo.toml</code> attribute part of <code>nci</code>.</p>
+<h2 id="04-11-2022"><a class="header" href="#04-11-2022">04-11-2022</a></h2>
+<ul>
+<li>nix: the outputs prefixed with <code>-debug</code> are now named with the <code>-dev</code> prefix. @ https://github.com/yusdacra/nix-cargo-integration/pull/97
+<ul>
+<li>This was done to have more consistency with Cargo profiles (eg. <code>profiles.dev</code> == <code>-dev</code> prefix).</li>
+</ul>
+</li>
+</ul>
 <h2 id="24-09-2022"><a class="header" href="#24-09-2022">24-09-2022</a></h2>
 <ul>
 <li>nix and cargo-toml: the whole interface was changed! Please refer to the documentation and the example flake.</li>
