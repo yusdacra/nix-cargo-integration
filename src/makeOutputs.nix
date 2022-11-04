@@ -9,14 +9,12 @@
 {
   # Path to the root of a cargo workspace or crate
   root,
-  # The systems to generate outputs for
-  systems ? lib.defaultSystems,
   # Config that will be applied to workspace
   config ? (_: {}),
   # All per crate overrides
   pkgConfig ? (_: {}),
   ...
-}: let
+} @ args: let
   l = lib // builtins;
 
   # Helper function to import a Cargo.toml from a root.
@@ -30,6 +28,13 @@
   rootPkg = cargoToml.package or null;
   # Get the workspace attributes if it exists.
   workspaceToml = cargoToml.workspace or null;
+
+  systems =
+    args.systems
+    or workspaceToml.metadata.nix.systems
+    or rootPkg.metadata.nix.systems
+    or lib.defaultSystems;
+
   # Get the workspace members if they exist.
   workspaceMembers = workspaceToml.members or [];
   # Process any globs that might be in workspace members.

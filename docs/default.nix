@@ -9,7 +9,8 @@
   ...
 }: let
   configDesc = ''
-    These are options that can be set under `workspace.metadata.nix` or `package.metadata.nix`.
+    These are options that can be set under `workspace.metadata.nix`.
+    They can be set under `package.metadata.nix` if the context isn't a Cargo workspace.
     They can also be set under `config` under `nci.lib.makeOutputs`:
     ```nix
     {

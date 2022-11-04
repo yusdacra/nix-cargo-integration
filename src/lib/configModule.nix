@@ -7,6 +7,19 @@
     ;
 in {
   options = {
+    systems = mkOption {
+      type = types.listOf types.str;
+      default = lib.defaultSystems;
+      example = ''
+        ```nix
+        ["x86_64-linux" "aarch64-darwin"]
+        ```
+      '';
+      description = ''
+        The systems to generate outputs for.
+        Note that if you want to declare this option in Nix, do not declare it under `config` but instead declare it in the argset you pass to `makeOutputs`.
+      '';
+    };
     cCompiler = {
       enable = mkOption {
         type = types.bool;

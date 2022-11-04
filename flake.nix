@@ -54,7 +54,7 @@
       in
         pkgs.callPackage ./docs {
           configDocs = generateDocsForModule ./src/lib/configModule.nix;
-          pkgConfigDocs = generateDocsForModule ./src/lib/pkgConfigModule.nix;
+          pkgConfigDocs = generateDocsForModule ./src/lib/namespacedConfigModule.nix;
         };
 
       makeOutputs = import ./src/makeOutputs.nix {inherit sources lib;};
