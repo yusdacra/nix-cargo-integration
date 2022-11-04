@@ -134,7 +134,8 @@
 
                 <div id="content" class="content">
                     <main>
-                        <p>These are options that can be set under <code>workspace.metadata.nix</code> or <code>package.metadata.nix</code>.
+                        <p>These are options that can be set under <code>workspace.metadata.nix</code>.
+They can be set under <code>package.metadata.nix</code> if the context isn't a Cargo workspace.
 They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</code>:</p>
 <pre><code class="language-nix">{
   config = common: { /* options go here */ };
@@ -291,6 +292,20 @@ These will also be added to the resulting package when you build it, as a wrappe
 <pre><code class="language-nix">{}
 </code></pre>
 <p><strong>Type</strong>: (attribute set) or function that evaluates to a(n) (attribute set)</p>
+<p>Declared in:</p>
+<ul>
+<li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
+</ul>
+<h2 id="systems"><a class="header" href="#systems"><code>systems</code></a></h2>
+<p>The systems to generate outputs for.
+Note that if you want to declare this option in Nix, do not declare it under <code>config</code> but instead declare it in the argset you pass to <code>makeOutputs</code>.</p>
+<p><strong>Default value</strong>:</p>
+<pre><code class="language-nix">[&quot;aarch64-linux&quot;,&quot;x86_64-darwin&quot;,&quot;x86_64-linux&quot;,&quot;i686-linux&quot;,&quot;aarch64-darwin&quot;]
+</code></pre>
+<p><strong>Type</strong>: list of string</p>
+<p><strong>Example value</strong>:</p>
+<pre><code class="language-nix">[&quot;x86_64-linux&quot; &quot;aarch64-darwin&quot;]
+</code></pre>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
