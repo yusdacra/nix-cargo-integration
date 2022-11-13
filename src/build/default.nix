@@ -167,7 +167,7 @@
     overrides = prev: {
       inherit doCheck dontFixup;
       cargoBuildFlags = flags;
-      cargoCheckFlags = flags;
+      cargoTestFlags = flags;
       # we set this to debug so that `cargoBuildProfileFlag` is not declared
       cargoBuildType = "debug";
       cargoCheckType = "debug";
