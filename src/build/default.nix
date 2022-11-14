@@ -94,55 +94,21 @@
 
   # Overrides for the crane builder
   craneOverrides = let
-    # Fixup a cargo command for crane
-    fixupCargoCommand = isDeps: isTest: let
-      subcmd = l.thenOr isTest "test" "build";
-      hook = l.thenOr isTest "Check" "Build";
-
-      mkCmd = subcmd:
-        l.concatStringsSep " " (l.flatten [
-          "cargo"
-          subcmd
-          profileFlag
-          packageFlag
-          featuresFlags
-          (
-            l.optionals (!isTest && !isDeps) [
-              "--message-format"
-              "json-render-diagnostics"
-              ">\"$cargoBuildLog\""
-            ]
-          )
-        ]);
-      cmd = mkCmd subcmd;
-    in
-      l.concatStringsSep "\n" (l.flatten [
-        "runHook pre${hook}"
-        (
-          l.optional
-          (!isTest && !isDeps)
-          "cargoBuildLog=$(mktemp cargoBuildLogXXXX.json)"
-        )
-        (l.optional (!isTest && isDeps) (mkCmd "check"))
-        cmd
-        "runHook post${hook}"
-      ]);
-    # Build phase for crane drvs
-    buildPhase = isDeps: fixupCargoCommand isDeps false;
-    # Check phase for crane drvs
-    checkPhase = isDeps: fixupCargoCommand isDeps true;
+    flagsProfiles = rec {
+      cargoBuildFlags = l.concatStringsSep " " featuresFlags;
+      cargoTestFlags = cargoBuildFlags;
+      cargoBuildProfile = profile;
+      cargoTestProfile = cargoBuildProfile;
+    };
 
     # Overrides for the dependency only drv
-    depsOverride = prev: {
-      buildPhase = buildPhase true;
-      checkPhase = checkPhase true;
-    };
+    depsOverride = prev: flagsProfiles;
     # Overrides for the main drv
-    mainOverride = prev: {
-      inherit doCheck dontFixup;
-      buildPhase = buildPhase false;
-      checkPhase = checkPhase false;
-    };
+    mainOverride = prev:
+      flagsProfiles
+      // {
+        inherit doCheck dontFixup;
+      };
   in {
     "${cargoPkg.name}-deps" =
       {
