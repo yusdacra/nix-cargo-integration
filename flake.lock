@@ -136,11 +136,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1668393806,
-        "narHash": "sha256-ew2bYm8z7CWKA2qcTuCk4/xEY4uG3WAloTczICe7gbc=",
+        "lastModified": 1668479979,
+        "narHash": "sha256-UI+JUCBaMpn+5Y1hSePmndbYX5zu0+bavlfzrhPrGEk=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "219feff2b874bf6f3d18214a8ed3f360fe067759",
+        "rev": "2342f70f7257046effc031333c4cfdea66c91d82",
         "type": "github"
       },
       "original": {
