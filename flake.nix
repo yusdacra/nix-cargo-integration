@@ -13,14 +13,19 @@
 
     dream2nix = {
       url = "github:nix-community/dream2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.gomod2nix.follows = "nixpkgs";
-      inputs.mach-nix.follows = "nixpkgs";
-      inputs.poetry2nix.follows = "nixpkgs";
-      inputs.alejandra.follows = "nixpkgs";
-      inputs.pre-commit-hooks.follows = "nixpkgs";
-      inputs.flake-utils-pre-commit.follows = "nixpkgs";
-      inputs.devshell.follows = "devshell";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        devshell.follows = "devshell";
+
+        alejandra.follows = "";
+        all-cabal-json.follows = "";
+        flake-utils-pre-commit.follows = "";
+        ghc-utils.follows = "";
+        gomod2nix.follows = "";
+        mach-nix.follows = "";
+        poetry2nix.follows = "";
+        pre-commit-hooks.follows = "";
+      };
     };
   };
 
