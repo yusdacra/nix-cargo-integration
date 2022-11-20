@@ -66,7 +66,6 @@ in rec {
   dream2nix = sources.dream2nix.lib.init {
     inherit pkgs;
     config.projectRoot = root;
-    config.disableIfdWarning = true;
   };
   # nci library utilities
   utils = import ./pkgs-lib.nix {inherit pkgs lib dream2nix;};
