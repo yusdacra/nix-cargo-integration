@@ -68,7 +68,7 @@ in {
     (l.dbgX "rawOverrides" rawOverrides);
 
   # dream2nix build crate.
-  mkCrateOutputs = dream2nix.realizeProjects;
+  mkCrateOutputs = dream2nix.dream2nix-interface.makeOutputs;
 
   wrapDerivation = old: args: script:
     pkgs.runCommand old.name
