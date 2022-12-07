@@ -206,8 +206,8 @@
   };
 
   _outputs = l.dbgX "outputs" (utils.mkCrateOutputs baseConfig);
-  unwrappedPackage = _outputs.packages.${cargoPkg.name};
-  shell = _outputs.devShells.${cargoPkg.name};
+  unwrappedPackage = _outputs.packages.${pkgs.system}.${cargoPkg.name};
+  shell = _outputs.devShells.${pkgs.system}.${cargoPkg.name};
 in rec {
   config = baseConfig // {inherit profile features doCheck;};
   package = let

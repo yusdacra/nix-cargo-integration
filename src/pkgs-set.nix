@@ -62,13 +62,8 @@
   };
 in rec {
   inherit rustToolchain pkgs;
-  # dream2nix tools
-  dream2nix = sources.dream2nix.lib.init {
-    inherit pkgs;
-    config.projectRoot = root;
-  };
   # nci library utilities
-  utils = import ./pkgs-lib.nix {inherit pkgs lib dream2nix;};
+  utils = import ./pkgs-lib.nix {inherit pkgs lib sources root;};
   # pre commit hooks
   makePreCommitHooks = let
     tools =

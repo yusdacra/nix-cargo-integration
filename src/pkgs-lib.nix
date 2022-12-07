@@ -4,8 +4,8 @@
   pkgs,
   # an NCI library
   lib,
-  # dream2nix tools
-  dream2nix,
+  sources,
+  root,
 }: let
   l = lib;
 
@@ -68,7 +68,13 @@ in {
     (l.dbgX "rawOverrides" rawOverrides);
 
   # dream2nix build crate.
-  mkCrateOutputs = dream2nix.dream2nix-interface.makeOutputs;
+  mkCrateOutputs = args:
+    sources.dream2nix.lib.makeFlakeOutputs
+    ({
+        inherit pkgs;
+        config.projectRoot = root;
+      }
+      // args);
 
   wrapDerivation = old: args: script:
     pkgs.runCommand old.name
