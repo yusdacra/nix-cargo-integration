@@ -184,7 +184,7 @@
     // {
       devShells =
         l.mapAttrs
-        (_: s: s // {default = mergeShells s;})
+        (_: s: {default = mergeShells s;})
         combinedOutputs.devShells;
     };
   checkedOutputs =
