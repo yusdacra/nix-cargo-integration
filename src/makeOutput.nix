@@ -122,7 +122,7 @@
       _packages
       // (
         l.optionalAttrs
-        (defaultOutputs ? package)
+        (defaultOutputs ? package && l.hasAttr defaultOutputs.package _packages)
         {default = _packages.${defaultOutputs.package};}
       );
   };
@@ -146,7 +146,7 @@
       _apps
       // (
         l.optionalAttrs
-        (defaultOutputs ? app)
+        (defaultOutputs ? app && l.hasAttr defaultOutputs.app _apps)
         {default = _apps.${defaultOutputs.app};}
       );
   };
