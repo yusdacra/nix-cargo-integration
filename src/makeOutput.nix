@@ -157,9 +157,8 @@
     };
   };
 in
-  {inherit devShells;}
-  // l.optionalAttrs (packageMetadata.build or false) (
-    {inherit packages checks;}
+  l.optionalAttrs (packageMetadata.build or false) (
+    {inherit packages checks devShells;}
     // l.optionalAttrs (packageMetadata.app or false) {
       inherit apps;
     }
