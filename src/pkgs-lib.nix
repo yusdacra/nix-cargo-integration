@@ -70,11 +70,14 @@ in {
   # dream2nix build crate.
   mkCrateOutputs = args:
     sources.dream2nix.lib.makeFlakeOutputs
-    ({
+    (
+      {
         inherit pkgs;
         config.projectRoot = root;
+        autoProjects = true;
       }
-      // args);
+      // args
+    );
 
   wrapDerivation = old: args: script:
     pkgs.runCommand old.name
