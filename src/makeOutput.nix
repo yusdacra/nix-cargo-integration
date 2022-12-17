@@ -19,7 +19,7 @@
 
   system = pkgsSet.pkgs.system;
 
-  features = packageMetadata.buildFeatures or {};
+  features = packageMetadata.features or {};
   profiles = packageMetadata.profiles;
   renameOutputs =
     workspaceMetadata.outputs.rename
