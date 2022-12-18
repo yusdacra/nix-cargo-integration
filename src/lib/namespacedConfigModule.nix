@@ -105,7 +105,7 @@ in {
     };
     features = mkOption {
       type = types.attrsOf (types.listOf types.str);
-      default = [];
+      default = {};
       example = ''
         ```nix
         {
