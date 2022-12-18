@@ -25,6 +25,7 @@
         mach-nix.follows = "";
         poetry2nix.follows = "";
         pre-commit-hooks.follows = "";
+        nix-pypi-fetcher.follows = "";
       };
     };
   };
