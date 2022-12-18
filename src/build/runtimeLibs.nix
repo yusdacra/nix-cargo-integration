@@ -4,10 +4,9 @@
   libs,
   # nixpkgs
   lib,
-  makeWrapper,
+  patchelf,
 }: ''
-  source ${makeWrapper}/nix-support/setup-hook
   for f in $out/bin/*; do
-    wrapProgram "$f" --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath libs}"
+    ${patchelf}/bin/patchelf --set-rpath "${lib.makeLibraryPath libs}" "$f"
   done
 ''

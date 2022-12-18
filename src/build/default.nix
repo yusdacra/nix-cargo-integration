@@ -67,11 +67,14 @@
   profileFlag = "--profile ${profile}";
   dontFixup = profile != "release";
 
-  # Wrapper that exposes runtimeLibs array as LD_LIBRARY_PATH env variable.
+  # Wrapper that patches the executables with patchelf.
   runtimeLibsWrapper = old:
     if l.length runtimeLibs > 0
     then
       utils.wrapDerivation old {} ''
+        rm -rf $out/bin/*
+        cp --no-preserve=mode,ownership ${old}/bin/* $out/bin/
+        chmod +x $out/bin/*
         ${
           pkgs.callPackage ./runtimeLibs.nix {
             libs = runtimeLibs;
