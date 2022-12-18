@@ -182,22 +182,26 @@
       // {
         "^.*" = {
           inherit set-toolchain;
-          set-stdenv.overrideAttrs = old: {
-            CC = "cc";
-            stdenv = pkgs.stdenvNoCC;
-            nativeBuildInputs = let
-              cCompilerPkgs =
-                if cCompiler != null
-                then
-                  [cCompiler.package]
-                  ++ (
-                    l.optional
-                    cCompiler.useCompilerBintools
-                    cCompiler.package.bintools
-                  )
-                else [];
-            in
-              (old.nativeBuildInputs or []) ++ cCompilerPkgs;
+          set-stdenv = {
+            override = old: {
+              stdenv = pkgs.stdenvNoCC;
+            };
+            overrideAttrs = old: {
+              CC = "cc";
+              nativeBuildInputs = let
+                cCompilerPkgs =
+                  if cCompiler != null
+                  then
+                    [cCompiler.package]
+                    ++ (
+                      l.optional
+                      cCompiler.useCompilerBintools
+                      cCompiler.package.bintools
+                    )
+                  else [];
+              in
+                (old.nativeBuildInputs or []) ++ cCompilerPkgs;
+            };
           };
         };
       };
