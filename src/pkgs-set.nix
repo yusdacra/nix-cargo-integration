@@ -64,6 +64,8 @@ in rec {
   inherit rustToolchain pkgs;
   # nci library utilities
   utils = import ./pkgs-lib.nix {inherit pkgs lib sources root;};
+  # devshell
+  makeDevshell = import "${sources.devshell}/modules" pkgs;
   # pre commit hooks
   makePreCommitHooks = let
     tools =

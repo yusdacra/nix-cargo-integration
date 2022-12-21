@@ -9,9 +9,8 @@
     root
     runtimeLibs
     sources
-    cCompiler
     ;
-  inherit (common.internal.pkgsSet) pkgs;
+  inherit (common.internal.pkgsSet) pkgs makeDevshell;
 
   l = common.internal.lib;
 
@@ -20,17 +19,71 @@
   cachixName = cachixMetadata.name;
   cachixKey = cachixMetadata.key;
 
+  # Get all the options' name declared immediately under `config.devshell` by
+  # devshell's modules.
+  devshellOptions =
+    l.filterAttrs
+    (_: l.isType "option")
+    (makeDevshell {configuration = {};}).options.devshell;
+
+  # A helper function moving all options defined in the root of the config
+  # (which name matches ones in `devshellOptions`) under a `devshell` attribute
+  # set in the resulting config.
+  #
+  # devshellOptions = { foo = ...; bar = ...; };
+  # pushUpDevshellOptions { foo = "foo"; baz = "baz"; }
+  # -> { devhsell.foo = "foo"; baz = "baz"; }
+  #
+  # Issues a warning if it would override an exisiting option:
+  #
+  # pushUpDevshellOptions { foo = "foo"; devshell.foo = "oof"; }
+  # -> { devhsell.foo = "foo"; }
+  # trace: warning: Option 'foo' defined twice, both under 'config' and
+  #   'config.devshell'. This likely happens when defining both in `Cargo.toml`:
+  #   ```toml
+  #   [workspace.metadata.nix.devshell]
+  #   name = "example"
+  #   [workspace.metadata.nix.devshell.devshell]
+  #   name = "example"
+  #   ```
+  pushUpDevshellOptions = config: let
+    movedOpts = l.flip l.filterAttrs config (
+      name: _:
+        l.warnIf
+        (l.hasAttr name (config.devshell or {}))
+        (l.concatStrings [
+          "Option '${name}' defined twice, both under 'config' and "
+          "'config.devshell'. This likely happens when defining both in "
+          ''
+            `Cargo.toml`:
+            ```toml
+            [workspace.metadata.nix.devshell]
+            name = "example"
+            [workspace.metadata.nix.devshell.devshell]
+            name = "example"
+            ```
+          ''
+        ])
+        (l.hasAttr name devshellOptions)
+    );
+  in
+    l.recursiveUpdate
+    (l.removeAttrs config (l.attrNames movedOpts))
+    {devshell = movedOpts;};
+
+  rawInputs =
+    (rawShell.buildInputs or [])
+    ++ (rawShell.nativeBuildInputs or []);
+  rawEnv = rawShell.passthru.env;
   # Create a base devshell config
   baseConfig =
     {
-      packages =
-        runtimeLibs
-        ++ (
-          l.optional
-          cCompiler.useCompilerBintools
-          cCompiler.package.bintools
-        );
-      language.c = {compiler = cCompiler.package;};
+      language.c = {
+        compiler = common.cCompiler.package;
+        libraries = rawInputs;
+        includes = rawInputs;
+      };
+      packages = rawInputs ++ runtimeLibs;
       commands = with pkgs; let
         buildFlakeExpr = nixArgs: expr: ''
           function get { nix flake metadata --json | ${jq}/bin/jq -c -r $1; }
@@ -124,22 +177,31 @@
           command = buildFlakeExpr "" ''flake.checks.\"${system}\".preCommitChecks'';
         };
       env =
-        [
+        (
+          l.mapAttrsToList
+          l.nameValuePair
+          (
+            l.filterAttrs
+            (name: value: l.isString value)
+            rawEnv
+          )
+        )
+        ++ [
           {
             name = "LD_LIBRARY_PATH";
-            eval = "$DEVSHELL_DIR/lib";
+            eval = "$DEVSHELL_DIR/lib${l.optionalString (rawEnv ? LD_LIBRARY_PATH) ":${rawEnv.LD_LIBRARY_PATH}"}";
           }
           {
             # On darwin for example enables finding of libiconv
             name = "LIBRARY_PATH";
             # append in case it needs to be modified
-            eval = "$DEVSHELL_DIR/lib";
+            eval = "$DEVSHELL_DIR/lib${l.optionalString (rawEnv ? LIBRARY_PATH) ":${rawEnv.LIBRARY_PATH}"}";
           }
           {
             # some *-sys crates require additional includes
             name = "CFLAGS";
             # append in case it needs to be modified
-            eval = "\"-I $DEVSHELL_DIR/include ${l.optionalString pkgs.stdenv.isDarwin "-iframework $DEVSHELL_DIR/Library/Frameworks"}\"";
+            eval = "\"-I $DEVSHELL_DIR/include${l.optionalString pkgs.stdenv.isDarwin " -iframework $DEVSHELL_DIR/Library/Frameworks"}${l.optionalString (rawEnv ? CFLAGS) " ${rawEnv.CFLAGS}"}\"";
           }
         ]
         ++ l.optionals pkgs.stdenv.isDarwin [
@@ -147,13 +209,13 @@
             # On darwin for example required for some *-sys crate compilation
             name = "RUSTFLAGS";
             # append in case it needs to be modified
-            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks${l.optionalString (rawEnv ? RUSTFLAGS) " ${rawEnv.RUSTFLAGS}"}\"";
           }
           {
             # rustdoc uses a different set of flags
             name = "RUSTDOCFLAGS";
             # append in case it needs to be modified
-            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks\"";
+            eval = "\"-L framework=$DEVSHELL_DIR/Library/Frameworks${l.optionalString (rawEnv ? RUSTDOCFLAGS) " ${rawEnv.RUSTDOCFLAGS}"}\"";
           }
         ]
         ++ l.optional ((cachixName != null) && (cachixKey != null)) (
@@ -178,7 +240,7 @@
   mkDevshellConfig = attrs:
     l.optionalAttrs
     (l.isAttrs attrs)
-    (l.removeAttrs attrs ["imports"]);
+    (pushUpDevshellOptions (l.removeAttrs attrs ["imports"]));
 
   # Make configs work workspace and package
   workspaceConfig = mkDevshellConfig (workspaceMetadata.shell or null);
@@ -209,7 +271,15 @@
   in
     l.recursiveUpdate clearedDevshellOptions {
       devshell.startup = getOpts "startup" {};
-      language = getOpts "language" {};
+      language =
+        (getOpts "language" {})
+        // {
+          c = {
+            compiler = base.language.c.compiler or config.language.c.compiler or null;
+            libraries = l.unique ((base.language.c.libraries or []) ++ (config.language.c.libraries or []));
+            includes = l.unique ((base.language.c.includes or []) ++ (config.language.c.includes or []));
+          };
+        };
       packages = getOpts "packages" [];
       commands = getOpts "commands" [];
       env = getOpts "env" [];
@@ -223,6 +293,7 @@
     if l.isFunction (workspaceMetadata.shell or null)
     then workspaceMetadata.shell or (_: {})
     else (_: {});
+
   # Collect final config
   finalConfig = let
     c =
@@ -241,6 +312,18 @@
     c
     // {
       config = c.config // (shellOverride c.config);
+      imports = c.imports ++ ["${sources.devshell}/extra/language/c.nix"];
+    };
+
+  makeShell = configuration:
+    (makeDevshell {inherit configuration;}).shell
+    // {
+      passthru = {inherit configuration;};
+      combineWith = otherShell:
+        makeShell {
+          config = combineWith configuration.config otherShell.passthru.configuration.config;
+          imports = configuration.imports ++ otherShell.passthru.configuration.imports;
+        };
     };
 in
-  rawShell.combineWith {passthru.config = finalConfig;}
+  makeShell finalConfig
