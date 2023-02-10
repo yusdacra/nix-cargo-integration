@@ -151,38 +151,41 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </code></pre>
 <h2 id="app"><a class="header" href="#app"><code>app</code></a></h2>
 <p>Whether to enable app outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;false&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+false</p>
 <p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;true&quot;}
-</code></pre>
+<p><strong>Example value</strong>:
+true</p>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
 <h2 id="build"><a class="header" href="#build"><code>build</code></a></h2>
 <p>Whether to enable package outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;false&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+false</p>
 <p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;true&quot;}
-</code></pre>
+<p><strong>Example value</strong>:
+true</p>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/namespacedConfigModule.nix">src/lib/namespacedConfigModule.nix</a></li>
 </ul>
 <h2 id="depsoverrides"><a class="header" href="#depsoverrides"><code>depsOverrides</code></a></h2>
 <p>dream2nix overrides for the dependency derivation of this package.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: attribute set of (attribute set)</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    add-inputs = {\n      buildInputs = [pkgs.hello];\n      TEST_ENV = \&quot;1\&quot;;\n      overrideAttrs = old: {\n        nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];\n      };\n    };\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  add-inputs = {
+    buildInputs = [pkgs.hello];
+    TEST_ENV = &quot;1&quot;;
+    overrideAttrs = old: {
+      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];
+    };
+  };
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -190,12 +193,30 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </ul>
 <h2 id="desktopfile"><a class="header" href="#desktopfile"><code>desktopFile</code></a></h2>
 <p>Desktop file</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;null&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+null</p>
 <p><strong>Type</strong>: null or string or path or (submodule)</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  \n  Set via a relative path to root:\n  ```nix\n  {\n    desktopFile = \&quot;./resources/app.desktop\&quot;;\n  }\n  ```\n  Set via a path:\n  ```nix\n  {\n    desktopFile = ./resources/app.desktop;\n  }\n  ```\n  Set via an attrset:\n  ```nix\n  {\n    desktopFile = {\n      name = \&quot;Test app\&quot;;\n      genericName = \&quot;App\&quot;;\n      comment = \&quot;An app that does stuff\&quot;;\n      icon = \&quot;./resources/icon.ico\&quot;;\n      categories = [\&quot;Category\&quot;];\n    };\n  }\n  ```\n''&quot;}
+<p>Set via a relative path to root:</p>
+<pre><code class="language-nix">{
+  desktopFile = &quot;./resources/app.desktop&quot;;
+}
+</code></pre>
+<p>Set via a path:</p>
+<pre><code class="language-nix">{
+  desktopFile = ./resources/app.desktop;
+}
+</code></pre>
+<p>Set via an attrset:</p>
+<pre><code class="language-nix">{
+  desktopFile = {
+    name = &quot;Test app&quot;;
+    genericName = &quot;App&quot;;
+    comment = &quot;An app that does stuff&quot;;
+    icon = &quot;./resources/icon.ico&quot;;
+    categories = [&quot;Category&quot;];
+  };
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -203,12 +224,11 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </ul>
 <h2 id="dream2nixsettings"><a class="header" href="#dream2nixsettings"><code>dream2nixSettings</code></a></h2>
 <p>Settings to pass to dream2nix.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;[ ]&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+[ ]</p>
 <p><strong>Type</strong>: list of (attribute set)</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  [{translator = \&quot;cargo-toml\&quot;;}]\n  ```\n''&quot;}
+<pre><code class="language-nix">[{translator = &quot;cargo-toml&quot;;}]
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -216,12 +236,16 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </ul>
 <h2 id="features"><a class="header" href="#features"><code>features</code></a></h2>
 <p>Set features to enable when building with a profile.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: attribute set of list of string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    release = [\&quot;default\&quot; \&quot;some-feature\&quot;];\n    dev = [\&quot;default-dev\&quot;];\n    bench = [\&quot;default\&quot; \&quot;bench\&quot;];\n    test = [\&quot;default\&quot; \&quot;tests\&quot;];\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  release = [&quot;default&quot; &quot;some-feature&quot;];
+  dev = [&quot;default-dev&quot;];
+  bench = [&quot;default&quot; &quot;bench&quot;];
+  test = [&quot;default&quot; &quot;tests&quot;];
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -229,12 +253,11 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </ul>
 <h2 id="longdescription"><a class="header" href="#longdescription"><code>longDescription</code></a></h2>
 <p>A longer description that explains what your app does.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;\&quot;\&quot;&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+&quot;&quot;</p>
 <p><strong>Type</strong>: string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```\n  A paragraph explaining what this app does.\n  ```\n''&quot;}
+<pre><code>A paragraph explaining what this app does.
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -242,12 +265,19 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 </ul>
 <h2 id="overrides"><a class="header" href="#overrides"><code>overrides</code></a></h2>
 <p>dream2nix overrides for this package.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: attribute set of (attribute set)</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    add-inputs = {\n      buildInputs = [pkgs.hello];\n      TEST_ENV = \&quot;1\&quot;;\n      overrideAttrs = old: {\n        nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];\n      };\n    };\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  add-inputs = {
+    buildInputs = [pkgs.hello];
+    TEST_ENV = &quot;1&quot;;
+    overrideAttrs = old: {
+      nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.pkg-config];
+    };
+  };
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -256,12 +286,18 @@ They can also be set under <code>pkgConfig</code> under <code>nci.lib.makeOutput
 <h2 id="profiles"><a class="header" href="#profiles"><code>profiles</code></a></h2>
 <p>Profiles to generate packages for.
 Set the profile to <code>true</code> to enable running tests, <code>false</code> to disable.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{\n  dev = false;\n  release = true;\n}&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{
+dev = false;
+release = true;
+}</p>
 <p><strong>Type</strong>: attribute set of boolean</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    release = true;\n    dev = false;\n    custom-profile = false;\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  release = true;
+  dev = false;
+  custom-profile = false;
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -272,9 +308,8 @@ Set the profile to <code>true</code> to enable running tests, <code>false</code>
 a derivation, which will be used in the outputs.
 <code>buildConfig</code> is the arguments passed to <code>dream2nix.lib.makeFlakeOutputs</code>
 along with variables like <code>release</code>, <code>doCheck</code> etc.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;&lt;function&gt;&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+<function></p>
 <p><strong>Type</strong>: function that evaluates to a(n) function that evaluates to a(n) package</p>
 <p>Declared in:</p>
 <ul>

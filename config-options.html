@@ -150,12 +150,11 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </code></pre>
 <h2 id="builder"><a class="header" href="#builder"><code>builder</code></a></h2>
 <p>The dream2nix builder that will be used for building packages.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;\&quot;crane\&quot;&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+&quot;crane&quot;</p>
 <p><strong>Type</strong>: one of &quot;crane&quot;, &quot;build-rust-package&quot;</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```\n  build-rust-package\n  ```\n''&quot;}
+<pre><code>build-rust-package
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -163,25 +162,25 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="ccompilerenable"><a class="header" href="#ccompilerenable"><code>cCompiler.enable</code></a></h2>
 <p>Whether to add the C compiler set to the dev env / build env.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;true&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+true</p>
 <p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;false&quot;}
-</code></pre>
+<p><strong>Example value</strong>:
+false</p>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
 <h2 id="ccompilerpackage"><a class="header" href="#ccompilerpackage"><code>cCompiler.package</code></a></h2>
 <p>The C compiler package.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;\&quot;gcc\&quot;&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+&quot;gcc&quot;</p>
 <p><strong>Type</strong>: string or package</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```\n  \&quot;clang\&quot;\n  ```\n  or\n  ```\n  pkgs.clang\n  ```\n''&quot;}
+<pre><code>&quot;clang&quot;
+</code></pre>
+<p>or</p>
+<pre><code>pkgs.clang
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -189,22 +188,19 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="ccompilerusecompilerbintools"><a class="header" href="#ccompilerusecompilerbintools"><code>cCompiler.useCompilerBintools</code></a></h2>
 <p>Whether to use the bintools from the C compiler or not.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;true&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+true</p>
 <p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;false&quot;}
-</code></pre>
+<p><strong>Example value</strong>:
+false</p>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
 </ul>
 <h2 id="cachixkey"><a class="header" href="#cachixkey"><code>cachix.key</code></a></h2>
 <p>Public key of the cachix cache.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;null&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+null</p>
 <p><strong>Type</strong>: null or string</p>
 <p>Declared in:</p>
 <ul>
@@ -212,9 +208,8 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="cachixname"><a class="header" href="#cachixname"><code>cachix.name</code></a></h2>
 <p>Name of the cachix cache.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;null&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+null</p>
 <p><strong>Type</strong>: null or string</p>
 <p>Declared in:</p>
 <ul>
@@ -222,12 +217,14 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="outputsdefaults"><a class="header" href="#outputsdefaults"><code>outputs.defaults</code></a></h2>
 <p>Default outputs to set in outputs.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: attribute set of string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    app = \&quot;helix\&quot;;\n    package = \&quot;helix\&quot;;\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  app = &quot;helix&quot;;
+  package = &quot;helix&quot;;
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -235,12 +232,13 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="outputsrename"><a class="header" href="#outputsrename"><code>outputs.rename</code></a></h2>
 <p>Which package outputs to rename to what.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: attribute set of string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  {\n    \&quot;helix-term\&quot; = \&quot;helix\&quot;;\n  }\n  ```\n''&quot;}
+<pre><code class="language-nix">{
+  &quot;helix-term&quot; = &quot;helix&quot;;
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -248,9 +246,8 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="pkgsoverlays"><a class="header" href="#pkgsoverlays"><code>pkgsOverlays</code></a></h2>
 <p>Overlays to use for the nixpkgs package set.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;[ ]&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+[ ]</p>
 <p><strong>Type</strong>: list of (path or function that evaluates to a(n) function that evaluates to a(n) (attribute set))</p>
 <p>Declared in:</p>
 <ul>
@@ -258,13 +255,11 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 </ul>
 <h2 id="precommithooksenable"><a class="header" href="#precommithooksenable"><code>preCommitHooks.enable</code></a></h2>
 <p>Whether to enable pre-commit hooks.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;false&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+false</p>
 <p><strong>Type</strong>: boolean</p>
-<p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;true&quot;}
-</code></pre>
+<p><strong>Example value</strong>:
+true</p>
 <p>Declared in:</p>
 <ul>
 <li><a href="https://github.com/yusdacra/nix-cargo-integration/tree/master/src/lib/configModule.nix">src/lib/configModule.nix</a></li>
@@ -272,12 +267,19 @@ They can also be set under <code>config</code> under <code>nci.lib.makeOutputs</
 <h2 id="runtimelibs"><a class="header" href="#runtimelibs"><code>runtimeLibs</code></a></h2>
 <p>Libraries that will be put in <code>LD_LIBRARY_PRELOAD</code> environment variable for the dev env.
 These will also be added to the resulting package when you build it, as a wrapper that adds the env variable.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;[ ]&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+[ ]</p>
 <p><strong>Type</strong>: list of (string or package)</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  \n  Set via specifying package attr names:\n  ```nix\n  {\n    runtimeLibs = [\&quot;ffmpeg\&quot;];\n  }\n  ```\n  Set via specifying packages:\n  ```nix\n  {\n    runtimeLibs = [pkgs.ffmpeg];\n  }\n  ```\n''&quot;}
+<p>Set via specifying package attr names:</p>
+<pre><code class="language-nix">{
+  runtimeLibs = [&quot;ffmpeg&quot;];
+}
+</code></pre>
+<p>Set via specifying packages:</p>
+<pre><code class="language-nix">{
+  runtimeLibs = [pkgs.ffmpeg];
+}
 </code></pre>
 <p>Declared in:</p>
 <ul>
@@ -285,9 +287,8 @@ These will also be added to the resulting package when you build it, as a wrappe
 </ul>
 <h2 id="shell"><a class="header" href="#shell"><code>shell</code></a></h2>
 <p>Development shell configuration.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;{ }&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+{ }</p>
 <p><strong>Type</strong>: (attribute set) or function that evaluates to a(n) (attribute set)</p>
 <p>Declared in:</p>
 <ul>
@@ -296,12 +297,17 @@ These will also be added to the resulting package when you build it, as a wrappe
 <h2 id="systems"><a class="header" href="#systems"><code>systems</code></a></h2>
 <p>The systems to generate outputs for.
 Note that if you want to declare this option in Nix, do not declare it under <code>config</code> but instead declare it in the argset you pass to <code>makeOutputs</code>.</p>
-<p><strong>Default value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;[\n  \&quot;aarch64-linux\&quot;\n  \&quot;x86_64-darwin\&quot;\n  \&quot;x86_64-linux\&quot;\n  \&quot;i686-linux\&quot;\n  \&quot;aarch64-darwin\&quot;\n]&quot;}
-</code></pre>
+<p><strong>Default value</strong>:
+[
+&quot;aarch64-linux&quot;
+&quot;x86_64-darwin&quot;
+&quot;x86_64-linux&quot;
+&quot;i686-linux&quot;
+&quot;aarch64-darwin&quot;
+]</p>
 <p><strong>Type</strong>: list of string</p>
 <p><strong>Example value</strong>:</p>
-<pre><code class="language-nix">{&quot;_type&quot;:&quot;literalExpression&quot;,&quot;text&quot;:&quot;''\n  ```nix\n  [\&quot;x86_64-linux\&quot; \&quot;aarch64-darwin\&quot;]\n  ```\n''&quot;}
+<pre><code class="language-nix">[&quot;x86_64-linux&quot; &quot;aarch64-darwin&quot;]
 </code></pre>
 <p>Declared in:</p>
 <ul>
