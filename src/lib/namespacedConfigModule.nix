@@ -4,13 +4,14 @@
     types
     mkOption
     mkEnableOption
+    literalExpression
     ;
 
   mkStrOption = description: example:
     mkOption {
       type = types.str;
       default = "";
-      example = ''
+      example = literalExpression ''
         ```
         ${example}
         ```
@@ -25,7 +26,7 @@
     categories = mkOption {
       type = types.listOf types.str;
       default = [];
-      example = ''
+      example = literalExpression ''
         ```nix
         ["Multimedia" "Internet"]
         ```
@@ -37,7 +38,7 @@
     mkOption {
       type = types.attrsOf types.attrs;
       default = {};
-      example = ''
+      example = literalExpression ''
         ```nix
         {
           add-inputs = {
@@ -59,7 +60,7 @@ in {
     longDescription = mkOption {
       type = types.str;
       default = "";
-      example = ''
+      example = literalExpression ''
         ```
         A paragraph explaining what this app does.
         ```
@@ -75,7 +76,7 @@ in {
         ]
       );
       default = null;
-      example = ''
+      example = literalExpression ''
         ''\nSet via a relative path to root:
         ```nix
         {
@@ -106,7 +107,7 @@ in {
     features = mkOption {
       type = types.attrsOf (types.listOf types.str);
       default = {};
-      example = ''
+      example = literalExpression ''
         ```nix
         {
           release = ["default" "some-feature"];
@@ -128,7 +129,7 @@ in {
         Profiles to generate packages for.
         Set the profile to `true` to enable running tests, `false` to disable.
       '';
-      example = ''
+      example = literalExpression ''
         ```nix
         {
           release = true;
@@ -157,7 +158,7 @@ in {
     dream2nixSettings = mkOption {
       type = types.listOf types.attrs;
       default = [];
-      example = ''
+      example = literalExpression ''
         ```nix
         [{translator = "cargo-toml";}]
         ```

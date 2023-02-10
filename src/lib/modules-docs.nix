@@ -136,19 +136,27 @@ with lib; let
       + (lib.optionalString (opt ? default && opt.default != null) ''
 
         **Default value**:
-        ```nix
         ${
           # When defaultText is set on the module, we only get back a
           # string here and defaultText has disappeared. Re-hydrate that
           # knowledge by looking at the type.
-          if builtins.isString opt.default && !(lib.hasPrefix "string" opt.type)
+          if opt.default._type or null == "literalExpression"
+          then opt.default.text
+          else if builtins.isString opt.default && !(lib.hasPrefix "string" opt.type)
           then
             # If it's a defaultText, assume it's already formatted as nix
             # code.
-            opt.default
-          else builtins.toJSON opt.default
+            ''
+              ```nix
+              ${opt.default}
+              ```
+            ''
+          else ''
+            ```nix
+            ${builtins.toJSON opt.default}
+            ```
+          ''
         }
-        ```
 
       '')
       + ''
@@ -159,7 +167,9 @@ with lib; let
 
         **Example value**:
         ${
-          if ! lib.isString opt.example
+          if opt.example._type or null == "literalExpression"
+          then opt.example.text
+          else if ! lib.isString opt.example
           then ''
             ```nix
             ${builtins.toJSON opt.example}

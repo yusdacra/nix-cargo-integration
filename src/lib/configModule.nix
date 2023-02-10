@@ -4,13 +4,14 @@
     types
     mkOption
     mkEnableOption
+    literalExpression
     ;
 in {
   options = {
     systems = mkOption {
       type = types.listOf types.str;
       default = lib.defaultSystems;
-      example = ''
+      example = literalExpression ''
         ```nix
         ["x86_64-linux" "aarch64-darwin"]
         ```
@@ -31,7 +32,7 @@ in {
         type = types.either types.str types.package;
         description = "The C compiler package.";
         default = "gcc";
-        example = ''
+        example = literalExpression ''
           ```
           "clang"
           ```
@@ -52,7 +53,7 @@ in {
     builder = mkOption {
       type = types.enum ["crane" "build-rust-package"];
       default = "crane";
-      example = ''
+      example = literalExpression ''
         ```
         build-rust-package
         ```
@@ -72,7 +73,7 @@ in {
       rename = mkOption {
         type = types.attrsOf types.str;
         default = {};
-        example = ''
+        example = literalExpression ''
           ```nix
           {
             "helix-term" = "helix";
@@ -84,7 +85,7 @@ in {
       defaults = mkOption {
         type = types.attrsOf types.str;
         default = {};
-        example = ''
+        example = literalExpression ''
           ```nix
           {
             app = "helix";
@@ -103,7 +104,7 @@ in {
     runtimeLibs = mkOption {
       type = types.listOf (types.either types.str types.package);
       default = [];
-      example = ''
+      example = literalExpression ''
         ''\nSet via specifying package attr names:
         ```nix
         {
