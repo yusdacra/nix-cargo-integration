@@ -184,7 +184,11 @@
     // {
       devShells =
         l.mapAttrs
-        (_: s: {default = mergeShells s;})
+        (_: s: let
+          shell = mergeShells s;
+        in {
+          default = l.dbgXY "final devshell combined" shell.drvAttrs shell;
+        })
         combinedOutputs.devShells;
     };
   checkedOutputs =
