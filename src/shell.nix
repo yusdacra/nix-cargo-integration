@@ -77,6 +77,8 @@
   rawEnv = rawShell.passthru.env;
   # Create a base devshell config
   baseConfig =
+    l.dbgX
+    "devshell baseConfig"
     {
       language.c = {
         compiler = common.cCompiler.package;
