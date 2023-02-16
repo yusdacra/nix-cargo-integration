@@ -187,7 +187,11 @@
         (_: s: let
           shell = mergeShells s;
         in {
-          default = l.dbgXY "final devshell combined" shell.drvAttrs shell;
+          default =
+            l.dbgXY
+            "final devshell combined"
+            shell.passthru.configuration
+            shell;
         })
         combinedOutputs.devShells;
     };

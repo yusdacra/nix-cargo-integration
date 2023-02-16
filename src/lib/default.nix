@@ -13,7 +13,7 @@
     dbgXY = msg: x: y:
       if doDbg
       then
-        l.debug.traceSeqN 6
+        l.debug.traceSeqN 10
         {
           message = "${msgPrefix}${msg}";
           value = x;

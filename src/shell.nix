@@ -329,4 +329,7 @@
     };
   finalDevshell = makeShell finalConfig;
 in
-  l.dbgXY "final devshell" finalDevshell.drvAttrs finalDevshell
+  l.dbgXY
+  "final devshell"
+  finalDevshell.passthru.configuration
+  finalDevshell
