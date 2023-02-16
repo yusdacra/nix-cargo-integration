@@ -327,5 +327,6 @@
           imports = configuration.imports ++ otherShell.passthru.configuration.imports;
         };
     };
+  finalDevshell = makeShell finalConfig;
 in
-  l.dbgX "final devshell" (makeShell finalConfig)
+  l.dbgXY "final devshell" finalDevshell.drvAttrs finalDevshell
