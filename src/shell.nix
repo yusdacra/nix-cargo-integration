@@ -328,4 +328,4 @@
         };
     };
 in
-  makeShell finalConfig
+  l.dbgX "final devshell" (makeShell finalConfig)
