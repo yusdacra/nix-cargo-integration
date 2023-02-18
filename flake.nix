@@ -39,16 +39,19 @@
   };
 
   outputs = {parts, ...} @ inp: let
-    flakeModule = {
-      imports = [
-        inp.dream2nix.flakeModuleBeta
-        ./src/default.nix
-      ];
+    flakeModuleNciOnly = {
+      imports = [./src/default.nix];
       config = {
         nci._inputs = {
           inherit (inp) rust-overlay;
         };
       };
+    };
+    flakeModule = {
+      imports = [
+        inp.dream2nix.flakeModuleBeta
+        flakeModuleNciOnly
+      ];
     };
   in
     parts.lib.mkFlake {inputs = inp;} {
@@ -57,7 +60,7 @@
       systems = ["x86_64-linux"];
 
       flake = {
-        inherit flakeModule;
+        inherit flakeModule flakeModuleNciOnly;
         templates.simple = {
           description = "A simple template for getting started";
           path = ./templates/simple;
