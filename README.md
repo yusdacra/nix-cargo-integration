@@ -11,9 +11,7 @@ the experience may not be smooth if you aren't using the newest version of Nix.
 
 ## Documentation
 
-Documentation for `master` branch is on https://yusdacra.github.io/nix-cargo-integration.
-
-Alternatively, you can run `nix build .#docs` to build the documentation.
+Documentation for `master` branch is on https://flake.parts/options/nix-cargo-integration.html
 
 Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG.md).
 
