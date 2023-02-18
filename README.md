@@ -2,8 +2,7 @@
 
 Library to easily and effortlessly integrate Cargo projects with Nix.
 
-- Uses [dream2nix] to build Cargo packages and provide a development shell.
-- Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
+- Uses [dream2nix](https://github.com/nix-community/dream2nix) to build Cargo packages and provide a development shell.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options
 
@@ -21,8 +20,6 @@ Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG
 ## Usage
 
 Run `nix flake init -t github:yusdacra/nix-cargo-integration`.
-
-[dream2nix]: https://github.com/nix-community/dream2nix "dream2nix"
 
 ## Tips and tricks
 
