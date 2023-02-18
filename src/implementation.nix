@@ -29,6 +29,27 @@ in {
             nci.crates.${name}.export or nci.export
         )
         nci.outputs;
+
+      projectsChecked =
+        l.mapAttrs
+        (name: import ./functions/warnIfNoLock.nix self)
+        nci.projects;
+      projectsWithLock =
+        l.mapAttrs
+        (name: value: value.project)
+        (
+          l.filterAttrs
+          (name: value: value.hasLock)
+          projectsChecked
+        );
+      projectsWithoutLock =
+        l.mapAttrs
+        (name: value: value.project)
+        (
+          l.filterAttrs
+          (name: value: !value.hasLock)
+          projectsChecked
+        );
     in {
       dream2nix.inputs."nci" = {
         source = self;
@@ -40,7 +61,7 @@ in {
             translator = "cargo-lock";
             builder = "crane";
           })
-          nci.projects;
+          projectsWithLock;
         packageOverrides = let
           crateOverridesList =
             l.mapAttrsToList
@@ -61,22 +82,51 @@ in {
           };
       };
 
-      nci.outputs =
+      nci.outputs = l.filterAttrs (name: attrs: attrs != null) (
         l.mapAttrs
-        (name: package: {
-          packages = import ./functions/mkPackagesFromRaw.nix {
-            inherit lib;
-            profiles = nci.crates.${name}.profiles or nci.profiles;
-            rawPkg = package;
-          };
-          devShell = import ./functions/mkDevshellFromRaw.nix {
-            inherit lib;
-            rawShell = d2n.outputs."nci".devShells.${name};
-            shellToolchain = nci.toolchains.shell;
-          };
-        })
-        d2n.outputs."nci".packages;
+        (
+          name: package:
+            if package ? override
+            then {
+              packages = import ./functions/mkPackagesFromRaw.nix {
+                inherit lib;
+                profiles = nci.crates.${name}.profiles or nci.profiles;
+                rawPkg = package;
+              };
+              devShell = import ./functions/mkDevshellFromRaw.nix {
+                inherit lib;
+                rawShell = d2n.outputs."nci".devShells.${name};
+                shellToolchain = nci.toolchains.shell;
+              };
+            }
+            else null
+        )
+        d2n.outputs."nci".packages
+      );
 
+      apps =
+        l.optionalAttrs
+        (l.length (l.attrNames projectsWithoutLock) > 0)
+        {
+          generate-lockfiles.program = toString (pkgs.writeScript "generate-lockfiles" ''
+            function addToGit {
+              if [ -d ".git" ]; then
+                git add $1
+              fi
+            }
+            ${
+              l.concatMapStringsSep
+              "\n"
+              (
+                project: ''
+                  ${nci.toolchains.build}/bin/cargo generate-lockfile --manifest-path ${project.relPath}/Cargo.toml
+                  addToGit ${project.relPath}/Cargo.lock
+                ''
+              )
+              (l.attrValues projectsWithoutLock)
+            }
+          '');
+        };
       packages = l.listToAttrs (l.flatten (
         l.mapAttrsToList
         (
