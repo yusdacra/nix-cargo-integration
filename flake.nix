@@ -56,7 +56,13 @@
 
       systems = ["x86_64-linux"];
 
-      flake = {inherit flakeModule;};
+      flake = {
+        inherit flakeModule;
+        templates.simple = {
+          description = "A simple template for getting started";
+          path = ./templates/simple;
+        };
+      };
       perSystem = {
         config,
         pkgs,
