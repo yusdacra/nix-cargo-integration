@@ -51,6 +51,12 @@ in {
           projectsChecked
         );
     in {
+      nci.toolchains = import ./functions/findRustToolchain.nix {
+        inherit lib pkgs;
+        inherit (inp) rust-overlay;
+        path = toString self;
+      };
+
       dream2nix.inputs."nci" = {
         source = self;
         projects =

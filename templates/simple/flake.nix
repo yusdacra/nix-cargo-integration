@@ -5,7 +5,11 @@
   inputs.parts.url = "github:hercules-ci/flake-parts";
   inputs.parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
-  outputs = inputs@{parts, nci, ...}:
+  outputs = inputs @ {
+    parts,
+    nci,
+    ...
+  }:
     parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
       imports = [nci.flakeModule];

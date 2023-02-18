@@ -15,17 +15,12 @@ in {
     };
     perSystem =
       flake-parts-lib.mkPerSystemOption
-      ({pkgs, ...}: let
-        toolchains = import ./functions/findRustToolchain.nix {
-          inherit lib pkgs;
-          inherit (inp) rust-overlay;
-          path = toString self;
-        };
-      in {
+      ({pkgs, ...}: {
         options = {
           nci.export = l.mkOption {
             type = t.bool;
             default = false;
+            example = true;
             description = "Whether to export all crates' outputs";
           };
           nci.profiles = l.mkOption {
@@ -36,15 +31,23 @@ in {
               dev = {};
               release.runTests = true;
             };
+            example = l.literalExpression ''
+              {
+                dev = {};
+                release.runTests = true;
+                custom-profile.features = ["some" "features"];
+              }
+            '';
+            description = "Profiles to generate packages for all crates";
           };
           nci.toolchains = {
             build = l.mkOption {
               type = t.package;
-              default = toolchains.build;
+              description = "The toolchain that will be used when building derivations";
             };
             shell = l.mkOption {
               type = t.package;
-              default = toolchains.shell;
+              description = "The toolchain that will be used in the development shell";
             };
           };
           nci.projects = l.mkOption {
@@ -52,6 +55,14 @@ in {
               modules = [./modules/project.nix];
             });
             default = {};
+            example = l.literalExpression ''
+              {
+                my-crate.relPath = "path/to/crate";
+                # empty path for projects at flake root
+                my-workspace.relPath = "";
+              }
+            '';
+            description = "Projects (workspaces / crates) to generate outputs for";
           };
           nci.crates = l.mkOption {
             type = t.lazyAttrsOf (t.submoduleWith {
@@ -59,12 +70,22 @@ in {
               specialArgs = {inherit pkgs;};
             });
             default = {};
+            example = l.literalExpression ''
+              {
+                my-crate = {
+                  export = true;
+                  overrides = {/* stuff */};
+                };
+              }
+            '';
+            description = "Crate configurations";
           };
           nci.outputs = l.mkOption {
             type = t.lazyAttrsOf (t.submoduleWith {
               modules = [./modules/output.nix];
             });
             readOnly = true;
+            description = "Each crate's outputs";
           };
         };
       });

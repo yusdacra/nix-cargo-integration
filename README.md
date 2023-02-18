@@ -2,7 +2,7 @@
 
 Library to easily and effortlessly integrate Cargo projects with Nix.
 
-- Uses [dream2nix] to build Cargo packages and [devshell] to provide a development shell.
+- Uses [dream2nix] to build Cargo packages and provide a development shell.
 - Allows configuration from `Cargo.toml` file(s) via `package.metadata.nix` and `workspace.metadata.nix` attributes.
 - Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
 - Aims to offload work from the user; comes with useful configuration options
@@ -20,51 +20,28 @@ Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG
 
 ## Usage
 
-### With flakes
-
 Run `nix flake init -t github:yusdacra/nix-cargo-integration`.
 
-Or add:
-```nix
-{
-  inputs = {
-    nci.url = "github:yusdacra/nix-cargo-integration";
-  };
-  outputs = inputs: inputs.nci.lib.makeOutputs { root = ./.; };
-}
-```
-to your `flake.nix`.
-
-### Without flakes
-
-You can use [flake-compat] to provide the default outputs of the flake for non-flake users.
-
-If you aren't using flakes, you can do (in your `default.nix` file for example):
-```nix
-let
-  nciSrc = fetchTarball {
-    url = "https://github.com/yusdacra/nix-cargo-integration/archive/<rev>.tar.gz";
-    sha256 = "<hash>";
-  };
-  nci = import nciSrc;
-in nci.makeOutputs { root = ./.; }
-```
-
-You can also couple it with [niv](https://github.com/nmattia/niv):
-- First run `niv add yusdacra/nix-cargo-integration`
-- Then you can write in your `default.nix` file:
-    ```nix
-    let
-      sources = import ./sources.nix;
-      nci = import sources.nix-cargo-integration;
-    in nci.makeOutputs { root = ./.; }
-    ```
-
-### Examples
-
-- [Basic flake.nix template with commented fields](./docs/example_flake.nix)
-- [Flake using a bit of everything](https://github.com/helix-editor/helix/blob/master/flake.nix)
-
-[devshell]: https://github.com/numtide/devshell "devshell"
-[flake-compat]: https://github.com/edolstra/flake-compat "flake-compat"
 [dream2nix]: https://github.com/nix-community/dream2nix "dream2nix"
+
+## Tips and tricks
+
+### Ignoring `Cargo.lock` in Rust libraries
+
+The [official recommendation](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html)
+for Rust libraries is to add `Cargo.lock` to the `.gitignore`. This conflicts
+with the way paths are evaluated when using a `flake.nix`. Only files tracked
+by the version control system (i.e. git) can be accessed during evaluation.
+This will manifest in the following error:
+```console
+$ nix build
+error: A Cargo.lock file must be present, please make sure it's at least staged in git.
+(use '--show-trace' to show detailed location information)
+```
+
+A neat fix for that is to track the path to `Cargo.lock` without staging it
+([thanks to @bew](https://github.com/yusdacra/nix-cargo-integration/issues/46#issuecomment-962589582)).
+```console
+$ git add --intent-to-add Cargo.lock
+```
+Add `--force` if your `Cargo.lock` is listed in `.gitignore`.
