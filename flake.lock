@@ -16,31 +16,15 @@
         "type": "github"
       }
     },
-    "devshell": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1676293499,
-        "narHash": "sha256-uIOTlTxvrXxpKeTvwBI1JGDGtCxMXE3BI0LFwoQMhiQ=",
-        "owner": "numtide",
-        "repo": "devshell",
-        "rev": "71e3022e3ab20bbf1342640547ef5bc14fb43bf4",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "devshell",
-        "type": "github"
-      }
-    },
     "dream2nix": {
       "inputs": {
         "alejandra": [],
         "all-cabal-json": [],
         "crane": "crane",
-        "devshell": [
-          "devshell"
+        "devshell": [],
+        "flake-parts": [
+          "parts"
         ],
-        "flake-parts": "flake-parts",
         "flake-utils-pre-commit": [],
         "ghc-utils": [],
         "gomod2nix": [],
@@ -67,24 +51,19 @@
         "type": "github"
       }
     },
-    "flake-parts": {
-      "inputs": {
-        "nixpkgs-lib": [
-          "dream2nix",
-          "nixpkgs"
-        ]
-      },
+    "mk-naked-shell": {
+      "flake": false,
       "locked": {
-        "lastModified": 1675933616,
-        "narHash": "sha256-/rczJkJHtx16IFxMmAWu5nNYcSXNg1YYXTHoGjLrLUA=",
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "rev": "47478a4a003e745402acf63be7f9a092d51b83d7",
+        "lastModified": 1676572903,
+        "narHash": "sha256-oQoDHHUTxNVSURfkFcYLuAK+btjs30T4rbEUtCUyKy8=",
+        "owner": "yusdacra",
+        "repo": "mk-naked-shell",
+        "rev": "aeca9f8aa592f5e8f71f407d081cb26fd30c5a57",
         "type": "github"
       },
       "original": {
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
+        "owner": "yusdacra",
+        "repo": "mk-naked-shell",
         "type": "github"
       }
     },
@@ -104,11 +83,32 @@
         "type": "github"
       }
     },
+    "parts": {
+      "inputs": {
+        "nixpkgs-lib": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1675933616,
+        "narHash": "sha256-/rczJkJHtx16IFxMmAWu5nNYcSXNg1YYXTHoGjLrLUA=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "47478a4a003e745402acf63be7f9a092d51b83d7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "devshell": "devshell",
         "dream2nix": "dream2nix",
+        "mk-naked-shell": "mk-naked-shell",
         "nixpkgs": "nixpkgs",
+        "parts": "parts",
         "rust-overlay": "rust-overlay"
       }
     },

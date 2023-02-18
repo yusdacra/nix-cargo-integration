@@ -1,7 +1,0 @@
-[package]
-name = "new-toolchain-file"
-version = "0.1.0"
-edition = "2018"
-
-[package.metadata.nix]
-build = true
