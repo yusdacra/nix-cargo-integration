@@ -7,10 +7,6 @@ on:
     branches: [ master ]
 jobs:
   tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        builder: [crane, brp]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
@@ -27,8 +23,4 @@ jobs:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Test checks
-      run: nix run .#run-${{ matrix.builder }}Tests-checks
-    - name: Test shells
-      run: nix run .#run-${{ matrix.builder }}Tests-shells
-    - name: Test packages
-      run: nix run .#run-${{ matrix.builder }}Tests-packages
+      run: nix flake check -L --show-trace
