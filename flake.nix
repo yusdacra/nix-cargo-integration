@@ -63,18 +63,23 @@
         lib,
         system,
         ...
-      }: {
+      }: let
+        testOut = config.nci.outputs."test-crate";
+      in {
         nci.projects."test-crate" = {
           relPath = "test-crate";
         };
 
         checks =
-          lib.mapAttrs'
-          (
-            profile: package:
-              lib.nameValuePair "test-crate-${profile}" package
-          )
-          config.nci.outputs."test-crate".packages;
+          {"test-crate-devshell" = testOut.devShell;}
+          // (
+            lib.mapAttrs'
+            (
+              profile: package:
+                lib.nameValuePair "test-crate-${profile}" package
+            )
+            testOut.packages
+          );
 
         devShells.default = (pkgs.callPackage inp.mk-naked-shell {}) {
           name = "nci";

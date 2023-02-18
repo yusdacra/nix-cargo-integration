@@ -69,7 +69,11 @@ in {
             profiles = nci.crates.${name}.profiles or nci.profiles;
             rawPkg = package;
           };
-          devShell = d2n.outputs."nci".devShells.${name};
+          devShell = import ./functions/mkDevshellFromRaw.nix {
+            inherit lib;
+            rawShell = d2n.outputs."nci".devShells.${name};
+            shellToolchain = nci.toolchains.shell;
+          };
         })
         d2n.outputs."nci".packages;
 
