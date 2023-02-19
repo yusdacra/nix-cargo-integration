@@ -116,24 +116,11 @@ in {
         l.optionalAttrs
         (l.length (l.attrNames projectsWithoutLock) > 0)
         {
-          generate-lockfiles.program = toString (pkgs.writeScript "generate-lockfiles" ''
-            function addToGit {
-              if [ -d ".git" ]; then
-                git add $1
-              fi
-            }
-            ${
-              l.concatMapStringsSep
-              "\n"
-              (
-                project: ''
-                  ${nci.toolchains.build}/bin/cargo generate-lockfile --manifest-path ${project.relPath}/Cargo.toml
-                  addToGit ${project.relPath}/Cargo.lock
-                ''
-              )
-              (l.attrValues projectsWithoutLock)
-            }
-          '');
+          generate-lockfiles.program = toString (import ./functions/mkGenerateLockfilesApp.nix {
+            inherit pkgs lib;
+            projects = projectsWithoutLock;
+            buildToolchain = nci.toolchains.build;
+          });
         };
       packages = l.listToAttrs (l.flatten (
         l.mapAttrsToList
