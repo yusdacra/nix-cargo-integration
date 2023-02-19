@@ -3,8 +3,8 @@
 Library to easily and effortlessly integrate Cargo projects with Nix.
 
 - Uses [dream2nix](https://github.com/nix-community/dream2nix) to build Cargo packages and provide a development shell.
-- Has sensible defaults, and strives to be compatible with Cargo (autobins, etc.).
-- Aims to offload work from the user; comes with useful configuration options
+- Has sensible defaults, and strives to be compatible with Cargo.
+- Aims to offload work from the user; comes with useful configuration options.
 
 NOTE: `nix-cargo-integration` should work with any Nix version above 2.4+, but
 the experience may not be smooth if you aren't using the newest version of Nix.
