@@ -8,7 +8,8 @@ most recent to least recent.
 
 ## 19-02-2023
 
-- nix: rewrite in flake-parts!
+- nix: rewrite in flake-parts! Please look at the readme for new documentation link.
+If you have any questions on how to migrate, please ask them here on GitHub Discussions.
 
 ## 04-11-2022
 
