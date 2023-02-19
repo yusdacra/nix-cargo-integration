@@ -88,6 +88,18 @@
         };
         nci.crates."test-crate".runtimeLibs = [pkgs.alsa-lib];
 
+        apps.format.program = let
+          configFile = pkgs.writeText "treefmt.toml" ''
+            [formatter.nix]
+            command = "${l.getExe pkgs.alejandra}"
+            includes = ["*.nix"]
+          '';
+          script = pkgs.writeScript "format" ''
+            ${l.getExe pkgs.treefmt} --config-file ${configFile} --tree-root ''${PRJ_ROOT:-$PWD}
+          '';
+        in
+          toString script;
+
         checks =
           {"test-crate-devshell" = testOut.devShell;}
           // (
