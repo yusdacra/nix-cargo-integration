@@ -1,13 +1,11 @@
 # nix-cargo-integration
 
-Library to easily and effortlessly integrate Cargo projects with Nix.
+Easily and effortlessly integrate Cargo projects with Nix.
 
 - Uses [dream2nix](https://github.com/nix-community/dream2nix) to build Cargo packages and provide a development shell.
 - Has sensible defaults, and strives to be compatible with Cargo.
 - Aims to offload work from the user; comes with useful configuration options.
-
-NOTE: `nix-cargo-integration` should work with any Nix version above 2.4+, but
-the experience may not be smooth if you aren't using the newest version of Nix.
+- It's a [flake-parts](https://github.com/hercules-ci/flake-parts) module, so you can easily include it in existing Nix code that also use `flake-parts`.
 
 ## Documentation
 
@@ -19,6 +17,7 @@ Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG
 ## Usage
 
 Run `nix flake init -t github:yusdacra/nix-cargo-integration` to initialize a simple `flake.nix`.
+
 Run `nix flake show github:yusdacra/nix-cargo-integration` to see more templates.
 
 ## Tips and tricks
