@@ -4,7 +4,11 @@ This is a list of important (mostly breaking) changes. The dates are from
 most recent to least recent.
 
 `nix:` means that the change was related to the Nix library part of `nci`.
-`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.
+~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
+
+## 19-02-2023
+
+- nix: rewrite in flake-parts!
 
 ## 04-11-2022
 
