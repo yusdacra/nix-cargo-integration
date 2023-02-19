@@ -18,7 +18,8 @@ Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG
 
 ## Usage
 
-Run `nix flake init -t github:yusdacra/nix-cargo-integration`.
+Run `nix flake init -t github:yusdacra/nix-cargo-integration` to initialize a simple `flake.nix`.
+Run `nix flake show github:yusdacra/nix-cargo-integration` to see more templates.
 
 ## Tips and tricks
 
@@ -28,11 +29,15 @@ The [official recommendation](https://doc.rust-lang.org/cargo/guide/cargo-toml-v
 for Rust libraries is to add `Cargo.lock` to the `.gitignore`. This conflicts
 with the way paths are evaluated when using a `flake.nix`. Only files tracked
 by the version control system (i.e. git) can be accessed during evaluation.
-This will manifest in the following error:
+This will manifest in the following warning:
 ```console
 $ nix build
-error: A Cargo.lock file must be present, please make sure it's at least staged in git.
-(use '--show-trace' to show detailed location information)
+trace: Cargo.lock not found for project at path path/to/project.
+Please ensure the lockfile exists for your project.
+If you are using a VCS, ensure the lockfile is added to the VCS and not ignored (eg. run `git add path/to/project/Cargo.lock` for git).
+
+This project will be skipped and won't have any outputs generated.
+Run `nix run .#generate-lockfiles` to generate lockfiles for projects that don't have one.
 ```
 
 A neat fix for that is to track the path to `Cargo.lock` without staging it
