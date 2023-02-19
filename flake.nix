@@ -39,6 +39,8 @@
   };
 
   outputs = {parts, ...} @ inp: let
+    l = inp.nixpkgs.lib // builtins;
+
     flakeModuleNciOnly = {
       imports = [./src/default.nix];
       config = {
@@ -61,15 +63,21 @@
 
       flake = {
         inherit flakeModule flakeModuleNciOnly;
-        templates.simple = {
-          description = "A simple template for getting started";
-          path = ./templates/simple;
+        templates = {
+          default = inp.self.templates.simple;
+          simple = {
+            description = "A simple flake.nix template for getting started";
+            path = ./examples/simple;
+          };
+          simple-crate = {
+            description = "A simple template with a Cargo crate pre-initialized";
+            path = ./examples/simple-crate;
+          };
         };
       };
       perSystem = {
         config,
         pkgs,
-        lib,
         system,
         ...
       }: let
@@ -83,10 +91,10 @@
         checks =
           {"test-crate-devshell" = testOut.devShell;}
           // (
-            lib.mapAttrs'
+            l.mapAttrs'
             (
               profile: package:
-                lib.nameValuePair "test-crate-${profile}" package
+                l.nameValuePair "test-crate-${profile}" package
             )
             testOut.packages
           );
