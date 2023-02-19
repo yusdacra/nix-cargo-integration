@@ -60,6 +60,19 @@ in {
       description = "Overrides to apply to this crate's dependency derivations (see dream2nix Rust docs for crane)";
     };
 
+    runtimeLibs = l.mkOption {
+      type = t.listOf t.package;
+      default = [];
+      example = l.literalExpression ''
+        [pkgs.alsa-lib pkgs.libxkbcommon]
+      '';
+      description = ''
+        Runtime libraries that will be:
+        - patched into the binary at build time,
+        - present in `LD_LIBRARY_PATH` environment variable in development shell.
+      '';
+    };
+
     renameTo = l.mkOption {
       type = t.nullOr t.str;
       default = null;

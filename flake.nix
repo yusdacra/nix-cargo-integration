@@ -78,6 +78,7 @@
         nci.projects."test-crate" = {
           relPath = "test-crate";
         };
+        nci.crates."test-crate".runtimeLibs = [pkgs.alsa-lib];
 
         checks =
           {"test-crate-devshell" = testOut.devShell;}

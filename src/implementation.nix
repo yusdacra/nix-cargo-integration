@@ -91,16 +91,18 @@ in {
       nci.outputs = l.filterAttrs (name: attrs: attrs != null) (
         l.mapAttrs
         (
-          name: package:
+          name: package: let
+            runtimeLibs = nci.crates.${name}.runtimeLibs or [];
+          in
             if package ? override
             then {
               packages = import ./functions/mkPackagesFromRaw.nix {
-                inherit lib;
+                inherit pkgs runtimeLibs;
                 profiles = nci.crates.${name}.profiles or nci.profiles;
                 rawPkg = package;
               };
               devShell = import ./functions/mkDevshellFromRaw.nix {
-                inherit lib;
+                inherit lib runtimeLibs;
                 rawShell = d2n.outputs."nci".devShells.${name};
                 shellToolchain = nci.toolchains.shell;
               };
