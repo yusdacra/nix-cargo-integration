@@ -70,6 +70,11 @@ in {
         Runtime libraries that will be:
         - patched into the binary at build time,
         - present in `LD_LIBRARY_PATH` environment variable in development shell.
+
+        Note that when it's patched in at build time, a separate derivation will
+        be created that "wraps" the original derivation to not cause the whole
+        crate to recompile when you only change `runtimeLibs`. The original
+        derivation can be accessed via `.passthru.unwrapped` attribute.
       '';
     };
 
