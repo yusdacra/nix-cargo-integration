@@ -13,15 +13,28 @@
     parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
       imports = [nci.flakeModule];
-      perSystem = {...}: {
-        # declare project
-        nci.projects."my-project" = {};
+      perSystem = {config, ...}: let
+        # TODO: change this to your crate's name
+        crateName = "my-crate";
+        # shorthand for accessing this crate's outputs
+        # you can access crate outputs under `config.nci.outputs.<crate name>` (see documentation)
+        crateOutputs = config.nci.outputs.${crateName};
+      in {
+        # declare projects
+        # relPath is the relative path of a project to the flake root
+        # TODO: change this to your crate's path
+        nci.projects.${crateName}.relPath = ".";
         # configure crates
-        nci.crates."my-crate" = {
+        nci.crates.${crateName} = {
           # export crate (packages and devshell) in flake outputs
+          # alternatively you can access the outputs and export them yourself (see below)
           export = true;
-          # look at docs for more options
+          # look at documentation for more options
         };
+        # export the crate devshell as the default devshell
+        devShells.default = crateOutputs.devShell;
+        # export the release package of the crate as default package
+        packages.default = crateOutputs.packages.release;
       };
     };
 }

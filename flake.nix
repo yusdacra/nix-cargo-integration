@@ -63,15 +63,27 @@
 
       flake = {
         inherit flakeModule flakeModuleNciOnly;
-        templates = {
+        templates = let
+          simpleWelcomeText = ''
+            To get started:
+
+            1. edit the project `relPath` in `flake.nix` to point to your project.
+            2. change `my-crate` crate name to your own crate name.
+            3. (optionally) add any other crate (or project) you want to configure.
+
+            You're set!
+          '';
+        in {
           default = inp.self.templates.simple;
           simple = {
             description = "A simple flake.nix template for getting started";
             path = ./examples/simple;
+            welcomeText = simpleWelcomeText;
           };
           simple-crate = {
             description = "A simple template with a Cargo crate pre-initialized";
             path = ./examples/simple-crate;
+            welcomeText = simpleWelcomeText;
           };
         };
       };
