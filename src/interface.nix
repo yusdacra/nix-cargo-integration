@@ -85,7 +85,7 @@ in {
               modules = [./modules/output.nix];
             });
             readOnly = true;
-            description = "Each crate's outputs";
+            description = "Each crate's (or project's) outputs";
           };
         };
       });

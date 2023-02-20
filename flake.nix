@@ -45,7 +45,7 @@
       imports = [./src/default.nix];
       config = {
         nci._inputs = {
-          inherit (inp) rust-overlay;
+          inherit (inp) rust-overlay dream2nix;
         };
       };
     };
@@ -63,27 +63,40 @@
 
       flake = {
         inherit flakeModule flakeModuleNciOnly;
-        templates = let
-          simpleWelcomeText = ''
-            To get started:
-
-            1. edit the project `relPath` in `flake.nix` to point to your project.
-            2. change `my-crate` crate name to your own crate name.
-            3. (optionally) add any other crate (or project) you want to configure.
-
-            You're set!
-          '';
-        in {
+        templates = {
           default = inp.self.templates.simple;
           simple = {
             description = "A simple flake.nix template for getting started";
             path = ./examples/simple;
-            welcomeText = simpleWelcomeText;
+            welcomeText = ''
+              To get started:
+
+              1. edit the project `relPath` in `flake.nix` to point to your project.
+              2. change `my-crate` crate name to your own crate name.
+              3. (optionally) add any other crate (or project) you want to configure.
+
+              You're set!
+            '';
           };
           simple-crate = {
             description = "A simple template with a Cargo crate pre-initialized";
             path = ./examples/simple-crate;
-            welcomeText = simpleWelcomeText;
+            welcomeText = ''
+              To get started, edit crate name in `flake.nix` and `Cargo.toml` to your liking.
+              And you should be good to go!
+            '';
+          };
+          simple-workspace = {
+            description = "A simple template with a Cargo workspace pre-initialized";
+            path = ./examples/simple-workspace;
+            welcomeText = ''
+              To get started:
+
+              1. edit crate names in `flake.nix` and `Cargo.toml`s to your liking,
+              2. edit project name in `flake.nix`
+
+              You're set!
+            '';
           };
         };
       };
@@ -95,7 +108,7 @@
       }: let
         testOut = config.nci.outputs."test-crate";
       in {
-        nci.projects."test-crate" = {
+        nci.projects."test-crate-project" = {
           relPath = "test-crate";
         };
         nci.crates."test-crate".runtimeLibs = [pkgs.alsa-lib];
@@ -113,15 +126,12 @@
           toString script;
 
         checks =
-          {"test-crate-devshell" = testOut.devShell;}
-          // (
-            l.mapAttrs'
-            (
-              profile: package:
-                l.nameValuePair "test-crate-${profile}" package
-            )
-            testOut.packages
-          );
+          l.mapAttrs'
+          (
+            profile: package:
+              l.nameValuePair "test-crate-${profile}" package
+          )
+          testOut.packages;
 
         devShells.default = (pkgs.callPackage inp.mk-naked-shell {}) {
           name = "nci";

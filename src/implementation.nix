@@ -88,29 +88,61 @@ in {
           };
       };
 
-      nci.outputs = l.filterAttrs (name: attrs: attrs != null) (
-        l.mapAttrs
+      nci.outputs = let
+        crates = l.filterAttrs (name: attrs: attrs != null) (
+          l.mapAttrs
+          (
+            name: package: let
+              runtimeLibs = nci.crates.${name}.runtimeLibs or [];
+            in
+              if package ? override
+              then {
+                packages = import ./functions/mkPackagesFromRaw.nix {
+                  inherit pkgs runtimeLibs;
+                  profiles = nci.crates.${name}.profiles or nci.profiles;
+                  rawPkg = package;
+                };
+                devShell = import ./functions/mkDevshellFromRaw.nix {
+                  inherit lib runtimeLibs;
+                  rawShell = d2n.outputs."nci".devShells.${name};
+                  shellToolchain = nci.toolchains.shell;
+                };
+              }
+              else null
+          )
+          d2n.outputs."nci".packages
+        );
+      in
         (
-          name: package: let
-            runtimeLibs = nci.crates.${name}.runtimeLibs or [];
-          in
-            if package ? override
-            then {
-              packages = import ./functions/mkPackagesFromRaw.nix {
-                inherit pkgs runtimeLibs;
-                profiles = nci.crates.${name}.profiles or nci.profiles;
-                rawPkg = package;
+          l.mapAttrs
+          (name: project: let
+            allCrateNames = import ./functions/getProjectCrates.nix {
+              inherit lib;
+              path = "${toString self}/${project.relPath}";
+            };
+          in {
+            devShell = import ./functions/mkDevshellFromRaw.nix {
+              inherit lib;
+              runtimeLibs = l.flatten (
+                l.map
+                (name: nci.crates.${name}.runtimeLibs)
+                allCrateNames
+              );
+              rawShell = import "${inp.dream2nix}/src/subsystems/rust/builders/devshell.nix" {
+                inherit lib;
+                inherit (pkgs) libiconv mkShell;
+                name = "${name}-devshell";
+                drvs =
+                  l.map
+                  (name: d2n.outputs."nci".packages.${name})
+                  allCrateNames;
               };
-              devShell = import ./functions/mkDevshellFromRaw.nix {
-                inherit lib runtimeLibs;
-                rawShell = d2n.outputs."nci".devShells.${name};
-                shellToolchain = nci.toolchains.shell;
-              };
-            }
-            else null
+              shellToolchain = nci.toolchains.shell;
+            };
+          })
+          nci.projects
         )
-        d2n.outputs."nci".packages
-      );
+        // crates;
 
       apps =
         l.optionalAttrs
