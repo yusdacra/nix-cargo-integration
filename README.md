@@ -29,6 +29,7 @@ for Rust libraries is to add `Cargo.lock` to the `.gitignore`. This conflicts
 with the way paths are evaluated when using a `flake.nix`. Only files tracked
 by the version control system (i.e. git) can be accessed during evaluation.
 This will manifest in the following warning:
+
 ```console
 $ nix build
 trace: Cargo.lock not found for project at path path/to/project.
@@ -41,7 +42,9 @@ Run `nix run .#generate-lockfiles` to generate lockfiles for projects that don't
 
 A neat fix for that is to track the path to `Cargo.lock` without staging it
 ([thanks to @bew](https://github.com/yusdacra/nix-cargo-integration/issues/46#issuecomment-962589582)).
+
 ```console
 $ git add --intent-to-add Cargo.lock
 ```
+
 Add `--force` if your `Cargo.lock` is listed in `.gitignore`.
