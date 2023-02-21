@@ -126,17 +126,16 @@
           toString script;
 
         checks =
-          l.mapAttrs'
-          (
-            profile: package:
-              l.nameValuePair "test-crate-${profile}" package
-          )
-          testOut.packages;
-
-        devShells.default = (pkgs.callPackage inp.mk-naked-shell {}) {
-          name = "nci";
-          packages = with pkgs; [alejandra treefmt];
-        };
+          {
+            "test-crate-devshell" = testOut.devShell;
+            "test-crate-project-devshell" = config.nci.outputs."test-crate-project".devShell;
+          }
+          // (l.mapAttrs'
+            (
+              profile: package:
+                l.nameValuePair "test-crate-${profile}" package
+            )
+            testOut.packages);
       };
     };
 }
