@@ -18,7 +18,8 @@ Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG
 
 Run `nix flake init -t github:yusdacra/nix-cargo-integration` to initialize a simple `flake.nix`.
 
-Run `nix flake show github:yusdacra/nix-cargo-integration` to see more templates.
+You can also run `nix flake init -t github:yusdacra/nix-cargo-integration#simple-crate` to initialize a Cargo crate alongside the `flake.nix`,
+or `nix flake init -t github:yusdacra/nix-cargo-integration#simple-workspace` for a Cargo workspace with a `flake.nix`.
 
 ## Tips and tricks
 
