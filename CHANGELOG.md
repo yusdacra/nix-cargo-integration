@@ -4,7 +4,12 @@ This is a list of important (mostly breaking) changes. The dates are from
 most recent to least recent.
 
 `nix:` means that the change was related to the Nix library part of `nci`.
-`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.
+~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
+
+## 19-02-2023
+
+- nix: rewrite in flake-parts! Please look at the readme for new documentation link.
+If you have any questions on how to migrate, please ask them here on GitHub Discussions.
 
 ## 04-11-2022
 

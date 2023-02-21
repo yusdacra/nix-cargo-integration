@@ -1,2 +1,0 @@
-[workspace]
-members = ["workspace-bin", "workspace-lib", "crates/*"]
