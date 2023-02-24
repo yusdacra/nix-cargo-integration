@@ -25,7 +25,7 @@
         # declare projects
         # relPath is the relative path of a project to the flake root
         # TODO: change this to your crate's path
-        nci.projects."my-project".relPath = ".";
+        nci.projects."my-project".relPath = "";
         # configure crates
         nci.crates = {
           "my-crate" = {
