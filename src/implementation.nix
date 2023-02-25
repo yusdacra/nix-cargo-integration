@@ -50,11 +50,17 @@ in {
           (name: value: !value.hasLock)
           projectsChecked
         );
-    in {
-      nci.toolchains = import ./functions/findRustToolchain.nix {
+      toolchains = import ./functions/findRustToolchain.nix {
         inherit lib pkgs;
         inherit (inp) rust-overlay;
         path = toString self;
+        buildComponents = nci.toolchains.build.components;
+        shellComponents = nci.toolchains.shell.components;
+      };
+    in {
+      nci.toolchains = {
+        build.package = l.mkDefault toolchains.build;
+        shell.package = l.mkDefault toolchains.shell;
       };
 
       dream2nix.inputs."nci" = {
@@ -82,8 +88,8 @@ in {
           crateOverrides
           // {
             "^.*".set-toolchain.overrideRustToolchain = _: {
-              cargo = nci.toolchains.build;
-              rustc = nci.toolchains.build;
+              cargo = nci.toolchains.build.package;
+              rustc = nci.toolchains.build.package;
             };
           };
       };
@@ -105,7 +111,7 @@ in {
                 devShell = import ./functions/mkDevshellFromRaw.nix {
                   inherit lib runtimeLibs;
                   rawShell = d2n.outputs."nci".devShells.${name};
-                  shellToolchain = nci.toolchains.shell;
+                  shellToolchain = nci.toolchains.shell.package;
                 };
               }
               else null
@@ -137,7 +143,7 @@ in {
                   (name: d2n.outputs."nci".packages.${name})
                   allCrateNames;
               };
-              shellToolchain = nci.toolchains.shell;
+              shellToolchain = nci.toolchains.shell.package;
             };
           })
           nci.projects
@@ -151,7 +157,7 @@ in {
           generate-lockfiles.program = toString (import ./functions/mkGenerateLockfilesApp.nix {
             inherit pkgs lib;
             projects = projectsWithoutLock;
-            buildToolchain = nci.toolchains.build;
+            buildToolchain = nci.toolchains.build.package;
           });
         };
       packages = l.listToAttrs (l.flatten (

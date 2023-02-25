@@ -41,13 +41,44 @@ in {
             description = "Profiles to generate packages for all crates";
           };
           nci.toolchains = {
-            build = l.mkOption {
-              type = t.package;
-              description = "The toolchain that will be used when building derivations";
+            build = {
+              package = l.mkOption {
+                type = t.package;
+                description = "The toolchain that will be used when building derivations";
+              };
+              components = l.mkOption {
+                type = t.listOf t.str;
+                default = ["rustc" "cargo" "rust-std"];
+                example = l.literalExpression ''
+                  ["rustc" "cargo"]
+                '';
+                description = ''
+                  Components to add to the build toolchain (unused if package option is set manually).
+
+                  Note that components added here must be also present in `rust-toolchain.toml`.
+                  When not using `rust-toolchain.toml`, you can only use components from the `default` `rustup` profile.
+                '';
+              };
             };
-            shell = l.mkOption {
-              type = t.package;
-              description = "The toolchain that will be used in the development shell";
+            shell = {
+              package = l.mkOption {
+                type = t.package;
+                description = "The toolchain that will be used in the development shell";
+              };
+              components = l.mkOption {
+                type = t.listOf t.str;
+                default = ["rust-src" "rustfmt" "clippy" "rust-analyzer"];
+                example = l.literalExpression ''
+                  ["rust-src" "rustfmt" "clippy"]
+                '';
+                description = ''
+                  Components to add to the shell toolchain (unused if package option is set manually).
+                  These are added on top of the build toolchain components.
+
+                  Note that components added here must be also present in `rust-toolchain.toml`.
+                  When not using `rust-toolchain.toml`, you can only use components from the `default` `rustup` profile.
+                '';
+              };
             };
           };
           nci.projects = l.mkOption {

@@ -19,7 +19,7 @@
         ...
       }: {
         # declare projects
-        nci.projects."example-crate".relPath = ".";
+        nci.projects."example-crate".relPath = "";
         # nci devshells are just regular `nixpkgs.mkShell`
         # alternatively you can not use NCI's own devshells and use numtide devshell or devenv etc.
         devShells.default = config.nci.outputs."example-crate".devShell.overrideAttrs (old: {
