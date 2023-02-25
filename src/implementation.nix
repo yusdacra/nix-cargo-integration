@@ -125,7 +125,7 @@ in {
               inherit lib;
               runtimeLibs = l.flatten (
                 l.map
-                (name: nci.crates.${name}.runtimeLibs)
+                (name: nci.crates.${name}.runtimeLibs or [])
                 allCrateNames
               );
               rawShell = import "${inp.dream2nix}/src/subsystems/rust/builders/devshell.nix" {

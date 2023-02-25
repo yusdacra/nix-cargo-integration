@@ -32,7 +32,7 @@
     (l.optional (manifest ? package) manifest)
     ++ (
       l.map
-      (relPath: l.fromTOML (l.readFile "${projectRoot}/${relPath}"))
+      (relPath: l.fromTOML (l.readFile "${projectRoot}/${relPath}/Cargo.toml"))
       workspaceMembers
     );
 in
