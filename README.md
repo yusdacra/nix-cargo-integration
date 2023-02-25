@@ -14,12 +14,32 @@ Documentation for `master` branch is on https://flake.parts/options/nix-cargo-in
 
 Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG.md).
 
-## Usage
+## Installation
 
 Run `nix flake init -t github:yusdacra/nix-cargo-integration` to initialize a simple `flake.nix`.
 
 You can also run `nix flake init -t github:yusdacra/nix-cargo-integration#simple-crate` to initialize a Cargo crate alongside the `flake.nix`,
 or `nix flake init -t github:yusdacra/nix-cargo-integration#simple-workspace` for a Cargo workspace with a `flake.nix`.
+
+If you already have a `flake.nix` with `flake-parts` setup, just add NCI to inputs:
+
+```nix
+{
+  # ...
+  inputs.nci.url = "github:yusdacra/nix-cargo-integration";
+  # ...
+}
+```
+
+and then inside the `mkFlake`:
+
+```nix
+{
+  imports = [
+    inputs.nci.flakeModule
+  ];
+}
+```
 
 ## Tips and tricks
 
