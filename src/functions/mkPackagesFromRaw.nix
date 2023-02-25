@@ -8,7 +8,11 @@
   makePackage = profile: conf: let
     flags =
       if l.length conf.features > 0
-      then ["--no-default-features" "--features"] ++ conf.features
+      then [
+        "--no-default-features"
+        "--features"
+        "${l.concatStringsSep "," conf.features}"
+      ]
       else [];
     common = {
       cargoTestProfile = profile;
@@ -41,6 +45,7 @@
         mkdir -p $out
         cp -r --no-preserve=mode,ownership ${pkg}/* $out/
         for bin in $out/bin/*; do
+          chmod +x "$bin"
           ${pkgs.patchelf}/bin/patchelf --set-rpath "${l.makeLibraryPath runtimeLibs}" "$bin"
         done
       ''
