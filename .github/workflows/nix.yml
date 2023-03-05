@@ -18,7 +18,7 @@ jobs:
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Setup cachix
-      uses: cachix/cachix-action@12
+      uses: cachix/cachix-action@v12
       with:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
