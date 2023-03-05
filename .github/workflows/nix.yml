@@ -12,13 +12,13 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v3
     - name: Install nix
-      uses: cachix/install-nix-action@v17
+      uses: cachix/install-nix-action@v20
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Setup cachix
-      uses: cachix/cachix-action@v10
+      uses: cachix/cachix-action@12
       with:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
