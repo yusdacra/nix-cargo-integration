@@ -13,7 +13,7 @@ jobs:
       with:
         token: ${{ secrets.PAT }}
     - name: Install nix
-      uses: cachix/install-nix-action@v17
+      uses: cachix/install-nix-action@v20
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
