@@ -13,8 +13,6 @@ in
     runtimeLibsEnv
     // {
       nativeBuildInputs =
-        (old.nativeBuildInputs or [])
-        ++ [
-          (lib.hiPrio shellToolchain)
-        ];
+        [(lib.hiPrio shellToolchain)]
+        ++ (old.nativeBuildInputs or []);
     })
