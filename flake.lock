@@ -39,11 +39,11 @@
         "pruned-racket-catalog": []
       },
       "locked": {
-        "lastModified": 1679031362,
-        "narHash": "sha256-pJA/gfdUdWotejLd2TJQv83angyIfLSSs+PR57z1C7g=",
+        "lastModified": 1679057248,
+        "narHash": "sha256-yfJdTJvWqe746XFTcmlbxVT5xBR7VrIxaPyiwmmcYkY=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "b33fb624666a1806f40bd3f9bcfdac63ee0b487d",
+        "rev": "7f422cf4f3041431f1c3186d9982d92c51a7f065",
         "type": "github"
       },
       "original": {
@@ -173,11 +173,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1679019776,
-        "narHash": "sha256-0E/zReDMCVEV24OCISKEw0ofPkW8ZSlLwD/XDwSOFFI=",
+        "lastModified": 1679106165,
+        "narHash": "sha256-03Opt2yu4E/AIFjvlgib0/nhMn6B4B/t/nvwS2bzOGw=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "41872ef6ee3d14236c345a5c528d679533e045dd",
+        "rev": "7313c06ac334d6262ddfe30a38b3abc3da6bd565",
         "type": "github"
       },
       "original": {
