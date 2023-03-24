@@ -19,12 +19,12 @@
       cargoBuildProfile = profile;
       cargoTestFlags = flags;
       cargoBuildFlags = flags;
+      dontCheck = !conf.runTests;
     };
     pkg = rawPkg.override (
       common
       // {
         cargoArtifacts = rawPkg.passthru.dependencies.override common;
-        dontCheck = !conf.runTests;
       }
     );
   in

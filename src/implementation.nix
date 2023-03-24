@@ -54,13 +54,11 @@ in {
         inherit lib pkgs;
         inherit (inp) rust-overlay;
         path = toString self;
-        buildComponents = nci.toolchains.build.components;
-        shellComponents = nci.toolchains.shell.components;
       };
     in {
       nci.toolchains = {
-        build.package = l.mkDefault toolchains.build;
-        shell.package = l.mkDefault toolchains.shell;
+        build = l.mkDefault toolchains.build;
+        shell = l.mkDefault toolchains.shell;
       };
 
       dream2nix.inputs."nci" = {
@@ -88,8 +86,8 @@ in {
           crateOverrides
           // {
             "^.*".set-toolchain.overrideRustToolchain = _: {
-              cargo = nci.toolchains.build.package;
-              rustc = nci.toolchains.build.package;
+              cargo = nci.toolchains.build;
+              rustc = nci.toolchains.build;
             };
           };
       };
@@ -111,7 +109,7 @@ in {
                 devShell = import ./functions/mkDevshellFromRaw.nix {
                   inherit lib runtimeLibs;
                   rawShell = d2n.outputs."nci".devShells.${name};
-                  shellToolchain = nci.toolchains.shell.package;
+                  shellToolchain = nci.toolchains.shell;
                 };
               }
               else null
@@ -143,7 +141,7 @@ in {
                   (name: d2n.outputs."nci".packages.${name})
                   allCrateNames;
               };
-              shellToolchain = nci.toolchains.shell.package;
+              shellToolchain = nci.toolchains.shell;
             };
           })
           nci.projects
@@ -157,7 +155,7 @@ in {
           generate-lockfiles.program = toString (import ./functions/mkGenerateLockfilesApp.nix {
             inherit pkgs lib;
             projects = projectsWithoutLock;
-            buildToolchain = nci.toolchains.build.package;
+            buildToolchain = nci.toolchains.build;
           });
         };
       packages = l.listToAttrs (l.flatten (

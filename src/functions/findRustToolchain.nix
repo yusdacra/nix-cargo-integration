@@ -3,8 +3,6 @@
   pkgs,
   rust-overlay,
   path,
-  buildComponents,
-  shellComponents,
 }: let
   l = lib // builtins;
   rust-lib = l.fix (l.extends (import rust-overlay) (self: pkgs));
@@ -22,19 +20,7 @@
     if file != null
     then rust-lib.rust-bin.fromRustupToolchainFile file
     else rust-lib.rust-bin.stable.latest.default;
-  components = toolchain.passthru.availableComponents;
-  mkAggregated = pkgs.callPackage "${rust-overlay}/mk-aggregated.nix" {};
 in {
-  build = mkAggregated {
-    pname = "minimal";
-    version = components.rustc.version;
-    date = null;
-    selectedComponents = l.attrVals buildComponents components;
-  };
-  shell = mkAggregated {
-    pname = "shell";
-    version = components.rustc.version;
-    date = null;
-    selectedComponents = l.attrVals (buildComponents ++ shellComponents) components;
-  };
+  build = toolchain;
+  shell = toolchain;
 }

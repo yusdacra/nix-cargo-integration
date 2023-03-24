@@ -24,7 +24,6 @@
         flake-parts.follows = "parts";
 
         devshell.follows = "";
-        alejandra.follows = "";
         all-cabal-json.follows = "";
         flake-utils-pre-commit.follows = "";
         ghc-utils.follows = "";
@@ -97,6 +96,10 @@
 
               You're set!
             '';
+          };
+          cross-compile-wasm = {
+            description = "An example showcasing WASM cross-compilation";
+            path = ./examples/cross-compile-wasm;
           };
         };
       };

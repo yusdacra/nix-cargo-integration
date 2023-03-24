@@ -1,4 +1,4 @@
-tests/**/target
+examples/**/target
 /result*
 .direnv
 cli/target
