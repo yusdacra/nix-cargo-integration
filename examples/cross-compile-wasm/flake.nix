@@ -1,6 +1,6 @@
 {
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  inputs.nci.url = "github:yusdacra/nix-cargo-integration";
+  inputs.nci.url = "path:/home/patriot/proj/nix-cargo-integration";
   inputs.nci.inputs.nixpkgs.follows = "nixpkgs";
   inputs.parts.url = "github:hercules-ci/flake-parts";
   inputs.parts.inputs.nixpkgs-lib.follows = "nixpkgs";
@@ -32,8 +32,8 @@
           # alternatively you can access the outputs and export them yourself (see below)
           export = true;
           depsOverrides.set-target = {
-            # set build flags to our target (which is wasm) so that dependencies are built correctly
-            cargoBuildFlags = ["--target" "wasm32-unknown-unknown"];
+            # set cargo target to WASM so it compiles correctly
+            CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
           };
           overrides.build-with-trunk.overrideAttrs = old: {
             # add trunk and other dependencies
@@ -45,12 +45,14 @@
               HOME=$TMPDIR \
                 trunk -v build \
                 --dist $out \
-                --release ''${cargoBuildFlags:-}
+                --release \
+                ''${cargoBuildFlags:-}
             '';
             # disable install phase because trunk will directly output to $out
             dontInstall = true;
           };
           # we don't need debug artifacts, so only create release package
+          # we can't run WASM tests on native, so also disable tests
           profiles = {release.runTests = false;};
         };
         # export the crate devshell as the default devshell

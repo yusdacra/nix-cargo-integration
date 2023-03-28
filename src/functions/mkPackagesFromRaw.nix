@@ -19,7 +19,7 @@
       cargoBuildProfile = profile;
       cargoTestFlags = flags;
       cargoBuildFlags = flags;
-      dontCheck = !conf.runTests;
+      doCheck = conf.runTests;
     };
     pkg = rawPkg.override (
       common
