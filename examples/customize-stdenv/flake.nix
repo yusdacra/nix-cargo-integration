@@ -23,7 +23,7 @@
           # the override we'll use for setting the stdenv
           set-stdenv = {
             # in this case we will set it to the clang stdenv
-            override = {stdenv = pkgs.clangStdenv;};
+            override = old: {stdenv = pkgs.clangStdenv;};
           };
         in {
           ### override stdenv for both dependencies and main derivation ###
