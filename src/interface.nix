@@ -17,29 +17,6 @@ in {
       flake-parts-lib.mkPerSystemOption
       ({pkgs, ...}: {
         options = {
-          nci.export = l.mkOption {
-            type = t.bool;
-            default = false;
-            example = true;
-            description = "Whether to export all crates' outputs";
-          };
-          nci.profiles = l.mkOption {
-            type = t.attrsOf (t.submoduleWith {
-              modules = [./modules/profile.nix];
-            });
-            default = {
-              dev = {};
-              release.runTests = true;
-            };
-            example = l.literalExpression ''
-              {
-                dev = {};
-                release.runTests = true;
-                custom-profile.features = ["some" "features"];
-              }
-            '';
-            description = "Profiles to generate packages for all crates";
-          };
           nci.toolchains = {
             build = l.mkOption {
               type = t.package;

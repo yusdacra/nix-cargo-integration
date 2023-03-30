@@ -25,7 +25,12 @@
         # declare projects
         # relPath is the relative path of a project to the flake root
         # TODO: change this to your crate's path
-        nci.projects."my-project".relPath = "";
+        nci.projects."my-project" = {
+          relPath = "";
+          # export all crates (packages and devshell) in flake outputs
+          # alternatively you can access the outputs and export them yourself
+          export = true;
+        };
         # configure crates
         nci.crates = {
           "my-crate" = {
@@ -38,9 +43,6 @@
             # look at documentation for more options
           };
         };
-        # export all crates (packages and devshell) in flake outputs
-        # alternatively you can access the outputs and export them yourself (see below)
-        nci.export = true;
         # export the project devshell as the default devshell
         devShells.default = outputs."my-project".devShell;
         # export the release package of the crate as default package

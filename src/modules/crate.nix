@@ -9,20 +9,19 @@
 in {
   options = {
     export = l.mkOption {
-      type = t.bool;
-      default = false;
+      type = t.nullOr t.bool;
+      default = null;
       example = true;
-      description = "Whether to export this all of this crate's outputs";
+      description = "Whether to export this all of this crate's outputs (if set will override project-wide setting)";
     };
 
     profiles = l.mkOption {
-      type = t.attrsOf (t.submoduleWith {
-        modules = [./profile.nix];
-      });
-      default = {
-        dev = {};
-        release.runTests = true;
-      };
+      type = t.nullOr (
+        t.attrsOf (t.submoduleWith {
+          modules = [./profile.nix];
+        })
+      );
+      default = null;
       example = l.literalExpression ''
         {
           dev = {};
@@ -30,7 +29,7 @@ in {
           custom-profile.features = ["some" "features"];
         }
       '';
-      description = "Profiles to generate packages for this crate";
+      description = "Profiles to generate packages for this crate (if set will override project-wide setting)";
     };
 
     overrides = l.mkOption {
@@ -44,7 +43,10 @@ in {
           };
         }
       '';
-      description = "Overrides to apply to this crate (see dream2nix Rust docs for crane)";
+      description = ''
+        Overrides to apply to this crate (see dream2nix Rust docs for crane)
+        Any overrides here that have the same name as project-wide overrides will take precedence over project-wide ones.
+      '';
     };
     depsOverrides = l.mkOption {
       type = t.attrsOf t.attrs;
@@ -57,7 +59,10 @@ in {
           };
         }
       '';
-      description = "Overrides to apply to this crate's dependency derivations (see dream2nix Rust docs for crane)";
+      description = ''
+        Overrides to apply to this crate's dependency derivations (see dream2nix Rust docs for crane)
+        Any overrides here that have the same name as project-wide overrides will take precedence over project-wide ones.
+      '';
     };
 
     runtimeLibs = l.mkOption {

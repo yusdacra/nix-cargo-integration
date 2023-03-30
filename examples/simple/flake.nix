@@ -13,7 +13,11 @@
     parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
       imports = [nci.flakeModule];
-      perSystem = {pkgs, config, ...}: let
+      perSystem = {
+        pkgs,
+        config,
+        ...
+      }: let
         # TODO: change this to your crate's name
         crateName = "my-crate";
         # shorthand for accessing this crate's outputs

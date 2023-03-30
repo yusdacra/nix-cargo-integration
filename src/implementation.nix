@@ -15,6 +15,24 @@ in {
       d2n = config.dream2nix;
       nci = config.nci;
 
+      projectsToCrates =
+        l.mapAttrs
+        (
+          name: project:
+            import ./functions/getProjectCrates.nix {
+              inherit lib;
+              path = "${toString self}/${project.relPath}";
+            }
+        )
+        nci.projects;
+      cratesToProjects = l.listToAttrs (l.flatten (
+        l.mapAttrsToList
+        (
+          project: crates:
+            l.map (crate: l.nameValuePair crate project) crates
+        )
+        projectsToCrates
+      ));
       getCrateName = currentName: let
         newName = nci.crates.${currentName}.renameTo or null;
       in
@@ -25,8 +43,13 @@ in {
       outputsToExport =
         l.filterAttrs
         (
-          name: out:
-            nci.crates.${name}.export or nci.export
+          name: out: let
+            crateExport = nci.crates.${name}.export or null;
+            projectExport = nci.projects.${cratesToProjects.${name} or name}.export;
+          in
+            if crateExport == null
+            then projectExport
+            else crateExport
         )
         nci.outputs;
 
@@ -75,9 +98,19 @@ in {
         packageOverrides = let
           crateOverridesList =
             l.mapAttrsToList
-            (name: crate: [
-              (l.nameValuePair name crate.overrides)
-              (l.nameValuePair "${name}-deps" crate.depsOverrides)
+            (name: crate: let
+              project = nci.projects.${cratesToProjects.${name}};
+            in [
+              (
+                l.nameValuePair
+                name
+                (project.overrides // crate.overrides)
+              )
+              (
+                l.nameValuePair
+                "${name}-deps"
+                (project.depsOverrides // crate.depsOverrides)
+              )
             ])
             nci.crates;
           crateOverrides =
@@ -97,13 +130,20 @@ in {
           l.mapAttrs
           (
             name: package: let
-              runtimeLibs = nci.crates.${name}.runtimeLibs or [];
+              project = nci.projects.${cratesToProjects.${name}};
+              runtimeLibs =
+                (project.runtimeLibs or [])
+                ++ (nci.crates.${name}.runtimeLibs or []);
+              crateProfiles = nci.crates.${name}.profiles;
             in
               if package ? override
               then {
                 packages = import ./functions/mkPackagesFromRaw.nix {
                   inherit pkgs runtimeLibs;
-                  profiles = nci.crates.${name}.profiles or nci.profiles;
+                  profiles =
+                    if crateProfiles == null
+                    then project.profiles
+                    else crateProfiles;
                   rawPkg = package;
                 };
                 devShell = import ./functions/mkDevshellFromRaw.nix {
@@ -124,19 +164,20 @@ in {
         (
           l.mapAttrs
           (name: project: let
-            allCrateNames = import ./functions/getProjectCrates.nix {
-              inherit lib;
-              path = "${toString self}/${project.relPath}";
-            };
+            allCrateNames = projectsToCrates.${name};
           in {
             packages = {};
             devShell = import ./functions/mkDevshellFromRaw.nix {
               inherit lib;
-              runtimeLibs = l.flatten (
-                l.map
-                (name: nci.crates.${name}.runtimeLibs or [])
-                allCrateNames
-              );
+              runtimeLibs =
+                project.runtimeLibs
+                ++ (
+                  l.flatten (
+                    l.map
+                    (name: nci.crates.${name}.runtimeLibs or [])
+                    allCrateNames
+                  )
+                );
               rawShell = import "${inp.dream2nix}/src/subsystems/rust/builders/devshell.nix" {
                 inherit lib;
                 inherit (pkgs) libiconv mkShell;
@@ -170,7 +211,9 @@ in {
             l.mapAttrsToList
             (
               profile: package:
-                l.nameValuePair "${getCrateName name}-${profile}" package
+                l.nameValuePair
+                "${getCrateName name}-${profile}"
+                (l.mkDefault package)
             )
             out.packages
         )
@@ -180,7 +223,9 @@ in {
         l.mapAttrs'
         (
           name: out:
-            l.nameValuePair (getCrateName name) out.devShell
+            l.nameValuePair
+            (getCrateName name)
+            (l.mkDefault out.devShell)
         )
         outputsToExport;
     };

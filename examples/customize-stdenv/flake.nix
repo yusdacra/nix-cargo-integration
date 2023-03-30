@@ -13,7 +13,11 @@
     parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
       imports = [nci.flakeModule];
-      perSystem = {pkgs, config, ...}: let
+      perSystem = {
+        pkgs,
+        config,
+        ...
+      }: let
         crateName = "my-crate";
       in {
         # declare projects
@@ -33,6 +37,9 @@
           overrides = {
             inherit set-stdenv;
           };
+          # note: for overriding stdenv for *all* packages in a project
+          # you can use `overrides` and `depsOverrides` under `nci.projects.<name>`
+          # instead.
         };
       };
     };
