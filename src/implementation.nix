@@ -125,6 +125,7 @@ in {
               path = "${toString self}/${project.relPath}";
             };
           in {
+            packages = {};
             devShell = import ./functions/mkDevshellFromRaw.nix {
               inherit lib;
               runtimeLibs = l.flatten (
