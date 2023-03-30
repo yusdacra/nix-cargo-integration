@@ -89,6 +89,11 @@ in {
               cargo = nci.toolchains.build;
               rustc = nci.toolchains.build;
             };
+          }
+          // l.optionalAttrs (nci.stdenv != null) {
+            "^.*".set-stdenv.override = _: {
+              stdenv = nci.stdenv;
+            };
           };
       };
 

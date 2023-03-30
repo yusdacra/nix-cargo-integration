@@ -40,6 +40,12 @@ in {
             '';
             description = "Profiles to generate packages for all crates";
           };
+          nci.stdenv = l.mkOption {
+            type = t.nullOr t.package;
+            description = "The stdenv that will be used.";
+            default = null;
+            example = l.literalExpression "pkgs.clangStdenv";
+          };
           nci.toolchains = {
             build = l.mkOption {
               type = t.package;
