@@ -114,7 +114,11 @@ in {
               }
               else null
           )
-          d2n.outputs."nci".packages
+          (
+            l.removeAttrs
+            d2n.outputs."nci".packages
+            ["default" "resolveImpure"]
+          )
         );
       in
         (
