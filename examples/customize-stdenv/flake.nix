@@ -14,7 +14,7 @@
       systems = ["x86_64-linux"];
       imports = [nci.flakeModule];
       perSystem = {pkgs, config, ...}: let
-        crateName = "example-crate";
+        crateName = "my-crate";
       in {
         # declare projects
         nci.projects.${crateName}.relPath = "";
