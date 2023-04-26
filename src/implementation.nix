@@ -134,7 +134,7 @@ in {
               runtimeLibs =
                 (project.runtimeLibs or [])
                 ++ (nci.crates.${name}.runtimeLibs or []);
-              crateProfiles = nci.crates.${name}.profiles;
+              crateProfiles = nci.crates.${name}.profiles or null;
             in
               if package ? override
               then {
