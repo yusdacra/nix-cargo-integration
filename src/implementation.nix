@@ -1,10 +1,10 @@
 {
-  self,
   lib,
   ...
 } @ args: let
   l = lib // builtins;
-  inp = args.config.nci._inputs;
+  systemlessNci = args.config.nci;
+  inp = systemlessNci._inputs;
 in {
   config = {
     perSystem = {
@@ -21,7 +21,7 @@ in {
           name: project:
             import ./functions/getProjectCrates.nix {
               inherit lib;
-              path = "${toString self}/${project.relPath}";
+              path = "${toString systemlessNci.source}/${project.relPath}";
             }
         )
         nci.projects;
@@ -55,7 +55,7 @@ in {
 
       projectsChecked =
         l.mapAttrs
-        (name: import ./functions/warnIfNoLock.nix self)
+        (name: import ./functions/warnIfNoLock.nix systemlessNci.source)
         nci.projects;
       projectsWithLock =
         l.mapAttrs
@@ -76,7 +76,7 @@ in {
       toolchains = import ./functions/findRustToolchain.nix {
         inherit lib pkgs;
         inherit (inp) rust-overlay;
-        path = toString self;
+        path = toString systemlessNci.source;
       };
     in {
       nci.toolchains = {
@@ -85,7 +85,7 @@ in {
       };
 
       dream2nix.inputs."nci" = {
-        source = self;
+        source = systemlessNci.source;
         projects =
           l.mapAttrs
           (name: project: {

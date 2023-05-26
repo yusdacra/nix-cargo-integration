@@ -3,15 +3,20 @@
   lib,
   flake-parts-lib,
   ...
-} @ args: let
+}: let
   l = lib // builtins;
   t = l.types;
-  inp = args.config.nci._inputs;
 in {
   options = {
     nci._inputs = l.mkOption {
       type = t.raw;
       internal = true;
+    };
+    nci.source = l.mkOption {
+      type = t.path;
+      default = self;
+      defaultText = "self";
+      description = "The source path that will be used as the 'flake root'. By default this points to the directory 'flake.nix' is in.";
     };
     perSystem =
       flake-parts-lib.mkPerSystemOption
