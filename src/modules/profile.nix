@@ -11,6 +11,12 @@ in {
       '';
       description = "Features to enable for this profile";
     };
+    noDefaultFeatures = l.mkOption {
+      type = t.bool;
+      default = false;
+      example = true;
+      description = "Whether to disable default features for this profile";
+    };
     runTests = l.mkOption {
       type = t.bool;
       default = false;

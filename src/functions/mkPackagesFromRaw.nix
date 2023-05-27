@@ -7,13 +7,19 @@
   l = pkgs.lib // builtins;
   makePackage = profile: conf: let
     flags =
-      if l.length conf.features > 0
-      then [
-        "--no-default-features"
-        "--features"
-        "${l.concatStringsSep "," conf.features}"
-      ]
-      else [];
+      (
+        if conf.noDefaultFeatures
+        then ["--no-default-features"]
+        else []
+      )
+      ++ (
+        if l.length conf.features > 0
+        then [
+          "--features"
+          "${l.concatStringsSep "," conf.features}"
+        ]
+        else []
+      );
     common = {
       cargoTestProfile = profile;
       cargoBuildProfile = profile;
