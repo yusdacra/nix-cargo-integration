@@ -8,12 +8,14 @@
   makePackage = profile: conf: let
     flags =
       if conf.features == null
+      then []
+      else if l.length conf.features > 0
       then [
         "--no-default-features"
         "--features"
         "${l.concatStringsSep "," conf.features}"
       ]
-      else [];
+      else ["--no-default-features"];
     common = {
       cargoTestProfile = profile;
       cargoBuildProfile = profile;
