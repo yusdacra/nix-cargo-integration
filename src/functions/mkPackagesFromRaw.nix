@@ -7,7 +7,7 @@
   l = pkgs.lib // builtins;
   makePackage = profile: conf: let
     flags =
-      if l.length conf.features > 0
+      if conf.features == null
       then [
         "--no-default-features"
         "--features"

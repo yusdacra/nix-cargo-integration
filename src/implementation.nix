@@ -1,7 +1,4 @@
-{
-  lib,
-  ...
-} @ args: let
+{lib, ...} @ args: let
   l = lib // builtins;
   systemlessNci = args.config.nci;
   inp = systemlessNci._inputs;
