@@ -19,7 +19,7 @@
           if l.last components == "*"
           then let
             parentDirRel = l.concatStringsSep "/" (l.init components);
-            dirs = l.readDir projectRoot;
+            dirs = l.readDir "${projectRoot}/${parentDirRel}";
           in
             l.mapAttrsToList
             (name: _: "${parentDirRel}/${name}")
