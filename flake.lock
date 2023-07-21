@@ -1,28 +1,56 @@
 {
   "nodes": {
+    "crane": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1681175776,
+        "narHash": "sha256-7SsUy9114fryHAZ8p1L6G6YSu7jjz55FddEwa2U8XZc=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "445a3d222947632b5593112bb817850e8a9cf737",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "ref": "v0.12.1",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
     "dream2nix": {
       "inputs": {
+        "all-cabal-json": [],
+        "crane": "crane",
         "devshell": [],
         "drv-parts": "drv-parts",
         "flake-compat": "flake-compat",
         "flake-parts": [
           "parts"
         ],
+        "flake-utils-pre-commit": [],
+        "ghc-utils": [],
+        "gomod2nix": [],
+        "mach-nix": [],
+        "nix-pypi-fetcher": [],
         "nixpkgs": [
           "nixpkgs"
         ],
-        "pre-commit-hooks": []
+        "nixpkgsV1": "nixpkgsV1",
+        "poetry2nix": [],
+        "pre-commit-hooks": [],
+        "pruned-racket-catalog": []
       },
       "locked": {
-        "lastModified": 1689775563,
-        "narHash": "sha256-U7SqBj7KCPMvZ2ZoJZGXomVLqOFbeGRY6+E/Efo72bc=",
+        "lastModified": 1688815683,
+        "narHash": "sha256-mGeQgTcAltpQlr3KUBA1WoGBQadq6OAhuF864ci4+vI=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "e68bff6dbd5aa2b9ffae1e12f60c71bf0bee0143",
+        "rev": "99373e29568de05287d391a745947154ddbf4e3e",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
+        "ref": "legacy",
         "repo": "dream2nix",
         "type": "github"
       }
@@ -102,6 +130,21 @@
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
+      }
+    },
+    "nixpkgsV1": {
+      "locked": {
+        "lastModified": 1686501370,
+        "narHash": "sha256-G0WuM9fqTPRc2URKP9Lgi5nhZMqsfHGrdEbrLvAPJcg=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "75a5ebf473cd60148ba9aec0d219f72e5cf52519",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
       }
     },
     "parts": {
