@@ -23,7 +23,7 @@
           in
             l.mapAttrsToList
             (name: _: "${parentDirRel}/${name}")
-            dirs
+            (l.filterAttrs (_: t: t == "directory") dirs)
           else memberName
       )
       (manifest.workspace.members or [])
