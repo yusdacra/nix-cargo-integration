@@ -12,6 +12,8 @@ Easily and effortlessly integrate Cargo projects with Nix.
 Documentation for `master` branch is on https://flake.parts/options/nix-cargo-integration.html
 (alternatively, read options directly in `src/interface.nix` and `src/modules`)
 
+Examples can be found at [`examples`](./examples) directory.
+
 Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Installation
