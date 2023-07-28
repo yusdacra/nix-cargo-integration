@@ -17,6 +17,11 @@
       flake = false;
     };
 
+    treefmt = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     dream2nix = {
       url = "github:nix-community/dream2nix/legacy";
       inputs = {
@@ -56,7 +61,10 @@
     };
   in
     parts.lib.mkFlake {inputs = inp;} {
-      imports = [flakeModule];
+      imports = [
+        flakeModule
+        inp.treefmt.flakeModule
+      ];
 
       systems = ["x86_64-linux"];
 
@@ -116,17 +124,10 @@
         };
         nci.crates."test-crate".runtimeLibs = [pkgs.alsa-lib];
 
-        apps.format.program = let
-          configFile = pkgs.writeText "treefmt.toml" ''
-            [formatter.nix]
-            command = "${l.getExe pkgs.alejandra}"
-            includes = ["*.nix"]
-          '';
-          script = pkgs.writeScript "format" ''
-            ${l.getExe pkgs.treefmt} --config-file ${configFile} --tree-root ''${PRJ_ROOT:-$PWD}
-          '';
-        in
-          toString script;
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs.alejandra.enable = true;
+        };
 
         checks =
           {
