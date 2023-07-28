@@ -187,7 +187,7 @@ in {
               shellToolchain = nci.toolchains.shell;
             };
           })
-          nci.projects
+          projectsWithLock
         )
         // crates;
 
