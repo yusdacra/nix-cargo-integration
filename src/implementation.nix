@@ -51,10 +51,11 @@ in {
 
       projectsChecked =
         l.mapAttrs
-        (name: project: import ./functions/warnIfNoLock.nix {
-          source = systemlessNci.source;
-          inherit project lib;
-        })
+        (name: project:
+          import ./functions/warnIfNoLock.nix {
+            source = systemlessNci.source;
+            inherit project lib;
+          })
         nci.projects;
       projectsWithLock =
         l.mapAttrs
