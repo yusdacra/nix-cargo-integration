@@ -29,6 +29,7 @@ in {
             type = t.nullOr (t.either t.path t.attrs);
             default = null;
             description = "The toolchain configuration that will be used";
+            example = l.literalExpression "./rust-subproject/rust-toolchain.toml";
           };
           nci.toolchains = {
             build = l.mkOption {
