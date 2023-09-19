@@ -72,7 +72,7 @@
             welcomeText = ''
               To get started:
 
-              1. edit the project `relPath` in `flake.nix` to point to your project.
+              1. edit the project `path` in `flake.nix` to point to your project.
               2. change `my-crate` crate name to your own crate name.
               3. (optionally) add any other crate (or project) you want to configure.
 
