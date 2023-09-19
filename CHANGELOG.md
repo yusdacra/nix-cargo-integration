@@ -6,6 +6,21 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 ~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
 
+## 19-09-2023
+
+- nix: update internals to use dream2nix v1 API.
+- nix: remove `overrides` and `depsOverrides` options from project and crate settings.
+  - These are now replaced by `drvConfig` and `depsDrvConfig` respectively. Please check out the updated examples.
+- nix: replace project `relPath` setting with `path` setting.
+- nix: change default value of `export` in project settings to `true`.
+  - This means that all packages and development shells will be exported by default now.
+  - You can set `nci.projects."project-name".export = false` to return to old behaviour.
+- nix: added new option `nci.toolchainConfig`
+  - This allows you to set the toolchain configuration manually.
+  - It can point to a `rust-toolchain.toml` or legacy `rust-toolchain` file, or
+  - it can point to an attrset containing what the `toolchain` section in a `rust-toolchain.toml` file would contain
+    - (so options such as `channel`, `components` and `targets`)
+
 ## 19-02-2023
 
 - nix: rewrite in flake-parts! Please look at the readme for new documentation link.
