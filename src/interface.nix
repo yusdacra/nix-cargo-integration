@@ -47,10 +47,8 @@ in {
             default = {};
             example = l.literalExpression ''
               {
-                # if you have a crate separate in some subdirectory, you can specify it like so, relative to `nci.source`
-                my-crate.relPath = "path/to/crate";
-                # empty path for projects that are in same path as `nci.source`, usually this is the case
-                my-workspace.relPath = "";
+                # define the absolute path to the project
+                my-project.path = ./.;
               }
             '';
             description = "Projects (workspaces / crates) to generate outputs for";
