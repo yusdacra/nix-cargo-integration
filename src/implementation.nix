@@ -9,7 +9,6 @@ in {
       pkgs,
       ...
     }: let
-      d2n = config.dream2nix;
       nci = config.nci;
 
       projectsToCrates =
@@ -18,7 +17,7 @@ in {
           name: project:
             import ./functions/getProjectCrates.nix {
               inherit lib;
-              path = "${toString systemlessNci.source}/${project.relPath}";
+              inherit (project) path;
             }
         )
         nci.projects;
@@ -26,7 +25,7 @@ in {
         l.mapAttrsToList
         (
           project: crates:
-            l.map (crate: l.nameValuePair crate project) crates
+            l.map (crate: l.nameValuePair crate.name project) crates
         )
         projectsToCrates
       ));
@@ -52,7 +51,7 @@ in {
 
       projectsChecked =
         l.mapAttrs
-        (name: import ./functions/warnIfNoLock.nix systemlessNci.source)
+        (name: import ./functions/warnIfNoLock.nix)
         nci.projects;
       projectsWithLock =
         l.mapAttrs
@@ -73,53 +72,71 @@ in {
       toolchains = import ./functions/findRustToolchain.nix {
         inherit lib pkgs;
         inherit (inp) rust-overlay;
+        inherit (nci) toolchainConfig;
         path = toString systemlessNci.source;
       };
+
+      d2nOutputs = l.listToAttrs (l.flatten (
+        l.mapAttrsToList
+        (
+          projName: project:
+            l.map
+            (crate: {
+              name = crate.name;
+              value = let
+                crateCfg = nci.crates.${crate.name};
+              in
+                inp.dream2nix.lib.evalModules {
+                  packageSets.nixpkgs = pkgs;
+                  modules = [
+                    inp.dream2nix.modules.dream2nix.rust-cargo-lock
+                    inp.dream2nix.modules.dream2nix.rust-crane
+                    {
+                      paths.projectRoot = project.path;
+                      paths.projectRootFile = "flake.nix";
+                      paths.package = "/${crate.path}";
+                    }
+                    (let
+                      filterConfig = attrs: builtins.removeAttrs attrs ["env"];
+                    in {
+                      deps.craneSource = inp.crane;
+                      deps.cargo = nci.toolchains.build;
+
+                      name = l.mkForce crate.name;
+                      version = l.mkForce crate.version;
+
+                      mkDerivation = l.mkMerge [
+                        {src = project.path;}
+                        (filterConfig project.drvConfig)
+                        (filterConfig crateCfg.drvConfig)
+                      ];
+                      env = l.mkMerge [
+                        (project.drvConfig.env or {})
+                        (crateCfg.drvConfig.env or {})
+                      ];
+
+                      rust-crane.depsDrv = {
+                        mkDerivation = l.mkMerge [
+                          (filterConfig project.depsDrvConfig)
+                          (filterConfig crateCfg.depsDrvConfig)
+                        ];
+                        env = l.mkMerge [
+                          (project.depsDrvConfig.env or {})
+                          (crateCfg.depsDrvConfig.env or {})
+                        ];
+                      };
+                    })
+                  ];
+                };
+            })
+            projectsToCrates.${projName}
+        )
+        projectsWithLock
+      ));
     in {
       nci.toolchains = {
         build = l.mkDefault toolchains.build;
         shell = l.mkDefault toolchains.shell;
-      };
-
-      dream2nix.inputs."nci" = {
-        source = systemlessNci.source;
-        projects =
-          l.mapAttrs
-          (name: project: {
-            inherit (project) relPath;
-            subsystem = "rust";
-            translator = "cargo-lock";
-            builder = "crane";
-          })
-          projectsWithLock;
-        packageOverrides = let
-          crateOverridesList =
-            l.mapAttrsToList
-            (name: crate: let
-              project = nci.projects.${cratesToProjects.${name}};
-            in [
-              (
-                l.nameValuePair
-                name
-                (project.overrides // crate.overrides)
-              )
-              (
-                l.nameValuePair
-                "${name}-deps"
-                (project.depsOverrides // crate.depsOverrides)
-              )
-            ])
-            nci.crates;
-          crateOverrides =
-            l.listToAttrs (l.flatten crateOverridesList);
-        in
-          crateOverrides
-          // {
-            "^.*".set-toolchain.overrideRustToolchain = _: {
-              cargo = nci.toolchains.build;
-              rustc = nci.toolchains.build;
-            };
-          };
       };
 
       nci.outputs = let
@@ -132,36 +149,29 @@ in {
                 (project.runtimeLibs or [])
                 ++ (nci.crates.${name}.runtimeLibs or []);
               crateProfiles = nci.crates.${name}.profiles or null;
-            in
-              if package ? override
-              then {
-                packages = import ./functions/mkPackagesFromRaw.nix {
-                  inherit pkgs runtimeLibs;
-                  profiles =
-                    if crateProfiles == null
-                    then project.profiles
-                    else crateProfiles;
-                  rawPkg = package;
-                };
-                devShell = import ./functions/mkDevshellFromRaw.nix {
-                  inherit lib runtimeLibs;
-                  rawShell = d2n.outputs."nci".devShells.${name};
-                  shellToolchain = nci.toolchains.shell;
-                };
-              }
-              else null
+            in {
+              packages = import ./functions/mkPackagesFromRaw.nix {
+                inherit pkgs runtimeLibs;
+                profiles =
+                  if crateProfiles == null
+                  then project.profiles
+                  else crateProfiles;
+                rawPkg = package;
+              };
+              devShell = import ./functions/mkDevshellFromRaw.nix {
+                inherit lib runtimeLibs;
+                rawShell = package.devShell;
+                shellToolchain = nci.toolchains.shell;
+              };
+            }
           )
-          (
-            l.removeAttrs
-            d2n.outputs."nci".packages
-            ["default" "resolveImpure"]
-          )
+          d2nOutputs
         );
       in
         (
           l.mapAttrs
           (name: project: let
-            allCrateNames = projectsToCrates.${name};
+            allCrateNames = l.map (crate: crate.name) projectsToCrates.${name};
           in {
             packages = {};
             devShell = import ./functions/mkDevshellFromRaw.nix {
@@ -175,13 +185,13 @@ in {
                     allCrateNames
                   )
                 );
-              rawShell = import "${inp.dream2nix}/src/subsystems/rust/builders/devshell.nix" {
+              rawShell = import ./functions/mkDevshellFromDrvs.nix {
                 inherit lib;
                 inherit (pkgs) libiconv mkShell;
                 name = "${name}-devshell";
                 drvs =
                   l.map
-                  (name: d2n.outputs."nci".packages.${name})
+                  (name: d2nOutputs.${name})
                   allCrateNames;
               };
               shellToolchain = nci.toolchains.shell;

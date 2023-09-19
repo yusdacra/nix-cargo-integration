@@ -21,24 +21,18 @@
         crateName = "my-crate";
       in {
         # declare projects
-        nci.projects.${crateName}.relPath = "";
+        nci.projects.${crateName}.path = ./.;
         # configure crates
-        nci.crates.${crateName} = let
-          # the override we'll use for setting the stdenv
-          set-stdenv = {
-            # in this case we will set it to the clang stdenv
-            override = old: {stdenv = pkgs.clangStdenv;};
-          };
-        in {
+        nci.crates.${crateName} = {
           ### override stdenv for both dependencies and main derivation ###
-          depsOverrides = {
-            inherit set-stdenv;
+          depsDrvConfig = {
+            stdenv = pkgs.clangStdenv;
           };
-          overrides = {
-            inherit set-stdenv;
+          drvConfig = {
+            stdenv = pkgs.clangStdenv;
           };
           # note: for overriding stdenv for *all* packages in a project
-          # you can use `overrides` and `depsOverrides` under `nci.projects.<name>`
+          # you can use `drvConfig` and `depsDrvConfig` under `nci.projects.<name>`
           # instead.
         };
       };

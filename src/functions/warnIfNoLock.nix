@@ -1,5 +1,5 @@
-self: project:
-if builtins.pathExists "${toString self}/${project.relPath}/Cargo.lock"
+project:
+if builtins.pathExists "${project.path}/Cargo.lock"
 then {
   inherit project;
   hasLock = true;

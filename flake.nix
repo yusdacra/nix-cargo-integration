@@ -22,22 +22,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    crane = {
+      url = "github:ipetkov/crane/v0.12.2";
+      flake = false;
+    };
+
     dream2nix = {
-      url = "github:nix-community/dream2nix/legacy";
+      url = "github:nix-community/dream2nix";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-parts.follows = "parts";
 
         devshell.follows = "";
-        all-cabal-json.follows = "";
-        flake-utils-pre-commit.follows = "";
-        ghc-utils.follows = "";
-        gomod2nix.follows = "";
-        mach-nix.follows = "";
-        poetry2nix.follows = "";
+        flake-compat.follows = "";
         pre-commit-hooks.follows = "";
-        nix-pypi-fetcher.follows = "";
-        pruned-racket-catalog.follows = "";
+        nix-unit.follows = "";
       };
     };
   };
@@ -45,31 +44,26 @@
   outputs = {parts, ...} @ inp: let
     l = inp.nixpkgs.lib // builtins;
 
-    flakeModuleNciOnly = {
+    flakeModule = {
       imports = [./src/default.nix];
       config = {
         nci._inputs = {
-          inherit (inp) rust-overlay dream2nix;
+          inherit (inp) crane dream2nix rust-overlay;
         };
       };
-    };
-    flakeModule = {
-      imports = [
-        inp.dream2nix.flakeModuleBeta
-        flakeModuleNciOnly
-      ];
     };
   in
     parts.lib.mkFlake {inputs = inp;} {
       imports = [
-        flakeModule
         inp.treefmt.flakeModule
+        flakeModule
+        ./examples/simple-crate/crates.nix
+        ./examples/cross-compile-wasm/crates.nix
       ];
-
       systems = ["x86_64-linux"];
 
       flake = {
-        inherit flakeModule flakeModuleNciOnly;
+        inherit flakeModule;
         templates = {
           default = inp.self.templates.simple;
           simple = {
@@ -117,29 +111,22 @@
         system,
         ...
       }: let
-        testOut = config.nci.outputs."test-crate";
+        simpleOut = config.nci.outputs."my-crate";
+        crossOut = config.nci.outputs."cross-compile";
       in {
-        nci.projects."test-crate-project" = {
-          relPath = "test-crate";
-        };
-        nci.crates."test-crate".runtimeLibs = [pkgs.alsa-lib];
-
         treefmt = {
           projectRootFile = "flake.nix";
           programs.alejandra.enable = true;
         };
 
-        checks =
-          {
-            "test-crate-devshell" = testOut.devShell;
-            "test-crate-project-devshell" = config.nci.outputs."test-crate-project".devShell;
-          }
-          // (l.mapAttrs'
-            (
-              profile: package:
-                l.nameValuePair "test-crate-${profile}" package
-            )
-            testOut.packages);
+        nci.projects."my-crate".export = false;
+        nci.projects."cross-compile".export = false;
+        nci.toolchainConfig = ./examples/cross-compile-wasm/rust-toolchain.toml;
+
+        checks."simple-test" = simpleOut.packages.release;
+        checks."simple-devshell" = simpleOut.devShell;
+        checks."cross-compile-test" = crossOut.packages.release;
+        checks."cross-compile-devshell" = crossOut.devShell;
       };
     };
 }

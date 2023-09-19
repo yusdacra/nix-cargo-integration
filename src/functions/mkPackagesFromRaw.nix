@@ -16,26 +16,29 @@
         "${l.concatStringsSep "," conf.features}"
       ]
       else ["--no-default-features"];
-    common = {
-      cargoTestProfile = profile;
-      cargoBuildProfile = profile;
-      cargoTestFlags = flags;
-      cargoBuildFlags = flags;
-      doCheck = conf.runTests;
-    };
-    pkg = rawPkg.override (
-      common
-      // {
-        cargoArtifacts = rawPkg.passthru.dependencies.override common;
-      }
-    );
+    pkg =
+      (rawPkg.extendModules {
+        modules = [
+          {
+            rust-crane = {
+              buildProfile = profile;
+              buildFlags = flags;
+              testProfile = profile;
+              testFlags = flags;
+              runTests = conf.runTests;
+            };
+          }
+        ];
+      })
+      .config
+      .public;
   in
     if l.length runtimeLibs > 0
     then
       pkgs.runCommand
       pkg.name
       {
-        inherit (pkg) pname version;
+        inherit (pkg) name version;
         meta = pkg.meta or {};
         passthru =
           (pkg.passthru or {})

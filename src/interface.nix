@@ -16,12 +16,21 @@ in {
       type = t.path;
       default = self;
       defaultText = "self";
-      description = "The source path that will be used as the 'flake root'. By default this points to the directory 'flake.nix' is in.";
+      description = ''
+        The source path that will be used as the 'flake root'.
+        By default this points to the directory 'flake.nix' is in.
+      '';
     };
     perSystem =
       flake-parts-lib.mkPerSystemOption
       ({pkgs, ...}: {
         options = {
+          nci.toolchainConfig = l.mkOption {
+            type = t.nullOr (t.either t.path t.attrs);
+            default = null;
+            description = "The toolchain configuration that will be used";
+            example = l.literalExpression "./rust-subproject/rust-toolchain.toml";
+          };
           nci.toolchains = {
             build = l.mkOption {
               type = t.package;
@@ -39,9 +48,8 @@ in {
             default = {};
             example = l.literalExpression ''
               {
-                my-crate.relPath = "path/to/crate";
-                # empty path for projects at flake root
-                my-workspace.relPath = "";
+                # define the absolute path to the project
+                my-project.path = ./.;
               }
             '';
             description = "Projects (workspaces / crates) to generate outputs for";
@@ -56,7 +64,6 @@ in {
               {
                 my-crate = {
                   export = true;
-                  overrides = {/* stuff */};
                 };
               }
             '';
