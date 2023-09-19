@@ -28,12 +28,25 @@
       )
       (manifest.workspace.members or [])
     );
-  allPackageManifests =
-    (l.optional (manifest ? package) manifest)
+  allPackages =
+    (
+      l.optional
+      (manifest ? package)
+      {
+        inherit (manifest.package) name version;
+        path = "";
+      }
+    )
     ++ (
       l.map
-      (relPath: l.fromTOML (l.readFile "${projectRoot}/${relPath}/Cargo.toml"))
+      (relPath: let
+        manifestPath = "${projectRoot}/${relPath}/Cargo.toml";
+        manifest = l.fromTOML (l.readFile manifestPath);
+      in {
+        inherit (manifest.package) name version;
+        path = relPath;
+      })
       workspaceMembers
     );
 in
-  l.unique (l.map (manifest: manifest.package.name) allPackageManifests)
+  l.unique allPackages

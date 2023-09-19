@@ -23,10 +23,9 @@
         outputs = config.nci.outputs;
       in {
         # declare projects
-        # relPath is the relative path of a project to the flake root
-        # TODO: change this to your crate's path
+        # TODO: change this to your workspace's path
         nci.projects."my-project" = {
-          relPath = "";
+          path = ./.;
           # export all crates (packages and devshell) in flake outputs
           # alternatively you can access the outputs and export them yourself
           export = true;
@@ -37,8 +36,8 @@
             # look at documentation for more options
           };
           "my-other-crate" = {
-            overrides.add-inputs.overrideAttrs = old: {
-              buildInputs = (old.buildInputs or []) ++ [pkgs.hello];
+            drvConfig = {
+              buildInputs = [pkgs.hello];
             };
             # look at documentation for more options
           };

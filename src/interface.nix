@@ -16,12 +16,20 @@ in {
       type = t.path;
       default = self;
       defaultText = "self";
-      description = "The source path that will be used as the 'flake root'. By default this points to the directory 'flake.nix' is in.";
+      description = ''
+        The source path that will be used as the 'flake root'.
+        By default this points to the directory 'flake.nix' is in.
+      '';
     };
     perSystem =
       flake-parts-lib.mkPerSystemOption
       ({pkgs, ...}: {
         options = {
+          nci.toolchainConfig = l.mkOption {
+            type = t.nullOr (t.either t.path t.attrs);
+            default = null;
+            description = "The toolchain configuration that will be used";
+          };
           nci.toolchains = {
             build = l.mkOption {
               type = t.package;
@@ -39,8 +47,9 @@ in {
             default = {};
             example = l.literalExpression ''
               {
+                # if you have a crate separate in some subdirectory, you can specify it like so, relative to `nci.source`
                 my-crate.relPath = "path/to/crate";
-                # empty path for projects at flake root
+                # empty path for projects that are in same path as `nci.source`, usually this is the case
                 my-workspace.relPath = "";
               }
             '';
@@ -56,7 +65,6 @@ in {
               {
                 my-crate = {
                   export = true;
-                  overrides = {/* stuff */};
                 };
               }
             '';

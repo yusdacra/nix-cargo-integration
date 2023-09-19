@@ -6,6 +6,15 @@
 }: let
   l = lib // builtins;
   t = l.types;
+  mkDrvConfig = desc:
+    l.mkOption {
+      type = t.attrs;
+      default = {};
+      description = ''
+        ${desc}
+        Environment variables must be defined under an attrset called `env`.
+      '';
+    };
 in {
   options = {
     export = l.mkOption {
@@ -32,38 +41,8 @@ in {
       description = "Profiles to generate packages for this crate (if set will override project-wide setting)";
     };
 
-    overrides = l.mkOption {
-      type = t.attrsOf t.attrs;
-      default = {};
-      example = l.literalExpression ''
-        {
-          add-env = {TEST_ENV = 1;};
-          add-inputs.overrideAttrs = old: {
-            buildInputs = (old.buildInputs or []) ++ [pkgs.hello];
-          };
-        }
-      '';
-      description = ''
-        Overrides to apply to this crate (see dream2nix Rust docs for crane)
-        Any overrides here that have the same name as project-wide overrides will take precedence over project-wide ones.
-      '';
-    };
-    depsOverrides = l.mkOption {
-      type = t.attrsOf t.attrs;
-      default = {};
-      example = l.literalExpression ''
-        {
-          add-env = {TEST_ENV = 1;};
-          add-inputs.overrideAttrs = old: {
-            buildInputs = (old.buildInputs or []) ++ [pkgs.hello];
-          };
-        }
-      '';
-      description = ''
-        Overrides to apply to this crate's dependency derivations (see dream2nix Rust docs for crane)
-        Any overrides here that have the same name as project-wide overrides will take precedence over project-wide ones.
-      '';
-    };
+    drvConfig = mkDrvConfig "Change main derivation configuration";
+    depsDrvConfig = mkDrvConfig "Change dependencies derivation configuration";
 
     runtimeLibs = l.mkOption {
       type = t.listOf t.package;
