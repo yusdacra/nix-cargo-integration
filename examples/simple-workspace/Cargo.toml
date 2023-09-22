@@ -1,2 +1,9 @@
 [workspace]
 members = ["my-crate", "my-other-crate"]
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Some Author <someone@example.com>", "Another Author <someone.else@example.com>"]
+license = "MIT"
+repository = "https://github.com/yusdacra/nix-cargo-integration/tree/master/examples/simple-workspace"
+homepage = "https://github.com/yusdacra/nix-cargo-integration/tree/master/examples/simple-workspace"

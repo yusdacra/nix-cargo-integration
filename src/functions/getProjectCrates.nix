@@ -28,12 +28,17 @@
       )
       (manifest.workspace.members or [])
     );
+  getAttribute = package: attr:
+    if package.${attr}.workspace or null == true
+    then manifest.workspace.package.${attr}
+    else package.${attr};
   allPackages =
     (
       l.optional
       (manifest ? package)
       {
-        inherit (manifest.package) name version;
+        inherit (manifest.package) name;
+        version = getAttribute manifest.package "version";
         path = "";
       }
     )
@@ -43,7 +48,8 @@
         manifestPath = "${projectRoot}/${relPath}/Cargo.toml";
         manifest = l.fromTOML (l.readFile manifestPath);
       in {
-        inherit (manifest.package) name version;
+        inherit (manifest.package) name;
+        version = getAttribute manifest.package "version";
         path = relPath;
       })
       workspaceMembers
