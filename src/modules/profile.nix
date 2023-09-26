@@ -2,6 +2,7 @@
   l = lib // builtins;
   t = l.types;
 in {
+  imports = [../options/drvConfig.nix];
   options = {
     features = l.mkOption {
       type = t.nullOr (t.listOf t.str);

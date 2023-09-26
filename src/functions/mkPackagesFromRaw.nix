@@ -19,6 +19,7 @@
     pkg =
       (rawPkg.extendModules {
         modules = [
+          conf.drvConfig
           {
             rust-crane = {
               buildProfile = profile;
@@ -26,6 +27,7 @@
               testProfile = profile;
               testFlags = flags;
               runTests = conf.runTests;
+              depsDrv = conf.depsDrvConfig;
             };
           }
         ];

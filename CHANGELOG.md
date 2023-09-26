@@ -6,6 +6,14 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 ~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
 
+## 26-09-2023
+
+- nix: `drvConfig` and `depsDrvConfig` options were changed to resemble `dream2nix` more
+  - `mkDerivation` options now must be defined under `drvConfig.mkDerivation` and `depsDrvConfig.mkDerivation` respectively
+- nix: implemented `drvConfig` and `depsDrvConfig` under `nci.crates.<name>.profiles.<profile name>` option
+  - This means that now every profile package can be customized separately.
+- nix: added a [new example](./examples/customize-profiles) showcasing how to customize profiles
+
 ## 19-09-2023
 
 - nix: update internals to use dream2nix v1 API.

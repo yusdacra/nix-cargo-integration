@@ -100,36 +100,22 @@ in {
                       paths.projectRootFile = "flake.nix";
                       paths.package = "/${crate.path}";
                     }
-                    (let
-                      filterConfig = attrs: builtins.removeAttrs attrs ["env"];
-                    in {
+                    project.drvConfig
+                    crateCfg.drvConfig
+                    {
                       deps.craneSource = inp.crane;
                       deps.cargo = nci.toolchains.build;
 
                       name = l.mkForce crate.name;
                       version = l.mkForce crate.version;
 
-                      mkDerivation = l.mkMerge [
-                        {src = project.path;}
-                        (filterConfig project.drvConfig)
-                        (filterConfig crateCfg.drvConfig)
-                      ];
-                      env = l.mkMerge [
-                        (project.drvConfig.env or {})
-                        (crateCfg.drvConfig.env or {})
-                      ];
+                      mkDerivation.src = l.mkForce project.path;
 
-                      rust-crane.depsDrv = {
-                        mkDerivation = l.mkMerge [
-                          (filterConfig project.depsDrvConfig)
-                          (filterConfig crateCfg.depsDrvConfig)
-                        ];
-                        env = l.mkMerge [
-                          (project.depsDrvConfig.env or {})
-                          (crateCfg.depsDrvConfig.env or {})
-                        ];
-                      };
-                    })
+                      rust-crane.depsDrv = l.mkMerge [
+                        project.depsDrvConfig
+                        crateCfg.depsDrvConfig
+                      ];
+                    }
                   ];
                 };
             })

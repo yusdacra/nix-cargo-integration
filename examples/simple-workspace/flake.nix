@@ -37,7 +37,7 @@
           };
           "my-other-crate" = {
             drvConfig = {
-              buildInputs = [pkgs.hello];
+              mkDerivation.buildInputs = [pkgs.hello];
             };
             # look at documentation for more options
           };
