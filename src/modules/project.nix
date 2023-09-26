@@ -1,17 +1,8 @@
 {lib, ...}: let
   l = lib // builtins;
   t = l.types;
-
-  mkDrvConfig = desc:
-    l.mkOption {
-      type = t.attrs;
-      default = {};
-      description = ''
-        ${desc}
-        Environment variables must be defined under an attrset called `env`.
-      '';
-    };
 in {
+  imports = [../options/drvConfig.nix];
   options = {
     path = l.mkOption {
       type = t.path;
@@ -51,9 +42,6 @@ in {
         For more information refer to `nci.crates.<name>.profiles` option.
       '';
     };
-
-    drvConfig = mkDrvConfig "Change main derivation configuration";
-    depsDrvConfig = mkDrvConfig "Change dependencies derivation configuration";
 
     runtimeLibs = l.mkOption {
       type = t.listOf t.package;
