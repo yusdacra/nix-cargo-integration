@@ -59,6 +59,7 @@
         flakeModule
         ./examples/simple-crate/crates.nix
         ./examples/cross-compile-wasm/crates.nix
+        ./examples/customize-profiles/crates.nix
       ];
       systems = ["x86_64-linux"];
 
@@ -111,6 +112,7 @@
         system,
         ...
       }: let
+        profilesOut = config.nci.outputs."customize-profiles";
         simpleOut = config.nci.outputs."my-crate";
         crossOut = config.nci.outputs."cross-compile";
       in {
@@ -119,14 +121,16 @@
           programs.alejandra.enable = true;
         };
 
-        nci.projects."my-crate".export = false;
+        nci.projects."simple".export = false;
         nci.projects."cross-compile".export = false;
+        nci.projects."profiles".export = false;
         nci.toolchainConfig = ./examples/cross-compile-wasm/rust-toolchain.toml;
 
         checks."simple-test" = simpleOut.packages.release;
         checks."simple-devshell" = simpleOut.devShell;
         checks."cross-compile-test" = crossOut.packages.release;
         checks."cross-compile-devshell" = crossOut.devShell;
+        checks."profiles-test" = profilesOut.packages.release;
       };
     };
 }
