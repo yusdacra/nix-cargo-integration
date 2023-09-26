@@ -7,12 +7,15 @@
       default = {};
       description = ''
         ${desc}
-        Environment variables must be defined under an attrset called `env`.
+        `mkDerivation` options must be defined under the `mkDerivation` attribute.
+        Environment variables and non-mkDerivation options must be defined under the `env` attribute.
       '';
       example = l.literalExpression ''
         {
-          # inputs and most other stuff will automatically merge
-          buildInputs = [pkgs.hello];
+          mkDerivation = {
+            # inputs and most other stuff will automatically merge
+            buildInputs = [pkgs.hello];
+          };
           # define env variables and options not defined in standard mkDerivation interface like this
           env = {
             CARGO_TERM_VERBOSE = "true";

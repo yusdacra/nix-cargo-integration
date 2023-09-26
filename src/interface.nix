@@ -3,9 +3,10 @@
   lib,
   flake-parts-lib,
   ...
-}: let
+} @ args: let
   l = lib // builtins;
   t = l.types;
+  inputs = args.config.nci._inputs;
 in {
   options = {
     nci._inputs = l.mkOption {
@@ -44,6 +45,7 @@ in {
           nci.projects = l.mkOption {
             type = t.lazyAttrsOf (t.submoduleWith {
               modules = [./modules/project.nix];
+              specialArgs = {inherit pkgs inputs;};
             });
             default = {};
             example = l.literalExpression ''
@@ -57,7 +59,7 @@ in {
           nci.crates = l.mkOption {
             type = t.lazyAttrsOf (t.submoduleWith {
               modules = [./modules/crate.nix];
-              specialArgs = {inherit pkgs;};
+              specialArgs = {inherit pkgs inputs;};
             });
             default = {};
             example = l.literalExpression ''
