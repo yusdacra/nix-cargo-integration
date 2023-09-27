@@ -10,12 +10,9 @@
     nci.projects.${crateName}.path = ./.;
     # configure crates
     nci.crates.${crateName} = {
-      depsDrvConfig = {
-        # set cargo target to WASM so dependencies compiles correctly
-        env.CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-      };
-      drvConfig = {
-        mkDerivation = {
+      targets."wasm32-unknown-unknown" = {
+        default = true;
+        drvConfig.mkDerivation = {
           # add trunk and other dependencies
           nativeBuildInputs = with pkgs; [trunk nodePackages.sass wasm-bindgen-cli];
           # override build phase to build with trunk instead

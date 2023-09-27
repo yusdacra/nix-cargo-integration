@@ -6,6 +6,12 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 ~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
 
+## 27-09-2023
+
+- nix: new `nci.projects.<name>.targets` and `nci.crates.<name>.targets` options
+  - These allow you to generate separate packages for separate targets, and configure each target separately
+  - Please check the option's documentation for more info, and the `cross-compile-wasm` example.
+
 ## 26-09-2023
 
 - nix: `drvConfig` and `depsDrvConfig` options were changed to resemble `dream2nix` more

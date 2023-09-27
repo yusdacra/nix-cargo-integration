@@ -1,8 +1,7 @@
 {lib, ...}: let
   l = lib // builtins;
   t = l.types;
-in {
-  options = {
+  opts = {
     packages = l.mkOption {
       type = t.lazyAttrsOf t.package;
       readOnly = true;
@@ -14,4 +13,16 @@ in {
       description = "The development shell for this crate";
     };
   };
+in {
+  options =
+    opts
+    // {
+      allTargets = l.mkOption {
+        type = t.lazyAttrsOf (t.submoduleWith {
+          modules = [{options = {inherit (opts) packages;};}];
+        });
+        readOnly = true;
+        description = "All packages for all targets";
+      };
+    };
 }
