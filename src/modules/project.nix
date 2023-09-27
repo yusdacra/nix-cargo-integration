@@ -54,13 +54,21 @@ in {
       default = {
         ${nixpkgsRustLib.toRustTarget pkgs.stdenv.hostPlatform}.default = true;
       };
+      defaultText = ''
+        {
+          <host platform>.default = true;
+        }
+      '';
       example = l.literalExpression ''
         {
           wasm32-unknown-unknown.profiles = ["release"];
           x86_64-unknown-linux-gnu.default = true;
         }
       '';
-      description = "Targets to generate packages for this crate";
+      description = ''
+        `targets` option that will affect all packages in this project.
+        For more information refer to `nci.crates.<name>.targets` option.
+      '';
     };
 
     runtimeLibs = l.mkOption {

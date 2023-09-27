@@ -45,7 +45,7 @@ in {
           x86_64-unknown-linux-gnu.default = true;
         }
       '';
-      description = "Targets to generate packages for this crate";
+      description = "Targets to generate packages for this crate (if set will override project-wide setting)";
     };
 
     runtimeLibs = l.mkOption {
