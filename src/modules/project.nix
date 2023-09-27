@@ -1,6 +1,11 @@
-{lib, ...}: let
+{
+  lib,
+  pkgs,
+  ...
+}: let
   l = lib // builtins;
   t = l.types;
+  nixpkgsRustLib = import "${pkgs.path}/pkgs/build-support/rust/lib" {inherit lib;};
 in {
   imports = [../options/drvConfig.nix];
   options = {
@@ -41,6 +46,21 @@ in {
         `profiles` option that will affect all packages in this project.
         For more information refer to `nci.crates.<name>.profiles` option.
       '';
+    };
+    targets = l.mkOption {
+      type = t.attrsOf (t.submoduleWith {
+        modules = [./target.nix];
+      });
+      default = {
+        ${nixpkgsRustLib.toRustTarget pkgs.stdenv.hostPlatform}.default = true;
+      };
+      example = l.literalExpression ''
+        {
+          wasm32-unknown-unknown.profiles = ["release"];
+          x86_64-unknown-linux-gnu.default = true;
+        }
+      '';
+      description = "Targets to generate packages for this crate";
     };
 
     runtimeLibs = l.mkOption {

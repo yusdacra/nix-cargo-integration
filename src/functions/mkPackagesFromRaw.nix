@@ -1,33 +1,56 @@
 {
   rawPkg,
+  targets,
   profiles,
   runtimeLibs,
   pkgs,
 }: let
   l = pkgs.lib // builtins;
-  makePackage = profile: conf: let
+  makePackage = target: targetConf:
+    l.mapAttrs
+    (
+      profile: profileConf:
+        _makePackage profile profileConf target targetConf
+    )
+    (
+      if targetConf.profiles != null
+      then
+        (
+          l.filterAttrs
+          (profile: _: l.any (op: profile == op) targetConf.profiles)
+          profiles
+        )
+      else profiles
+    );
+  _makePackage = profile: profileConf: target: targetConf: let
     flags =
-      if conf.features == null
+      if profileConf.features == null
       then []
-      else if l.length conf.features > 0
+      else if l.length profileConf.features > 0
       then [
         "--no-default-features"
         "--features"
-        "${l.concatStringsSep "," conf.features}"
+        "${l.concatStringsSep "," profileConf.features}"
       ]
       else ["--no-default-features"];
     pkg =
       (rawPkg.extendModules {
         modules = [
-          conf.drvConfig
+          profileConf.drvConfig
+          targetConf.drvConfig
           {
+            env.CARGO_BUILD_TARGET = target;
             rust-crane = {
               buildProfile = profile;
               buildFlags = flags;
               testProfile = profile;
               testFlags = flags;
-              runTests = conf.runTests;
-              depsDrv = conf.depsDrvConfig;
+              runTests = profileConf.runTests;
+              depsDrv = l.mkMerge [
+                profileConf.depsDrvConfig
+                targetConf.depsDrvConfig
+                {env.CARGO_BUILD_TARGET = target;}
+              ];
             };
           }
         ];
@@ -58,4 +81,4 @@
       ''
     else pkg;
 in
-  l.mapAttrs makePackage profiles
+  l.mapAttrs makePackage targets

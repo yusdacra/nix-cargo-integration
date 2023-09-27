@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   l = lib // builtins;
@@ -30,6 +31,21 @@ in {
         }
       '';
       description = "Profiles to generate packages for this crate (if set will override project-wide setting)";
+    };
+    targets = l.mkOption {
+      type = t.nullOr (
+        t.attrsOf (t.submoduleWith {
+          modules = [./target.nix];
+        })
+      );
+      default = null;
+      example = l.literalExpression ''
+        {
+          wasm32-unknown-unknown.profiles = ["release"];
+          x86_64-unknown-linux-gnu.default = true;
+        }
+      '';
+      description = "Targets to generate packages for this crate";
     };
 
     runtimeLibs = l.mkOption {

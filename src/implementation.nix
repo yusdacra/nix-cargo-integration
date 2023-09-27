@@ -138,16 +138,30 @@ in {
               runtimeLibs =
                 (project.runtimeLibs or [])
                 ++ (nci.crates.${name}.runtimeLibs or []);
-              crateProfiles = nci.crates.${name}.profiles or null;
-            in {
-              packages = import ./functions/mkPackagesFromRaw.nix {
-                inherit pkgs runtimeLibs;
-                profiles =
-                  if crateProfiles == null
-                  then project.profiles
-                  else crateProfiles;
+              crateProfiles = nci.crates.${name}.profiles;
+              crateTargets = nci.crates.${name}.targets;
+              profiles =
+                if crateProfiles == null
+                then project.profiles
+                else crateProfiles;
+              targets =
+                if crateTargets == null
+                then project.targets
+                else crateTargets;
+              allTargets = import ./functions/mkPackagesFromRaw.nix {
+                inherit pkgs runtimeLibs profiles targets;
                 rawPkg = package;
               };
+              _defaultTargets = l.attrNames (l.filterAttrs (_: v: v.default) targets);
+              defaultTarget =
+                if l.length _defaultTargets > 1
+                then throw "there can't be more than one default target: ${l.concatStringsSep ", " _defaultTargets}"
+                else if l.length _defaultTargets < 1
+                then throw "there is no default target defined"
+                else l.head _defaultTargets;
+            in {
+              allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
+              packages = allTargets.${defaultTarget};
               devShell = import ./functions/mkDevshellFromRaw.nix {
                 inherit lib runtimeLibs;
                 rawShell = package.devShell;
