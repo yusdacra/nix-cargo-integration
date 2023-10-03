@@ -4,4 +4,5 @@ pkg: let
     mkDerivation.buildPhase = ":";
     mkDerivation.installPhase = "env > $out";
   };
-in (pkg.extendModules {modules = [cfg];}).config.public
+in
+  (pkg.extendModules {modules = [cfg];}).config.public
