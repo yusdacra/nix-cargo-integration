@@ -6,6 +6,12 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 ~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
 
+## 03-10-2023
+
+- nix: new `nci.outputs.<name>.check` and `nci.crates.<name>.checkProfile` options
+  - the new `check` output is a package that *only* runs `cargo test`
+  using the package generated for the profile specified in `checkProfile`.
+
 ## 27-09-2023
 
 - nix: new `nci.projects.<name>.targets` and `nci.crates.<name>.targets` options
