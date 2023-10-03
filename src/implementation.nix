@@ -135,19 +135,17 @@ in {
           (
             name: package: let
               project = nci.projects.${cratesToProjects.${name}};
+              crate = nci.crates.${name};
               runtimeLibs =
-                (project.runtimeLibs or [])
-                ++ (nci.crates.${name}.runtimeLibs or []);
-              crateProfiles = nci.crates.${name}.profiles;
-              crateTargets = nci.crates.${name}.targets;
+                (project.runtimeLibs or []) ++ (crate.runtimeLibs or []);
               profiles =
-                if crateProfiles == null
+                if crate.profiles == null
                 then project.profiles
-                else crateProfiles;
+                else crate.profiles;
               targets =
-                if crateTargets == null
+                if crate.targets == null
                 then project.targets
-                else crateTargets;
+                else crate.targets;
               allTargets = import ./functions/mkPackagesFromRaw.nix {
                 inherit pkgs runtimeLibs profiles targets;
                 rawPkg = package;
@@ -159,14 +157,16 @@ in {
                 else if l.length _defaultTargets < 1
                 then throw "there is no default target defined"
                 else l.head _defaultTargets;
-            in {
-              allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
               packages = allTargets.${defaultTarget};
+            in {
+              inherit packages;
+              allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
               devShell = import ./functions/mkDevshellFromRaw.nix {
                 inherit lib runtimeLibs;
                 rawShell = package.devShell;
                 shellToolchain = nci.toolchains.shell;
               };
+              check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
             }
           )
           d2nOutputs

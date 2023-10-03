@@ -12,6 +12,11 @@
       readOnly = true;
       description = "The development shell for this crate";
     };
+    check = l.mkOption {
+      type = t.package;
+      readOnly = true;
+      description = "Tests only package for this crate";
+    };
   };
 in {
   options =

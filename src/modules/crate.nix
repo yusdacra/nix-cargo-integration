@@ -16,6 +16,12 @@ in {
       description = "Whether to export this all of this crate's outputs (if set will override project-wide setting)";
     };
 
+    checkProfile = l.mkOption {
+      type = t.str;
+      default = "release";
+      example = "custom-profile";
+      description = "Profile to use for the tests only package";
+    };
     profiles = l.mkOption {
       type = t.nullOr (
         t.attrsOf (t.submoduleWith {
