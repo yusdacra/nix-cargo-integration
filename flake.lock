@@ -31,11 +31,11 @@
         "pre-commit-hooks": []
       },
       "locked": {
-        "lastModified": 1696984790,
-        "narHash": "sha256-78rtzhAXqSqYYnslqv5pCz8ViPIM5eN5+1smdC67TBo=",
+        "lastModified": 1697064937,
+        "narHash": "sha256-yZ5OlQkPnNUDnEzUY/Su2gu52i1+w7h5HHK/kBk5oUg=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "af64cc56440e8c00c2e90b6a046c57996d2c44fa",
+        "rev": "1caf997f694c3144ed8fa6752c4af36d1e68851c",
         "type": "github"
       },
       "original": {
@@ -110,11 +110,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1696990596,
-        "narHash": "sha256-Yyb4o7/qNGB+oig3978ehzRrJf/zjfCOEB/g7ZF3//E=",
+        "lastModified": 1697076655,
+        "narHash": "sha256-NcCtVUOd0X81srZkrdP8qoA1BMsPdO2tGtlZpsGijeU=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "c6d2f0bbd56fc833a7c1973f422ca92a507d0320",
+        "rev": "aa7584f5bbf5947716ad8ec14eccc0334f0d28f0",
         "type": "github"
       },
       "original": {
@@ -130,11 +130,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1695822946,
-        "narHash": "sha256-IQU3fYo0H+oGlqX5YrgZU3VRhbt2Oqe6KmslQKUO4II=",
+        "lastModified": 1697018566,
+        "narHash": "sha256-tOhoeq621JQOULO9X2U+Io03PK/TQrYFYB4sJFaDCuQ=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "720bd006d855b08e60664e4683ccddb7a9ff614a",
+        "rev": "0b2ffeb3ae1a7449a48a952f3e731cfa41eaf780",
         "type": "github"
       },
       "original": {
