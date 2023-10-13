@@ -139,11 +139,11 @@ in {
               runtimeLibs =
                 (project.runtimeLibs or []) ++ (crate.runtimeLibs or []);
               profiles =
-                if crate.profiles == null
+                if (crate.profiles or null) == null
                 then project.profiles
                 else crate.profiles;
               targets =
-                if crate.targets == null
+                if (crate.targets or null) == null
                 then project.targets
                 else crate.targets;
               allTargets = import ./functions/mkPackagesFromRaw.nix {
