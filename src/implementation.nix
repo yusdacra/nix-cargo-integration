@@ -88,7 +88,7 @@ in {
             (crate: {
               name = crate.name;
               value = let
-                crateCfg = nci.crates.${crate.name};
+                crateCfg = nci.crates.${crate.name} or {};
               in
                 inp.dream2nix.lib.evalModules {
                   packageSets.nixpkgs = pkgs;
@@ -134,8 +134,8 @@ in {
           l.mapAttrs
           (
             name: package: let
-              project = nci.projects.${cratesToProjects.${name}};
-              crate = nci.crates.${name};
+              project = nci.projects.${cratesToProjects.${name}} or {};
+              crate = nci.crates.${name} or {};
               runtimeLibs =
                 (project.runtimeLibs or []) ++ (crate.runtimeLibs or []);
               profiles =
