@@ -101,7 +101,7 @@ in {
                       paths.package = "/${crate.path}";
                     }
                     project.drvConfig
-                    crateCfg.drvConfig
+                    (crateCfg.drvConfig or {})
                     {
                       deps.craneSource = inp.crane;
                       deps.cargo = nci.toolchains.build;
@@ -113,7 +113,7 @@ in {
 
                       rust-crane.depsDrv = l.mkMerge [
                         project.depsDrvConfig
-                        crateCfg.depsDrvConfig
+                        (crateCfg.depsDrvConfig or {})
                       ];
                     }
                   ];
