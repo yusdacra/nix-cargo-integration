@@ -31,11 +31,11 @@
         "pre-commit-hooks": []
       },
       "locked": {
-        "lastModified": 1698021334,
-        "narHash": "sha256-7nQwElF4hNLHlviIVNrCPEwt60SSH/FEB92HN+psFoA=",
+        "lastModified": 1698098831,
+        "narHash": "sha256-cm+tLa2JNQjmQGUIkplYpHBM0pzEJGXsUcRHZP6rbeQ=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "7f753eb025eec41e8b7630fdc7469faebdf32da2",
+        "rev": "17aa9af5865ba5bdc9133b9d8b2d8273cec73c3e",
         "type": "github"
       },
       "original": {
