@@ -5,7 +5,12 @@
 }: let
   l = lib // builtins;
   t = l.types;
-  nixpkgsRustLib = import "${pkgs.path}/pkgs/build-support/rust/lib" {inherit lib;};
+  nixpkgsRustLib = import "${pkgs.path}/pkgs/build-support/rust/lib" {
+    inherit lib;
+    stdenv = null;
+    buildPackages = null;
+    targetPackages = null;
+  };
 in {
   imports = [../options/drvConfig.nix];
   options = {
