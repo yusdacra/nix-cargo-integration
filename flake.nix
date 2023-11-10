@@ -23,7 +23,7 @@
     };
 
     crane = {
-      url = "github:ipetkov/crane/v0.12.2";
+      url = "github:ipetkov/crane/v0.15.0";
       flake = false;
     };
 
