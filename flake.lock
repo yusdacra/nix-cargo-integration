@@ -26,11 +26,11 @@
         "pyproject-nix": "pyproject-nix"
       },
       "locked": {
-        "lastModified": 1700206509,
-        "narHash": "sha256-rwM55r8eqI+0aZG+iBxniRPl1vTMC83/M4Yt2PYpuRc=",
+        "lastModified": 1700448730,
+        "narHash": "sha256-5dQTWQgCY1/XXDgxuYP1bT5S6rNdoukFRRmGdaL8uBw=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "c25e88974f2bd34d4120e39bb5e48fae0c9d2010",
+        "rev": "427b5e94f4b57d35466c37bc962eb9122e6df2ad",
         "type": "github"
       },
       "original": {
@@ -143,11 +143,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1700360261,
-        "narHash": "sha256-8fRSHx5osjDELHSL7OHEfj/cOh8q+B7M9EF/yPR3bw8=",
+        "lastModified": 1700446608,
+        "narHash": "sha256-q/87GqBvQoUNBYiI3hwhsDqfyfk972RuZK+EwKab5s0=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "45066cb0b2505d8da581be8432a16238c867f199",
+        "rev": "e17bfe3baa0487f0671c9ed0e9057d10987ba7f7",
         "type": "github"
       },
       "original": {
