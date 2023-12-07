@@ -26,10 +26,10 @@
         nci.crates.${crateName} = {
           ### override stdenv for both dependencies and main derivation ###
           depsDrvConfig = {
-            mkDerivation.stdenv = pkgs.clangStdenv;
+            deps.stdenv = pkgs.clangStdenv;
           };
           drvConfig = {
-            mkDerivation.stdenv = pkgs.clangStdenv;
+            deps.stdenv = pkgs.clangStdenv;
           };
           # note: for overriding stdenv for *all* packages in a project
           # you can use `drvConfig` and `depsDrvConfig` under `nci.projects.<name>`
