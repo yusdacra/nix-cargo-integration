@@ -8,7 +8,8 @@
   l = lib // builtins;
 in
   pkgs.writeScript "generate-lockfiles" ''
-    function addToGit {
+    #!/usr/bin/env bash
+    function addToGit() {
       if [ -d ".git" ]; then
         git add $1
       fi
