@@ -216,6 +216,25 @@ in {
             source = systemlessNci.source;
           });
         };
+
+      # export checks, packages and devshells for crates that have `export` set to `true`
+      checks = l.filterAttrs (_: out: out != null) (
+        l.mapAttrs'
+        (
+          name: out:
+            if l.hasAttr name projectsWithLock
+            then
+              # skip this since projects don't define check outputs
+              l.nameValuePair
+              (getCrateName name)
+              null
+            else
+              l.nameValuePair
+              (getCrateName name)
+              (l.mkDefault out.check)
+        )
+        outputsToExport
+      );
       packages = l.listToAttrs (l.flatten (
         l.mapAttrsToList
         (
