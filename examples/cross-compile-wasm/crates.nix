@@ -17,8 +17,10 @@
           nativeBuildInputs = with pkgs; [trunk nodePackages.sass wasm-bindgen-cli];
           # override build phase to build with trunk instead
           buildPhase = ''
-            TRUNK_TOOLS_SASS=$(sass --version) \
-            TRUNK_TOOLS_WASM_BINDGEN="${pkgs.wasm-bindgen-cli.version}" \
+            export TRUNK_TOOLS_SASS="${pkgs.nodePackages.sass.version}"
+            export TRUNK_TOOLS_WASM_BINDGEN="${pkgs.wasm-bindgen-cli.version}"
+            echo sass is version $TRUNK_TOOLS_SASS
+            echo wasm bindgen is version $TRUNK_TOOLS_WASM_BINDGEN
             HOME=$TMPDIR \
               trunk -v build \
               --dist $out \
