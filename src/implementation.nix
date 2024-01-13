@@ -9,6 +9,12 @@ in {
       pkgs,
       ...
     }: let
+      getModuleDefaults = import ./functions/getModuleDefaults.nix {inherit lib pkgs;};
+      moduleDefaults = {
+        crate = getModuleDefaults ./modules/crate.nix;
+        project = getModuleDefaults ./modules/project.nix;
+      };
+
       nci = config.nci;
 
       projectsToCrates =
@@ -30,7 +36,7 @@ in {
         projectsToCrates
       ));
       getCrateName = currentName: let
-        newName = nci.crates.${currentName}.renameTo or null;
+        newName = nci.crates.${currentName}.renameTo or moduleDefaults.crate.renameTo;
       in
         if newName != null
         then newName
@@ -40,7 +46,7 @@ in {
         l.filterAttrs
         (
           name: out: let
-            crateExport = nci.crates.${name}.export or null;
+            crateExport = nci.crates.${name}.export or moduleDefaults.crate.export;
             projectExport = nci.projects.${cratesToProjects.${name} or name}.export;
           in
             if crateExport == null
@@ -88,7 +94,7 @@ in {
             (crate: {
               name = crate.name;
               value = let
-                crateCfg = nci.crates.${crate.name} or {};
+                crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
               in
                 inp.dream2nix.lib.evalModules {
                   packageSets.nixpkgs = pkgs;
@@ -101,7 +107,7 @@ in {
                       paths.package = "/${crate.path}";
                     }
                     project.drvConfig
-                    (crateCfg.drvConfig or {})
+                    crateCfg.drvConfig
                     {
                       deps.craneSource = inp.crane;
                       deps.cargo = nci.toolchains.build;
@@ -113,7 +119,7 @@ in {
 
                       rust-crane.depsDrv = l.mkMerge [
                         project.depsDrvConfig
-                        (crateCfg.depsDrvConfig or {})
+                        crateCfg.depsDrvConfig
                       ];
                     }
                   ];
@@ -134,10 +140,9 @@ in {
           l.mapAttrs
           (
             name: package: let
-              project = nci.projects.${cratesToProjects.${name}} or {};
-              crate = nci.crates.${name} or {};
-              runtimeLibs =
-                (project.runtimeLibs or []) ++ (crate.runtimeLibs or []);
+              project = nci.projects.${cratesToProjects.${name}} or moduleDefaults.project;
+              crate = nci.crates.${name} or moduleDefaults.crate;
+              runtimeLibs = project.runtimeLibs ++ crate.runtimeLibs;
               profiles =
                 if (crate.profiles or null) == null
                 then project.profiles
@@ -185,7 +190,7 @@ in {
                 ++ (
                   l.flatten (
                     l.map
-                    (name: nci.crates.${name}.runtimeLibs or [])
+                    (name: nci.crates.${name}.runtimeLibs or moduleDefaults.crate.runtimeLibs)
                     allCrateNames
                   )
                 );
