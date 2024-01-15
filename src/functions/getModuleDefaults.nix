@@ -1,6 +1,10 @@
-{pkgs, lib, ...}:
-module:
+{
+  pkgs,
+  lib,
+  ...
+}: module:
 (lib.evalModules {
   specialArgs = {inherit pkgs;};
   modules = [module];
-}).config
+})
+.config
