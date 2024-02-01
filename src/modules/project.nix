@@ -5,11 +5,13 @@
 }: let
   l = lib // builtins;
   t = l.types;
+  # HACK: this is... not really good, but it works
   nixpkgsRustLib = import "${pkgs.path}/pkgs/build-support/rust/lib" {
     inherit lib;
     stdenv = null;
-    buildPackages = null;
-    targetPackages = null;
+    pkgsBuildHost = null;
+    pkgsBuildTarget = null;
+    pkgsTargetTarget = null;
   };
 in {
   imports = [../options/drvConfig.nix];
