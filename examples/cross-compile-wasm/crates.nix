@@ -14,11 +14,13 @@
         default = true;
         drvConfig.mkDerivation = {
           # add trunk and other dependencies
-          nativeBuildInputs = with pkgs; [trunk nodePackages.sass wasm-bindgen-cli];
+          nativeBuildInputs = with pkgs; [trunk nodePackages.sass wasm-bindgen-cli binaryen];
           # override build phase to build with trunk instead
           buildPhase = ''
             export TRUNK_TOOLS_SASS="${pkgs.nodePackages.sass.version}"
             export TRUNK_TOOLS_WASM_BINDGEN="${pkgs.wasm-bindgen-cli.version}"
+            export TRUNK_TOOLS_WASM_OPT="version_${pkgs.binaryen.version}"
+            export TRUNK_SKIP_VERSION_CHECK="true"
             echo sass is version $TRUNK_TOOLS_SASS
             echo wasm bindgen is version $TRUNK_TOOLS_WASM_BINDGEN
             HOME=$TMPDIR \
