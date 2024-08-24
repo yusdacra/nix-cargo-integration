@@ -79,6 +79,8 @@ in {
           (name: value: !value.hasLock)
           projectsChecked
         );
+
+      # get the toolchains we will use
       toolchains = import ./functions/findRustToolchain.nix {
         inherit lib pkgs;
         inherit (inp) rust-overlay;
@@ -86,6 +88,38 @@ in {
         path = toString systemlessNci.source;
       };
 
+      evalCrate = project: crate: let
+        crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
+      in
+        inp.dream2nix.lib.evalModules {
+          packageSets.nixpkgs = pkgs;
+          modules = [
+            inp.dream2nix.modules.dream2nix.rust-cargo-lock
+            inp.dream2nix.modules.dream2nix.rust-crane
+            {
+              paths.projectRoot = project.path;
+              paths.projectRootFile = "flake.nix";
+              paths.package = "/${crate.path}";
+            }
+            project.drvConfig
+            crateCfg.drvConfig
+            {
+              deps.craneSource = inp.crane;
+              deps.cargo = nci.toolchains.build;
+
+              name = l.mkForce crate.name;
+              version = l.mkForce crate.version;
+
+              mkDerivation.src = l.mkForce project.path;
+
+              rust-crane.depsDrv = l.mkMerge [
+                project.depsDrvConfig
+                crateCfg.depsDrvConfig
+              ];
+            }
+          ];
+        };
+      # eval all crates with d2n
       d2nOutputs = l.listToAttrs (l.flatten (
         l.mapAttrsToList
         (
@@ -93,122 +127,95 @@ in {
             l.map
             (crate: {
               name = crate.name;
-              value = let
-                crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
-              in
-                inp.dream2nix.lib.evalModules {
-                  packageSets.nixpkgs = pkgs;
-                  modules = [
-                    inp.dream2nix.modules.dream2nix.rust-cargo-lock
-                    inp.dream2nix.modules.dream2nix.rust-crane
-                    {
-                      paths.projectRoot = project.path;
-                      paths.projectRootFile = "flake.nix";
-                      paths.package = "/${crate.path}";
-                    }
-                    project.drvConfig
-                    crateCfg.drvConfig
-                    {
-                      deps.craneSource = inp.crane;
-                      deps.cargo = nci.toolchains.build;
-
-                      name = l.mkForce crate.name;
-                      version = l.mkForce crate.version;
-
-                      mkDerivation.src = l.mkForce project.path;
-
-                      rust-crane.depsDrv = l.mkMerge [
-                        project.depsDrvConfig
-                        crateCfg.depsDrvConfig
-                      ];
-                    }
-                  ];
-                };
+              value = evalCrate project crate;
             })
             projectsToCrates.${projName}
         )
         projectsWithLock
       ));
+
+      # make crate outputs
+      crateOutputs =
+        l.mapAttrs
+        (
+          name: package: let
+            project = nci.projects.${cratesToProjects.${name}} or moduleDefaults.project;
+            crate = nci.crates.${name} or moduleDefaults.crate;
+            runtimeLibs = project.runtimeLibs ++ crate.runtimeLibs;
+            profiles =
+              if (crate.profiles or null) == null
+              then project.profiles
+              else crate.profiles;
+            targets =
+              if (crate.targets or null) == null
+              then project.targets
+              else crate.targets;
+            allTargets = import ./functions/mkPackagesFromRaw.nix {
+              inherit pkgs runtimeLibs profiles targets;
+              rawPkg = package;
+            };
+            _defaultTargets = l.attrNames (l.filterAttrs (_: v: v.default) targets);
+            defaultTarget =
+              if l.length _defaultTargets > 1
+              then throw "there can't be more than one default target: ${l.concatStringsSep ", " _defaultTargets}"
+              else if l.length _defaultTargets < 1
+              then throw "there is no default target defined"
+              else l.head _defaultTargets;
+            packages = allTargets.${defaultTarget};
+          in {
+            inherit packages;
+            allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
+            devShell = import ./functions/mkDevshellFromRaw.nix {
+              inherit lib runtimeLibs;
+              rawShell = package.devShell;
+              shellToolchain = nci.toolchains.shell;
+            };
+            check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
+          }
+        )
+        d2nOutputs;
+
+      # make project outputs
+      projectsOutputs =
+        l.mapAttrs
+        (name: project: let
+          allCrateNames = l.map (crate: crate.name) projectsToCrates.${name};
+          rawShell = import ./functions/mkRawshellFromDrvs.nix {
+            inherit lib;
+            inherit (pkgs) libiconv mkShell;
+            name = "${name}-devshell";
+            drvs =
+              l.map
+              (name: d2nOutputs.${name})
+              allCrateNames;
+          };
+          runtimeLibs =
+            project.runtimeLibs
+            ++ (
+              l.flatten (
+                l.map
+                (name: nci.crates.${name}.runtimeLibs or moduleDefaults.crate.runtimeLibs)
+                allCrateNames
+              )
+            );
+        in {
+          packages = {};
+          devShell = import ./functions/mkDevshellFromRaw.nix {
+            inherit lib runtimeLibs rawShell;
+            shellToolchain = nci.toolchains.shell;
+          };
+        })
+        projectsWithLock;
     in {
       nci.toolchains = {
         build = l.mkDefault toolchains.build;
         shell = l.mkDefault toolchains.shell;
       };
 
-      nci.outputs = let
-        crates = l.filterAttrs (name: attrs: attrs != null) (
-          l.mapAttrs
-          (
-            name: package: let
-              project = nci.projects.${cratesToProjects.${name}} or moduleDefaults.project;
-              crate = nci.crates.${name} or moduleDefaults.crate;
-              runtimeLibs = project.runtimeLibs ++ crate.runtimeLibs;
-              profiles =
-                if (crate.profiles or null) == null
-                then project.profiles
-                else crate.profiles;
-              targets =
-                if (crate.targets or null) == null
-                then project.targets
-                else crate.targets;
-              allTargets = import ./functions/mkPackagesFromRaw.nix {
-                inherit pkgs runtimeLibs profiles targets;
-                rawPkg = package;
-              };
-              _defaultTargets = l.attrNames (l.filterAttrs (_: v: v.default) targets);
-              defaultTarget =
-                if l.length _defaultTargets > 1
-                then throw "there can't be more than one default target: ${l.concatStringsSep ", " _defaultTargets}"
-                else if l.length _defaultTargets < 1
-                then throw "there is no default target defined"
-                else l.head _defaultTargets;
-              packages = allTargets.${defaultTarget};
-            in {
-              inherit packages;
-              allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
-              devShell = import ./functions/mkDevshellFromRaw.nix {
-                inherit lib runtimeLibs;
-                rawShell = package.devShell;
-                shellToolchain = nci.toolchains.shell;
-              };
-              check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
-            }
-          )
-          d2nOutputs
-        );
-      in
-        (
-          l.mapAttrs
-          (name: project: let
-            allCrateNames = l.map (crate: crate.name) projectsToCrates.${name};
-          in {
-            packages = {};
-            devShell = import ./functions/mkDevshellFromRaw.nix {
-              inherit lib;
-              runtimeLibs =
-                project.runtimeLibs
-                ++ (
-                  l.flatten (
-                    l.map
-                    (name: nci.crates.${name}.runtimeLibs or moduleDefaults.crate.runtimeLibs)
-                    allCrateNames
-                  )
-                );
-              rawShell = import ./functions/mkDevshellFromDrvs.nix {
-                inherit lib;
-                inherit (pkgs) libiconv mkShell;
-                name = "${name}-devshell";
-                drvs =
-                  l.map
-                  (name: d2nOutputs.${name})
-                  allCrateNames;
-              };
-              shellToolchain = nci.toolchains.shell;
-            };
-          })
-          projectsWithLock
-        )
-        // crates;
+      nci.outputs =
+        # crates will override project outputs if they have the same names
+        # TODO: should probably warn the user here if that's the case
+        projectsOutputs // (l.filterAttrs (name: attrs: attrs != null) crateOutputs);
 
       apps =
         l.optionalAttrs
