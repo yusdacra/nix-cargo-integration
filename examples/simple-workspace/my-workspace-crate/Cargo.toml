@@ -1,5 +1,5 @@
 [package]
-name = "my-other-crate"
+name = "my-workspace-crate"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

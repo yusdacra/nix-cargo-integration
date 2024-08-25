@@ -167,7 +167,12 @@ in {
             allTargets = l.mapAttrs (_: packages: {inherit packages;}) allTargets;
             devShell = import ./functions/mkDevshellFromRaw.nix {
               inherit lib runtimeLibs;
-              rawShell = package.devShell;
+              rawShell = import ./functions/mkRawshellFromDrvs.nix {
+                inherit lib;
+                inherit (pkgs) mkShell;
+                name = package.devShell.name;
+                drvs = [package];
+              };
               shellToolchain = nci.toolchains.shell;
             };
             check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
@@ -182,7 +187,7 @@ in {
           allCrateNames = l.map (crate: crate.name) projectsToCrates.${name};
           rawShell = import ./functions/mkRawshellFromDrvs.nix {
             inherit lib;
-            inherit (pkgs) libiconv mkShell;
+            inherit (pkgs) mkShell;
             name = "${name}-devshell";
             drvs =
               l.map

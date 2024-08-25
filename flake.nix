@@ -54,6 +54,7 @@
         ./examples/simple-crate/crates.nix
         ./examples/cross-compile-wasm/crates.nix
         ./examples/customize-profiles/crates.nix
+        ./examples/simple-workspace/crates.nix
       ];
       systems = ["x86_64-linux"];
 
@@ -100,15 +101,13 @@
           };
         };
       };
-      perSystem = {
-        config,
-        pkgs,
-        system,
-        ...
-      }: let
+      perSystem = {config, ...}: let
         profilesOut = config.nci.outputs."customize-profiles";
         simpleOut = config.nci.outputs."my-crate";
+        workspaceOut = config.nci.outputs."my-project";
         crossOut = config.nci.outputs."cross-compile";
+        workspaceCrateOut = config.nci.outputs."my-workspace-crate";
+        otherWorkspaceCrateOut = config.nci.outputs."my-other-workspace-crate";
       in {
         treefmt = {
           projectRootFile = "flake.nix";
@@ -118,12 +117,16 @@
         nci.projects."simple".export = false;
         nci.projects."cross-compile".export = false;
         nci.projects."profiles".export = false;
+        nci.projects."my-project".export = l.mkForce false;
         nci.toolchainConfig = ./examples/cross-compile-wasm/rust-toolchain.toml;
 
-        checks."simple-test" = simpleOut.packages.release;
+        checks."simple-test" = simpleOut.check;
         checks."simple-devshell" = simpleOut.devShell;
         checks."cross-compile-test" = crossOut.packages.release;
         checks."cross-compile-devshell" = crossOut.devShell;
+        checks."simple-workspace-test" = workspaceCrateOut.check;
+        checks."simple-workspace-test-other" = otherWorkspaceCrateOut.check;
+        checks."simple-workspace-devshell" = workspaceOut.devShell;
         checks."profiles-test" = profilesOut.packages.release;
       };
     };

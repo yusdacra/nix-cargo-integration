@@ -12,36 +12,12 @@
   }:
     parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
-      imports = [nci.flakeModule];
-      perSystem = {
-        config,
-        pkgs,
-        ...
-      }: let
+      imports = [nci.flakeModule ./crates.nix];
+      perSystem = {config, ...}: let
         # shorthand for accessing outputs
         # you can access crate outputs under `config.nci.outputs.<crate name>` (see documentation)
         outputs = config.nci.outputs;
       in {
-        # declare projects
-        # TODO: change this to your workspace's path
-        nci.projects."my-project" = {
-          path = ./.;
-          # export all crates (packages and devshell) in flake outputs
-          # alternatively you can access the outputs and export them yourself
-          export = true;
-        };
-        # configure crates
-        nci.crates = {
-          "my-crate" = {
-            # look at documentation for more options
-          };
-          "my-other-crate" = {
-            drvConfig = {
-              mkDerivation.buildInputs = [pkgs.hello];
-            };
-            # look at documentation for more options
-          };
-        };
         # export the project devshell as the default devshell
         devShells.default = outputs."my-project".devShell;
         # export the release package of the crate as default package

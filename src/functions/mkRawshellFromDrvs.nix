@@ -4,83 +4,47 @@
   drvs,
   # nixpkgs
   lib,
-  libiconv,
   mkShell,
   ...
 }: let
   l = lib // builtins;
 
-  # illegal env names to be removed and not be added to the devshell
-  illegalEnvNames =
-    [
-      "src"
-      "name"
-      "pname"
-      "version"
-      "args"
-      "stdenv"
-      "builder"
-      "outputs"
-      "phases"
-      # cargo artifact and vendoring derivations
-      # we don't need these in the devshell
-      "cargoArtifacts"
-      "dream2nixVendorDir"
-      "cargoVendorDir"
-    ]
-    ++ (
-      l.map
-      (phase: "${phase}Phase")
-      ["configure" "build" "check" "install" "fixup" "unpack"]
-    )
-    ++ l.flatten (
-      l.map
-      (phase: ["pre${phase}" "post${phase}"])
-      ["Configure" "Build" "Check" "Install" "Fixup" "Unpack"]
-    );
-  isIllegalEnv = name: l.elem name illegalEnvNames;
-  filterIllegal = cfg:
-  # filter out attrsets, functions and illegal environment vars
-    l.filterAttrs
-    (name: env: (env != null) && (! isIllegalEnv name))
-    (
-      l.mapAttrs
-      (
-        n: v:
-          if ! (l.isAttrs v || l.isFunction v)
-          then v
-          else null
-      )
-      cfg
-    );
+  filterIllegal = import ./filterDevshellIllegalVars.nix {inherit lib;};
+  inputsNames = ["buildInputs" "nativeBuildInputs" "propagatedBuildInputs" "propagatedNativeBuildInputs"];
   getEnvs = drv: [
-    (filterIllegal (drv.config.mkDerivation // drv.config.env))
-    (filterIllegal (drv.config.rust-crane.depsDrv.mkDerivation // drv.config.rust-crane.depsDrv.env))
+    (filterIllegal drv.config.env)
+    (filterIllegal drv.config.rust-crane.depsDrv.env)
   ];
-  combineEnvs = envs:
+  getMkDerivations = drv: [
+    (filterIllegal drv.config.mkDerivation)
+    (filterIllegal drv.config.rust-crane.depsDrv.mkDerivation)
+  ];
+  _combine = envs:
     l.foldl'
     (
       all: env: let
-        mergeInputs = name: (all.${name} or []) ++ (env.${name} or []);
+        mergeInputs = name: l.unique ((all.${name} or []) ++ (env.${name} or []));
       in
         all
         // env
-        // {
-          buildInputs = mergeInputs "buildInputs";
-          nativeBuildInputs = mergeInputs "nativeBuildInputs";
-          propagatedBuildInputs = mergeInputs "propagatedBuildInputs";
-          propagatedNativeBuildInputs = mergeInputs "propagatedNativeBuildInputs";
-        }
+        // (l.genAttrs inputsNames mergeInputs)
     )
     {}
     envs;
-  _shellEnv = combineEnvs (l.flatten (l.map getEnvs drvs));
-  shellEnv =
+  combine = envs:
+    l.filterAttrs (_: v:
+      if l.isList v
+      then (l.length v) != 0
+      else true) (_combine envs);
+  _shellEnv = combine (l.flatten (l.map getEnvs drvs));
+  _shellInputs = combine (l.flatten (l.map getMkDerivations drvs));
+  shellAttrs =
     _shellEnv
+    // _shellInputs
     // {
       inherit name;
       passthru.env = _shellEnv;
-      nativeBuildInputs = _shellEnv.nativeBuildInputs;
+      passthru.packages = l.unique (l.flatten (l.map (name: _shellInputs.${name} or []) inputsNames));
     };
 in
-  (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellEnv
+  (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellAttrs

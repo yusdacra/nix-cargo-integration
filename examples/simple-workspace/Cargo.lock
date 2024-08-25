@@ -3,9 +3,9 @@
 version = 3
 
 [[package]]
-name = "my-crate"
+name = "my-workspace-crate"
 version = "0.1.0"
 
 [[package]]
-name = "my-other-crate"
+name = "my-other-workspace-crate"
 version = "0.1.0"

@@ -5,6 +5,7 @@
   runtimeLibs,
 }: let
   l = lib // builtins;
+  inputsNames = ["buildInputs" "nativeBuildInputs" "propagatedBuildInputs" "propagatedNativeBuildInputs"];
   runtimeLibsEnv = l.optionalAttrs (l.length runtimeLibs > 0) {
     LD_LIBRARY_PATH = "${l.makeLibraryPath runtimeLibs}";
   };
@@ -19,14 +20,22 @@
     new = base.overrideAttrs (
       old: let
         attrs = f old;
+        _newAttrs =
+          attrs
+          // {
+            nativeBuildInputs =
+              (attrs.packages or [])
+              ++ (attrs.nativeBuildInputs or [])
+              ++ (old.nativeBuildInputs or []);
+          };
+        newAttrs =
+          _newAttrs
+          // {
+            env = l.filterAttrs (name: _: l.any (oname: name != oname) inputsNames) (_newAttrs.env or {});
+            packages = l.unique ((_newAttrs.packages or []) ++ (l.flatten (l.map (name: _newAttrs.${name} or []) inputsNames)));
+          };
       in
-        attrs
-        // {
-          nativeBuildInputs =
-            (attrs.packages or [])
-            ++ (attrs.nativeBuildInputs or [])
-            ++ (old.nativeBuildInputs or []);
-        }
+        newAttrs
     );
   in
     new
