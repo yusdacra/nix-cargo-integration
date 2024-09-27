@@ -26,16 +26,32 @@
         "pyproject-nix": "pyproject-nix"
       },
       "locked": {
-        "lastModified": 1726523340,
-        "narHash": "sha256-Av5mdR2lAGUVdA6DJ8Anon3/FZg3DX4gl1Ff72rCpKU=",
+        "lastModified": 1727376269,
+        "narHash": "sha256-UYle5zHhAU3f47DpWzYvSIOGJMIRMezJe618qpSUzxs=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "b76c529f377100516c40c5b6e239a4525fdcabe0",
+        "rev": "8f9fd56fa7a5e7ed4d80f57ca917d29e68ad71b4",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
         "repo": "dream2nix",
+        "type": "github"
+      }
+    },
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1696426674,
+        "narHash": "sha256-kvjfFW7WAETZlt09AgDn1MrtKzP7t90Vf7vypd3OL1U=",
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "0f9255e01c2351cc7d116c072cb317785dd33b33",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "flake-compat",
         "type": "github"
       }
     },
@@ -93,6 +109,7 @@
     },
     "purescript-overlay": {
       "inputs": {
+        "flake-compat": "flake-compat",
         "nixpkgs": [
           "dream2nix",
           "nixpkgs"
@@ -100,11 +117,11 @@
         "slimlock": "slimlock"
       },
       "locked": {
-        "lastModified": 1696022621,
-        "narHash": "sha256-eMjFmsj2G1E0Q5XiibUNgFjTiSz0GxIeSSzzVdoN730=",
+        "lastModified": 1724504251,
+        "narHash": "sha256-TIw+sac0NX0FeAneud+sQZT+ql1G/WEb7/Vb436rUXM=",
         "owner": "thomashoneyman",
         "repo": "purescript-overlay",
-        "rev": "047c7933abd6da8aa239904422e22d190ce55ead",
+        "rev": "988b09676c2a0e6a46dfa3589aa6763c90476b8a",
         "type": "github"
       },
       "original": {
@@ -144,11 +161,11 @@
     "rust-overlay": {
       "flake": false,
       "locked": {
-        "lastModified": 1727317727,
-        "narHash": "sha256-yGYahXzCquyYEgf5GTtvtaN5hXbw20Ok2+o8uVxoaFs=",
+        "lastModified": 1727404165,
+        "narHash": "sha256-kZCiYpQJBZ3kL9QymS88mCxpQwqo8KqvZeHk6LATuY8=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "a3d832f389606d7dc61a45b244c72ea472d1fcd4",
+        "rev": "76f0a61e733259e1034dd6523e039d04932ffefc",
         "type": "github"
       },
       "original": {
@@ -166,11 +183,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1688610262,
-        "narHash": "sha256-Wg0ViDotFWGWqKIQzyYCgayeH8s4U1OZcTiWTQYdAp4=",
+        "lastModified": 1688756706,
+        "narHash": "sha256-xzkkMv3neJJJ89zo3o2ojp7nFeaZc2G0fYwNXNJRFlo=",
         "owner": "thomashoneyman",
         "repo": "slimlock",
-        "rev": "b5c6cdcaf636ebbebd0a1f32520929394493f1a6",
+        "rev": "cf72723f59e2340d24881fd7bf61cb113b4c407c",
         "type": "github"
       },
       "original": {
