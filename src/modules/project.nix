@@ -1,18 +1,10 @@
 {
   lib,
-  pkgs,
+  defaultRustcTarget,
   ...
 }: let
   l = lib // builtins;
   t = l.types;
-  # HACK: this is... not really good, but it works
-  nixpkgsRustLib = import "${pkgs.path}/pkgs/build-support/rust/lib" {
-    inherit lib;
-    stdenv = null;
-    pkgsBuildHost = null;
-    pkgsBuildTarget = null;
-    pkgsTargetTarget = null;
-  };
 in {
   imports = [../options/drvConfig.nix];
   options = {
@@ -59,7 +51,7 @@ in {
         modules = [./target.nix];
       });
       default = {
-        ${nixpkgsRustLib.toRustTarget pkgs.stdenv.hostPlatform}.default = true;
+        ${defaultRustcTarget}.default = true;
       };
       defaultText = ''
         {

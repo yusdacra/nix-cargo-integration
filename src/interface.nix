@@ -45,7 +45,9 @@ in {
           nci.projects = l.mkOption {
             type = t.lazyAttrsOf (t.submoduleWith {
               modules = [./modules/project.nix];
-              specialArgs = {inherit pkgs inputs;};
+              specialArgs = {
+                defaultRustcTarget = pkgs.stdenv.hostPlatform.rust.rustcTarget;
+              };
             });
             default = {};
             example = l.literalExpression ''
