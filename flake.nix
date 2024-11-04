@@ -4,7 +4,7 @@
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
-      flake = false;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     parts = {
@@ -29,9 +29,7 @@
 
     dream2nix = {
       url = "github:nix-community/dream2nix";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-      };
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 

@@ -6,7 +6,7 @@
   path,
 }: let
   l = lib // builtins;
-  rust-lib = l.fix (l.extends (import rust-overlay) (self: pkgs));
+  rust-bin = rust-overlay.lib.mkRustBin {} pkgs;
   toolchainFile =
     if builtins.isPath toolchainConfig
     then toolchainConfig
@@ -31,10 +31,10 @@
   # Create the base Rust toolchain that we will override to add other components.
   toolchain =
     if toolchainFile != null
-    then rust-lib.rust-bin.fromRustupToolchainFile toolchainFile
+    then rust-bin.fromRustupToolchainFile toolchainFile
     else if toolchainAttrs != null
-    then rust-lib.rust-bin.fromRustupToolchain toolchainAttrs
-    else rust-lib.rust-bin.stable.latest.default;
+    then rust-bin.fromRustupToolchain toolchainAttrs
+    else rust-bin.stable.latest.default;
 in {
   build = toolchain;
   shell = toolchain;
