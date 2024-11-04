@@ -147,11 +147,11 @@ in {
             profiles =
               if (crate.profiles or null) == null
               then project.profiles
-              else crate.profiles;
+              else project.profiles // crate.profiles;
             targets =
               if (crate.targets or null) == null
               then project.targets
-              else crate.targets;
+              else project.targets // crate.targets;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
               inherit pkgs runtimeLibs profiles targets;
               rawPkg = package;
