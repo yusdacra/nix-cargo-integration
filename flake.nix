@@ -120,7 +120,8 @@
 
         checks."simple-test" = simpleOut.check;
         checks."simple-devshell" = simpleOut.devShell;
-        checks."cross-compile-test" = crossOut.packages.release;
+        # TODO: reenable when trunk supports passing flags to wasm-opt so we can pass --enable-bulk-memory
+        # checks."cross-compile-test" = crossOut.packages.release;
         checks."cross-compile-devshell" = crossOut.devShell;
         checks."simple-workspace-test" = workspaceCrateOut.check;
         checks."simple-workspace-test-other" = otherWorkspaceCrateOut.check;
