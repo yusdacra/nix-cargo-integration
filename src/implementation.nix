@@ -81,12 +81,14 @@ in {
         );
 
       # get the toolchains we will use
-      toolchains = import ./functions/findRustToolchain.nix {
-        inherit lib pkgs;
-        inherit (inp) rust-overlay;
-        inherit (nci) toolchainConfig;
-        path = toString systemlessNci.source;
-      };
+      toolchainsFn = pkgs:
+        import ./functions/findRustToolchain.nix {
+          inherit lib pkgs;
+          inherit (inp) rust-overlay;
+          inherit (nci) toolchainConfig;
+          path = toString systemlessNci.source;
+        };
+      toolchains = toolchainsFn pkgs;
 
       evalCrate = project: crate: let
         crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
@@ -105,7 +107,7 @@ in {
             crateCfg.drvConfig
             {
               deps.craneSource = inp.crane;
-              deps.cargo = nci.toolchains.build;
+              deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
 
               name = l.mkForce crate.name;
               version = l.mkForce crate.version;
