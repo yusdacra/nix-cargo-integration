@@ -80,6 +80,13 @@ in {
             readOnly = true;
             description = "Each crate's (or project's) outputs";
           };
+          nci.lib = {
+            buildCrate = l.mkOption {
+              type = t.functionTo t.package;
+              readOnly = true;
+              description = "A function to build a crate from a provided source (and crate name if workspace) automagically";
+            };
+          };
         };
       });
   };

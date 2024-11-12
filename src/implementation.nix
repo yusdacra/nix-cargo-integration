@@ -90,37 +90,42 @@ in {
         };
       toolchains = toolchainsFn pkgs;
 
+      _evalCrate = modules:
+        inp.dream2nix.lib.evalModules {
+          packageSets.nixpkgs = pkgs;
+          modules =
+            [
+              inp.dream2nix.modules.dream2nix.rust-cargo-lock
+              inp.dream2nix.modules.dream2nix.rust-crane
+            ]
+            ++ modules;
+        };
       evalCrate = project: crate: let
         crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
       in
-        inp.dream2nix.lib.evalModules {
-          packageSets.nixpkgs = pkgs;
-          modules = [
-            inp.dream2nix.modules.dream2nix.rust-cargo-lock
-            inp.dream2nix.modules.dream2nix.rust-crane
-            {
-              paths.projectRoot = project.path;
-              paths.projectRootFile = "flake.nix";
-              paths.package = "/${crate.path}";
-            }
-            project.drvConfig
-            crateCfg.drvConfig
-            {
-              deps.craneSource = inp.crane;
-              deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
+        _evalCrate [
+          {
+            paths.projectRoot = project.path;
+            paths.projectRootFile = "flake.nix";
+            paths.package = "/${crate.path}";
+          }
+          project.drvConfig
+          crateCfg.drvConfig
+          {
+            deps.craneSource = inp.crane;
+            deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
 
-              name = l.mkForce crate.name;
-              version = l.mkForce crate.version;
+            name = l.mkForce crate.name;
+            version = l.mkForce crate.version;
 
-              mkDerivation.src = l.mkForce project.path;
+            mkDerivation.src = l.mkForce project.path;
 
-              rust-crane.depsDrv = l.mkMerge [
-                project.depsDrvConfig
-                crateCfg.depsDrvConfig
-              ];
-            }
-          ];
-        };
+            rust-crane.depsDrv = l.mkMerge [
+              project.depsDrvConfig
+              crateCfg.depsDrvConfig
+            ];
+          }
+        ];
       # eval all crates with d2n
       d2nOutputs = l.listToAttrs (l.flatten (
         l.mapAttrsToList
@@ -223,6 +228,39 @@ in {
         # crates will override project outputs if they have the same names
         # TODO: should probably warn the user here if that's the case
         projectsOutputs // (l.filterAttrs (name: attrs: attrs != null) crateOutputs);
+
+      nci.lib = {
+        buildCrate = {
+          src,
+          drvConfig ? {},
+          depsDrvConfig ? {},
+          cratePath ? "",
+        }: let
+          cargoToml = l.fromTOML (l.readFile (
+            if cratePath == ""
+            then "${src}/Cargo.toml"
+            else "${src}/${cratePath}/Cargo.toml"
+          ));
+        in (_evalCrate [
+          {
+            paths.projectRoot = src;
+            paths.projectRootFile = "Cargo.toml";
+            paths.package = "/${cratePath}";
+          }
+          drvConfig
+          {
+            deps.craneSource = inp.crane;
+            deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
+
+            name = l.mkForce cargoToml.package.name;
+            version = l.mkForce cargoToml.package.version;
+
+            mkDerivation.src = l.mkForce "${src}/${cratePath}";
+
+            rust-crane.depsDrv = depsDrvConfig;
+          }
+        ]);
+      };
 
       apps =
         l.optionalAttrs
