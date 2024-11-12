@@ -96,6 +96,7 @@ in {
           modules =
             [
               inp.dream2nix.modules.dream2nix.rust-cargo-lock
+              inp.dream2nix.modules.dream2nix.rust-cargo-vendor
               inp.dream2nix.modules.dream2nix.rust-crane
             ]
             ++ modules;
