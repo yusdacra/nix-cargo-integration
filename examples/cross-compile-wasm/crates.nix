@@ -15,24 +15,26 @@
         default = true;
         drvConfig.mkDerivation = {
           # add trunk and other dependencies
-          nativeBuildInputs = (with pkgs; [nodePackages.sass wasm-bindgen-cli binaryen]) ++ [
-            (config.nci.lib.buildCrate rec {
-              src = pkgs.fetchFromGitHub {
-                owner = "trunk-rs";
-                repo = "trunk";
-                rev = "v0.21.4";
-                hash = "sha256-tU0Xob0dS1+rrfRVitwOe0K1AG05LHlGPHhFL0yOjxM=";
-              };
-              drvConfig = {
-                mkDerivation = {
-                  nativeBuildInputs = [pkgs.pkg-config];
-                  buildInputs = [pkgs.openssl];
+          nativeBuildInputs =
+            (with pkgs; [nodePackages.sass wasm-bindgen-cli binaryen])
+            ++ [
+              (config.nci.lib.buildCrate rec {
+                src = pkgs.fetchFromGitHub {
+                  owner = "trunk-rs";
+                  repo = "trunk";
+                  rev = "v0.21.4";
+                  hash = "sha256-tU0Xob0dS1+rrfRVitwOe0K1AG05LHlGPHhFL0yOjxM=";
                 };
-                rust-crane.runTests = false;
-              };
-              depsDrvConfig.mkDerivation = drvConfig.mkDerivation;
-            })
-          ];
+                drvConfig = {
+                  mkDerivation = {
+                    nativeBuildInputs = [pkgs.pkg-config];
+                    buildInputs = [pkgs.openssl];
+                  };
+                  rust-crane.runTests = false;
+                };
+                depsDrvConfig.mkDerivation = drvConfig.mkDerivation;
+              })
+            ];
           # override build phase to build with trunk instead
           buildPhase = ''
             export TRUNK_TOOLS_SASS="${pkgs.nodePackages.sass.version}"
