@@ -20,8 +20,8 @@
       in {
         # export the project devshell as the default devshell
         devShells.default = outputs."my-project".devShell;
-        # export the release package of the crate as default package
-        packages.default = outputs."my-crate".packages.release;
+        # export the release package of one crate as default package
+        packages.default = outputs."my-workspace-crate".packages.release;
       };
     };
 }
