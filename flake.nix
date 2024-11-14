@@ -96,6 +96,10 @@
             description = "An example showcasing WASM cross-compilation";
             path = ./examples/cross-compile-wasm;
           };
+          cross-compile-aarch64 = {
+            description = "An example showcasing aarch64 cross-compilation";
+            path = ./examples/cross-compile-aarch64;
+          };
           numtide-devshell = {
             description = "Example showcasing using a numtide devshell instead of NCI's own";
             path = ./examples/numtide-devshell;
