@@ -1,5 +1,6 @@
 examples/**/target
 examples/**/flake.lock
+examples/**/result
 /result*
 .direnv
 cli/target
