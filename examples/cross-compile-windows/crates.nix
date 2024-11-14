@@ -11,12 +11,13 @@
     # declare projects
     nci.projects.${crateName}.path = ./.;
     # TODO: fenix works, rust-overlay doesn't, why?
-    nci.toolchains.mkBuild = _: with inputs'.fenix.packages;
-      combine [
-        minimal.rustc
-        minimal.cargo
-        targets.x86_64-pc-windows-gnu.latest.rust-std
-      ];
+    nci.toolchains.mkBuild = _:
+      with inputs'.fenix.packages;
+        combine [
+          minimal.rustc
+          minimal.cargo
+          targets.x86_64-pc-windows-gnu.latest.rust-std
+        ];
     # configure crates
     nci.crates.${crateName} = {
       targets."x86_64-pc-windows-gnu" = let
