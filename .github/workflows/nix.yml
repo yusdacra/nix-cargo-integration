@@ -36,3 +36,7 @@ jobs:
       run: |
         sed -i 's|github:yusdacra/nix-cargo-integration|path:../..|g' examples/cross-compile-aarch64/flake.nix
         nix build -L --show-trace ./examples/cross-compile-aarch64
+    - name: Test windows cross compile
+      run: |
+        sed -i 's|github:yusdacra/nix-cargo-integration|path:../..|g' examples/cross-compile-windows/flake.nix
+        nix build -L --show-trace ./examples/cross-compile-windows
