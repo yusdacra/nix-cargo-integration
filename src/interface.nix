@@ -33,13 +33,13 @@ in {
             example = l.literalExpression "./rust-subproject/rust-toolchain.toml";
           };
           nci.toolchains = {
-            build = l.mkOption {
-              type = t.package;
-              description = "The toolchain that will be used when building derivations";
+            mkBuild = l.mkOption {
+              type = t.functionTo t.package;
+              description = "The function to (given a nixpkgs instance) generate a toolchain that will be used when building derivations";
             };
-            shell = l.mkOption {
-              type = t.package;
-              description = "The toolchain that will be used in the development shell";
+            mkShell = l.mkOption {
+              type = t.functionTo t.package;
+              description = "The function to (given a nixpkgs instance) generate a toolchain that will be used in the development shell";
             };
           };
           nci.projects = l.mkOption {

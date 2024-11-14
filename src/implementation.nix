@@ -104,7 +104,6 @@ in {
           inherit (nci) toolchainConfig;
           path = toString systemlessNci.source;
         };
-      toolchains = toolchainsFn pkgs;
 
       _evalCrate = modules:
         inp.dream2nix.lib.evalModules {
@@ -130,7 +129,7 @@ in {
           crateCfg.drvConfig
           {
             deps.craneSource = inp.crane;
-            deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
+            deps.mkRustToolchain = nci.toolchains.mkBuild;
 
             name = l.mkForce crate.name;
             version = l.mkForce crate.version;
@@ -197,7 +196,7 @@ in {
                 name = package.devShell.name;
                 drvs = [package];
               };
-              shellToolchain = nci.toolchains.shell;
+              shellToolchain = nci.toolchains.mkShell pkgs;
             };
             check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
           }
@@ -231,14 +230,14 @@ in {
           packages = {};
           devShell = import ./functions/mkDevshellFromRaw.nix {
             inherit lib runtimeLibs rawShell;
-            shellToolchain = nci.toolchains.shell;
+            shellToolchain = nci.toolchains.mkShell pkgs;
           };
         })
         projectsWithLock;
     in {
       nci.toolchains = {
-        build = l.mkDefault toolchains.build;
-        shell = l.mkDefault toolchains.shell;
+        mkBuild = l.mkDefault (pkgs: (toolchainsFn pkgs).build);
+        mkShell = l.mkDefault (pkgs: (toolchainsFn pkgs).shell);
       };
 
       nci.outputs =
@@ -267,7 +266,7 @@ in {
           drvConfig
           {
             deps.craneSource = inp.crane;
-            deps.mkRustToolchain = pkgs: (toolchainsFn pkgs).build;
+            deps.mkRustToolchain = nci.toolchains.mkBuild;
 
             name = l.mkForce cargoToml.package.name;
             version = l.mkForce cargoToml.package.version;
@@ -286,7 +285,7 @@ in {
           generate-lockfiles.program = toString (import ./functions/mkGenerateLockfilesApp.nix {
             inherit pkgs lib;
             projects = projectsWithoutLock;
-            buildToolchain = nci.toolchains.build;
+            buildToolchain = nci.toolchains.mkBuild pkgs;
             source = systemlessNci.source;
           });
         };
@@ -352,13 +351,13 @@ in {
             name = k;
             value = v;
           }) (devShell.env or []));
-
+        shellToolchain = config.nci.toolchains.mkShell pkgs;
         numtideDevshellFor = outputs: name: cfg:
           l.optional (cfg.numtideDevshell != null) {
             ${cfg.numtideDevshell} = {
-              packagesFrom = [config.nci.toolchains.shell];
+              packagesFrom = [shellToolchain];
               packages =
-                [config.nci.toolchains.shell]
+                [shellToolchain]
                 ++ addDevOutputs (outputs.${name}.devShell.packages or []);
               env = collectEnv outputs.${name}.devShell;
             };
