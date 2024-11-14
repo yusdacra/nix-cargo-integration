@@ -100,6 +100,10 @@
             description = "An example showcasing aarch64 cross-compilation";
             path = ./examples/cross-compile-aarch64;
           };
+          cross-compile-windows = {
+            description = "An example showcasing windows cross-compilation";
+            path = ./examples/cross-compile-windows;
+          };
           numtide-devshell = {
             description = "Example showcasing using a numtide devshell instead of NCI's own";
             path = ./examples/numtide-devshell;
