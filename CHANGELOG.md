@@ -6,6 +6,11 @@ most recent to least recent.
 `nix:` means that the change was related to the Nix library part of `nci`.
 ~~`cargo-toml:` means that the change was related to the `Cargo.toml` attribute part of `nci`.~~
 
+## 15-11-2024
+
+- nix: `toolchains.<build/shell>` attributes were removed and replaced with `toolchains.mkBuild` and `toolchains.mkShell` respectively.
+  - these take functions that take a nixpkgs instance and should output a rust toolchain package.
+
 ## 03-10-2023
 
 - nix: new `nci.outputs.<name>.check` and `nci.crates.<name>.checkProfile` options
