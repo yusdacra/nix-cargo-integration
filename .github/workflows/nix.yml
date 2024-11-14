@@ -28,3 +28,7 @@ jobs:
       run: |
         sed -i 's|github:yusdacra/nix-cargo-integration|path:../..|g' examples/numtide-devshell/flake.nix
         nix develop -L --show-trace ./examples/numtide-devshell#default -c env
+    - name: Test wasm cross compile
+      run: |
+        sed -i 's|github:yusdacra/nix-cargo-integration|path:../..|g' examples/cross-compile-wasm/flake.nix
+        nix build -L --show-trace ./examples/cross-compile-wasm
