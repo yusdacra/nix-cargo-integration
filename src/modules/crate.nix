@@ -7,7 +7,10 @@
   l = lib // builtins;
   t = l.types;
 in {
-  imports = [../options/drvConfig.nix];
+  imports = [
+    ../options/drvConfig.nix
+    ../options/numtideDevshell.nix
+  ];
   options = {
     export = l.mkOption {
       type = t.nullOr t.bool;

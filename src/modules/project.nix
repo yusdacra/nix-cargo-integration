@@ -6,7 +6,10 @@
   l = lib // builtins;
   t = l.types;
 in {
-  imports = [../options/drvConfig.nix];
+  imports = [
+    ../options/drvConfig.nix
+    ../options/numtideDevshell.nix
+  ];
   options = {
     path = l.mkOption {
       type = t.path;

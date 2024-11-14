@@ -1,8 +1,24 @@
-{lib, ...} @ args: let
+{
+  lib,
+  flake-parts-lib,
+  ...
+} @ args: let
   l = lib // builtins;
   systemlessNci = args.config.nci;
   inp = systemlessNci._inputs;
 in {
+  # Make sure the top-level optiopn devshells exists
+  # even when the numtide devshell is not included.
+  # We don't want to depend on adding the numtide devshell
+  # module and this doesn't interfere with it when it is added.
+  options = {
+    perSystem = flake-parts-lib.mkPerSystemOption {
+      options.devshells = l.mkOption {
+        type = l.types.lazyAttrsOf (l.types.submoduleWith {modules = [];});
+      };
+    };
+  };
+
   config = {
     perSystem = {
       config,
@@ -317,6 +333,43 @@ in {
             (l.mkDefault out.devShell)
         )
         outputsToExport;
+
+      # numtide devshell integration
+      devshells = let
+        addDevOutputs = xs: lib.concatLists (map (p: [(l.getDev p) p]) xs);
+        collectEnv = devShell:
+          [
+            {
+              name = "PKG_CONFIG_PATH";
+              prefix = "$DEVSHELL_DIR/lib/pkgconfig";
+            }
+            {
+              name = "LD_LIBRARY_PATH";
+              prefix = "$DEVSHELL_DIR/lib";
+            }
+          ]
+          ++ (l.mapAttrsToList (k: v: {
+            name = k;
+            value = v;
+          }) (devShell.env or []));
+
+        numtideDevshellFor = outputs: name: cfg:
+          l.optional (cfg.numtideDevshell != null) {
+            ${cfg.numtideDevshell} = {
+              packagesFrom = [config.nci.toolchains.shell];
+              packages =
+                [config.nci.toolchains.shell]
+                ++ addDevOutputs (outputs.${name}.devShell.packages or []);
+              env = collectEnv outputs.${name}.devShell;
+            };
+          };
+      in
+        l.mkMerge (
+          l.concatLists (
+            l.mapAttrsToList (numtideDevshellFor projectsOutputs) config.nci.projects
+            ++ l.mapAttrsToList (numtideDevshellFor crateOutputs) config.nci.crates
+          )
+        );
     };
   };
 }

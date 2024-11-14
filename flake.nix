@@ -97,6 +97,10 @@
             description = "An example showcasing WASM cross-compilation";
             path = ./examples/cross-compile-wasm;
           };
+          numtide-devshell = {
+            description = "Example showcasing using a numtide devshell instead of NCI's own";
+            path = ./examples/numtide-devshell;
+          };
         };
       };
       perSystem = {config, ...}: let
