@@ -1,8 +1,6 @@
-{ lib, ... }:
-let
+{lib, ...}: let
   l = lib // builtins;
-in
-{
+in {
   options = {
     numtideDevshell = l.mkOption {
       type = l.types.nullOr l.types.str;
