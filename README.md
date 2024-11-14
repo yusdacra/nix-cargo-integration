@@ -2,10 +2,10 @@
 
 Easily and effortlessly integrate Cargo projects with Nix.
 
-- Uses [dream2nix](https://github.com/nix-community/dream2nix) to build Cargo packages and provide a development shell.
+- Uses [dream2nix](https://github.com/nix-community/dream2nix) to build Cargo packages and provide a development shell (dream2nix default, also supports numtide devshell, check examples).
+- It's a [flake-parts](https://github.com/hercules-ci/flake-parts) module, so you can easily include it in existing Nix code that also use `flake-parts`.
 - Has sensible defaults, and strives to be compatible with Cargo.
 - Aims to offload work from the user; comes with useful configuration options.
-- It's a [flake-parts](https://github.com/hercules-ci/flake-parts) module, so you can easily include it in existing Nix code that also use `flake-parts`.
 
 ## Documentation
 
