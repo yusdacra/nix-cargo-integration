@@ -10,17 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install nix
-      uses: cachix/install-nix-action@v20
+      uses: cachix/install-nix-action@v30
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Setup cachix
-      uses: cachix/cachix-action@v12
+      uses: cachix/cachix-action@v15
       with:
         name: nix-cargo-integration
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - name: Test checks
       run: nix flake check -L --show-trace
+    - name: Test numtide devshell integration
+      run: |
+        sed -i 's|github:yusdacra/nix-cargo-integration|path:../..|g' examples/numtide-devshell/flake.nix
+        nix develop -L --show-trace examples/numtide-devshell#default -c env
