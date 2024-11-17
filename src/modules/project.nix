@@ -27,6 +27,15 @@ in {
       '';
     };
 
+    useClippy = l.mkOption {
+      type = t.bool;
+      default = false;
+      example = true;
+      description = ''
+        `useClippy` option that will affect all packages in this project.
+        For more information refer to `nci.crates.<name>.useClippy` option.
+      '';
+    };
     profiles = l.mkOption {
       type = t.attrsOf (t.submoduleWith {
         modules = [./profile.nix];

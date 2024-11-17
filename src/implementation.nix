@@ -173,8 +173,12 @@ in {
               if (crate.targets or null) == null
               then project.targets
               else crate.targets;
+            useClippy =
+              if (crate.useClippy or null) == null
+              then project.useClippy
+              else crate.useClippy;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
-              inherit pkgs runtimeLibs profiles targets;
+              inherit pkgs runtimeLibs profiles targets useClippy;
               rawPkg = package;
             };
             _defaultTargets = l.attrNames (l.filterAttrs (_: v: v.default) targets);

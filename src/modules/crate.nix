@@ -25,6 +25,13 @@ in {
       example = "custom-profile";
       description = "Profile to use for the tests only package";
     };
+    useClippy = l.mkOption {
+      type = t.nullOr t.bool;
+      default = null;
+      example = true;
+      description = "Whether to use 'cargo clippy' or not for the crate's checks, instead of 'cargo check'";
+    };
+
     profiles = l.mkOption {
       type = t.nullOr (
         t.attrsOf (t.submoduleWith {
