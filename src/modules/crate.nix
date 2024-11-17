@@ -29,7 +29,10 @@ in {
       type = t.nullOr t.bool;
       default = null;
       example = true;
-      description = "Whether to use 'cargo clippy' or not for the crate's checks, instead of 'cargo check'";
+      description = ''
+        Whether to use 'cargo clippy' or not for the crate's checks, instead of 'cargo check'
+        Note that you will need to add 'clippy' as a component to the rust toolchain you are using yourself
+      '';
     };
 
     profiles = l.mkOption {
