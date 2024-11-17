@@ -177,6 +177,10 @@ in {
               if (crate.useClippy or null) == null
               then project.useClippy
               else crate.useClippy;
+            checkProfile =
+              if (crate.checkProfile or null) == null
+              then project.checkProfile
+              else crate.checkProfile;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
               inherit pkgs runtimeLibs profiles targets useClippy;
               rawPkg = package;
@@ -202,7 +206,7 @@ in {
               };
               shellToolchain = nci.toolchains.mkShell pkgs;
             };
-            check = import ./functions/mkCheckOnlyPackage.nix packages.${crate.checkProfile};
+            check = import ./functions/mkCheckOnlyPackage.nix packages.${checkProfile};
           }
         )
         d2nOutputs;

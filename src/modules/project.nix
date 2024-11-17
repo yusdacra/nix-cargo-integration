@@ -36,6 +36,15 @@ in {
         For more information refer to `nci.crates.<name>.useClippy` option.
       '';
     };
+    checkProfile = l.mkOption {
+      type = t.str;
+      default = "release";
+      example = "custom-profile";
+      description = ''
+        `checkProfile` option that will affect all packages in this project.
+        For more information refer to `nci.crates.<name>.checkProfile` option.
+      '';
+    };
     profiles = l.mkOption {
       type = t.attrsOf (t.submoduleWith {
         modules = [./profile.nix];
