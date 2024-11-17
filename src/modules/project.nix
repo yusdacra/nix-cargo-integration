@@ -5,6 +5,14 @@
 }: let
   l = lib // builtins;
   t = l.types;
+  mkOpt = name: attrs:
+    l.mkOption (attrs
+      // {
+        description = ''
+          `${name}` option that will affect all packages in this project.
+          For more information refer to `nci.crates.<name>.${name}` option.
+        '';
+      });
 in {
   imports = [
     ../options/drvConfig.nix
@@ -17,35 +25,23 @@ in {
       description = "The absolute path of this project";
     };
 
-    export = l.mkOption {
+    export = mkOpt "export" {
       type = t.bool;
       default = true;
       example = false;
-      description = ''
-        `export` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.export` option.
-      '';
     };
 
-    useClippy = l.mkOption {
+    useClippy = mkOpt "useClippy" {
       type = t.bool;
       default = false;
       example = true;
-      description = ''
-        `useClippy` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.useClippy` option.
-      '';
     };
-    checkProfile = l.mkOption {
+    checkProfile = mkOpt "checkProfile" {
       type = t.str;
       default = "release";
       example = "custom-profile";
-      description = ''
-        `checkProfile` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.checkProfile` option.
-      '';
     };
-    profiles = l.mkOption {
+    profiles = mkOpt "profiles" {
       type = t.attrsOf (t.submoduleWith {
         modules = [./profile.nix];
       });
@@ -62,12 +58,8 @@ in {
           custom-profile.features = ["some" "features"];
         }
       '';
-      description = ''
-        `profiles` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.profiles` option.
-      '';
     };
-    targets = l.mkOption {
+    targets = mkOpt "targets" {
       type = t.attrsOf (t.submoduleWith {
         modules = [./target.nix];
       });
@@ -85,21 +77,13 @@ in {
           x86_64-unknown-linux-gnu.default = true;
         }
       '';
-      description = ''
-        `targets` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.targets` option.
-      '';
     };
 
-    runtimeLibs = l.mkOption {
+    runtimeLibs = mkOpt "runtimeLibs" {
       type = t.listOf t.package;
       default = [];
       example = l.literalExpression ''
         [pkgs.alsa-lib pkgs.libxkbcommon]
-      '';
-      description = ''
-        `runtimeLibs` option that will affect all packages in this project.
-        For more information refer to `nci.crates.<name>.runtimeLibs` option.
       '';
     };
   };

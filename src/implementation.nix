@@ -164,23 +164,22 @@ in {
           name: package: let
             project = nci.projects.${cratesToProjects.${name}} or moduleDefaults.project;
             crate = nci.crates.${name} or moduleDefaults.crate;
-            runtimeLibs = project.runtimeLibs ++ crate.runtimeLibs;
-            profiles =
-              if (crate.profiles or null) == null
-              then project.profiles
-              else project.profiles // crate.profiles;
-            targets =
-              if (crate.targets or null) == null
-              then project.targets
-              else crate.targets;
-            useClippy =
-              if (crate.useClippy or null) == null
-              then project.useClippy
-              else crate.useClippy;
-            checkProfile =
-              if (crate.checkProfile or null) == null
-              then project.checkProfile
-              else crate.checkProfile;
+            getOption = name: merge:
+              if (crate.${name} or null) == null
+              then project.${name}
+              else if merge
+              then
+                if l.isList crate.${name}
+                then project.${name} ++ crate.${name}
+                else if l.isAttrs crate.${name}
+                then project.${name} // crate.${name}
+                else crate.${name}
+              else crate.${name};
+            runtimeLibs = getOption "runtimeLibs" true;
+            profiles = getOption "profiles" true;
+            targets = getOption "targets" false;
+            useClippy = getOption "useClippy" false;
+            checkProfile = getOption "checkProfile" false;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
               inherit pkgs runtimeLibs profiles targets useClippy;
               rawPkg = package;
