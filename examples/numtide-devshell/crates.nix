@@ -14,6 +14,7 @@
       # crate to your numtide devshell:
       #numtideDevshell = "default";
       drvConfig.mkDerivation.buildInputs = [pkgs.hello];
+      drvConfig.env.FOO = "BAR";
     };
 
     # Conveniently configure additional things in your devshell
