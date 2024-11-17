@@ -20,8 +20,8 @@ in {
     };
 
     checkProfile = l.mkOption {
-      type = t.str;
-      default = "release";
+      type = t.nullOr t.str;
+      default = null;
       example = "custom-profile";
       description = "Profile to use for the tests only package";
     };
