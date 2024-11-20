@@ -44,8 +44,8 @@
       l.mapAttrs
       (
         n: v:
-          if ! (l.isAttrs v || l.isFunction v)
-          then v
+          if l.isStringLike v || l.isFloat v || l.isInt v
+          then l.toString v
           else null
       )
       cfg
