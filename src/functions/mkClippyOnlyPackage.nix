@@ -1,5 +1,9 @@
 pkg: let
-  cfg = {config, lib, ...}: {
+  cfg = {
+    config,
+    lib,
+    ...
+  }: {
     mkDerivation.buildPhase = ''
       cargo clippy $cargoBuildFlags --profile $cargoBuildProfile --package ${config.name}
     '';
