@@ -127,6 +127,7 @@
         nci.projects."my-project".export = l.mkForce false;
 
         checks."simple-test" = simpleOut.check;
+        checks."simple-clippy" = simpleOut.clippy;
         checks."simple-devshell" = simpleOut.devShell;
         checks."simple-workspace-test" = workspaceCrateOut.check;
         checks."simple-workspace-test-other" = otherWorkspaceCrateOut.check;

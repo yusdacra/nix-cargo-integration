@@ -2,7 +2,6 @@
   rawPkg,
   targets,
   profiles,
-  useClippy,
   runtimeLibs,
   pkgs,
 }: let
@@ -34,10 +33,6 @@
         "${l.concatStringsSep "," profileConf.features}"
       ]
       else ["--no-default-features"];
-    checkCommand =
-      if useClippy
-      then "clippy"
-      else "check";
     pkg =
       (rawPkg.extendModules {
         modules = [
@@ -46,7 +41,6 @@
           {
             env.CARGO_BUILD_TARGET = target;
             rust-crane = {
-              inherit checkCommand;
               buildProfile = profile;
               buildFlags = flags;
               testProfile = profile;

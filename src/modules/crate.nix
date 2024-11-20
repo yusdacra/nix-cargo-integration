@@ -25,12 +25,12 @@ in {
       example = "custom-profile";
       description = "Profile to use for the tests only package";
     };
-    useClippy = l.mkOption {
+    clippyProfile = l.mkOption {
       type = t.nullOr t.bool;
       default = null;
-      example = true;
+      example = "custom-profile";
       description = ''
-        Whether to use 'cargo clippy' or not for the crate's checks, instead of 'cargo check'
+        Profile to use for clippy only package
         Note that you will need to add 'clippy' as a component to the rust toolchain you are using yourself
       '';
     };
