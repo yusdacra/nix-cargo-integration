@@ -9,6 +9,7 @@
         ${desc}
         `mkDerivation` options must be defined under the `mkDerivation` attribute.
         Environment variables and non-mkDerivation options must be defined under the `env` attribute.
+        This is passed to `dream2nix` as is, so you could also define any other dream2nix module options here (eg. `rust-crane`).
       '';
       example = l.literalExpression ''
         {
