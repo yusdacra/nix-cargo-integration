@@ -299,8 +299,8 @@ in {
         };
 
       # export checks, packages and devshells for crates that have `export` set to `true`
-      checks = l.filterAttrs (_: out: out != null) (
-        l.mapAttrs'
+      checks = l.filterAttrs (_: out: out != null) (l.listToAttrs (l.flatten (
+        l.mapAttrsToList
         (
           name: out:
             if l.hasAttr name projectsWithLock
@@ -309,13 +309,21 @@ in {
               l.nameValuePair
               (getCrateName name)
               null
-            else
-              l.nameValuePair
-              (getCrateName name)
-              (l.mkDefault out.check)
+            else [
+              (
+                l.nameValuePair
+                "${getCrateName name}-tests"
+                (l.mkDefault out.check)
+              )
+              (
+                l.nameValuePair
+                "${getCrateName name}-clippy"
+                (l.mkDefault out.clippy)
+              )
+            ]
         )
         outputsToExport
-      );
+      )));
       packages = l.listToAttrs (l.flatten (
         l.mapAttrsToList
         (
