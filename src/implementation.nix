@@ -178,10 +178,10 @@ in {
             runtimeLibs = getOption "runtimeLibs" true;
             profiles = getOption "profiles" true;
             targets = getOption "targets" false;
-            useClippy = getOption "useClippy" false;
+            clippyProfile = getOption "clippyProfile" false;
             checkProfile = getOption "checkProfile" false;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
-              inherit pkgs runtimeLibs profiles targets useClippy;
+              inherit pkgs runtimeLibs profiles targets;
               rawPkg = package;
             };
             _defaultTargets = l.attrNames (l.filterAttrs (_: v: v.default) targets);
@@ -206,6 +206,7 @@ in {
               shellToolchain = nci.toolchains.mkShell pkgs;
             };
             check = import ./functions/mkCheckOnlyPackage.nix packages.${checkProfile};
+            clippy = import ./functions/mkClippyOnlyPackage.nix packages.${clippyProfile};
           }
         )
         d2nOutputs;

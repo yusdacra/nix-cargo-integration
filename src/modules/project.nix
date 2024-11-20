@@ -31,10 +31,10 @@ in {
       example = false;
     };
 
-    useClippy = mkOpt "useClippy" {
-      type = t.bool;
-      default = false;
-      example = true;
+    clippyProfile = mkOpt "clippyProfile" {
+      type = t.str;
+      default = "dev";
+      example = "custom-profile";
     };
     checkProfile = mkOpt "checkProfile" {
       type = t.str;

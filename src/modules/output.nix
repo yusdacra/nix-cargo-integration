@@ -17,6 +17,11 @@
       readOnly = true;
       description = "Tests only package for this crate";
     };
+    clippy = l.mkOption {
+      type = t.package;
+      readOnly = true;
+      description = "Clippy only package for this crate";
+    };
   };
 in {
   options =
