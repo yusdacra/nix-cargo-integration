@@ -1,5 +1,5 @@
 {lib}: let
-  l = lib;
+  l = lib // builtins;
   # illegal env names to be removed and not be added to the devshell
   illegalEnvNames =
     [
