@@ -22,6 +22,11 @@
       readOnly = true;
       description = "Clippy only package for this crate";
     };
+    docs = l.mkOption {
+      type = t.package;
+      readOnly = true;
+      description = "Docs only package for this crate";
+    };
   };
 in {
   options =

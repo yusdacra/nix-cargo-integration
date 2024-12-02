@@ -180,6 +180,7 @@ in {
             targets = getOption "targets" false;
             clippyProfile = getOption "clippyProfile" false;
             checkProfile = getOption "checkProfile" false;
+            docsProfile = getOption "docsProfile" false;
             allTargets = import ./functions/mkPackagesFromRaw.nix {
               inherit pkgs runtimeLibs profiles targets;
               rawPkg = package;
@@ -207,6 +208,7 @@ in {
             };
             check = import ./functions/mkCheckOnlyPackage.nix packages.${checkProfile};
             clippy = import ./functions/mkClippyOnlyPackage.nix packages.${clippyProfile};
+            docs = import ./functions/mkDocsOnlyPackage.nix packages.${docsProfile};
           }
         )
         d2nOutputs;

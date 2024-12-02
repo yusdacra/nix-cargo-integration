@@ -128,6 +128,7 @@
 
         checks."simple-test" = simpleOut.check;
         checks."simple-clippy" = simpleOut.clippy;
+        checks."simple-docs" = simpleOut.docs;
         checks."simple-devshell" = simpleOut.devShell;
         checks."simple-workspace-test" = workspaceCrateOut.check;
         checks."simple-workspace-test-other" = otherWorkspaceCrateOut.check;

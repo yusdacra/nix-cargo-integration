@@ -41,6 +41,12 @@ in {
       default = "release";
       example = "custom-profile";
     };
+    docsProfile = mkOpt "docsProfile" {
+      type = t.str;
+      default = "release";
+      example = "custom-profile";
+    };
+
     profiles = mkOpt "profiles" {
       type = t.attrsOf (t.submoduleWith {
         modules = [./profile.nix];

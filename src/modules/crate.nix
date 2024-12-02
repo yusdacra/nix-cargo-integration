@@ -34,6 +34,12 @@ in {
         Note that you will need to add 'clippy' as a component to the rust toolchain you are using yourself
       '';
     };
+    docsProfile = l.mkOption {
+      type = t.nullOr t.str;
+      default = null;
+      example = "custom-profile";
+      description = "Profile to use for the docs only package";
+    };
 
     profiles = l.mkOption {
       type = t.nullOr (
