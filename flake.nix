@@ -132,6 +132,8 @@
         checks."simple-devshell" = simpleOut.devShell;
         checks."simple-workspace-test" = workspaceCrateOut.check;
         checks."simple-workspace-test-other" = otherWorkspaceCrateOut.check;
+        checks."simple-workspace-crate-docs" = workspaceCrateOut.docs;
+        checks."simple-workspace-docs" = workspaceOut.docs;
         checks."simple-workspace-devshell" = workspaceOut.devShell;
         checks."profiles-test" = profilesOut.packages.release;
       };

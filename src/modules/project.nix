@@ -46,6 +46,16 @@ in {
       default = "release";
       example = "custom-profile";
     };
+    docsIndexCrate = l.mkOption {
+      type = t.nullOr t.str;
+      default = null;
+      example = "my-crate";
+      description = ''
+        The crate to link it's index.html when building project docs.
+
+        The default will be not symlinking any index.html.
+      '';
+    };
 
     profiles = mkOpt "profiles" {
       type = t.attrsOf (t.submoduleWith {

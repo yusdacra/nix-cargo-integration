@@ -116,6 +116,40 @@ in {
             ]
             ++ modules;
         };
+
+      nci-lib = {
+        buildCrate = {
+          src,
+          drvConfig ? {},
+          depsDrvConfig ? {},
+          cratePath ? "",
+        }: let
+          cargoToml = l.fromTOML (l.readFile (
+            if cratePath == ""
+            then "${src}/Cargo.toml"
+            else "${src}/${cratePath}/Cargo.toml"
+          ));
+        in (_evalCrate [
+          {
+            paths.projectRoot = src;
+            paths.projectRootFile = "Cargo.toml";
+            paths.package = "/${cratePath}";
+          }
+          drvConfig
+          {
+            deps.craneSource = inp.crane;
+            deps.mkRustToolchain = nci.toolchains.mkBuild;
+
+            name = l.mkForce cargoToml.package.name;
+            version = l.mkForce cargoToml.package.version;
+
+            mkDerivation.src = l.mkForce "${src}/${cratePath}";
+
+            rust-crane.depsDrv = depsDrvConfig;
+          }
+        ]);
+      };
+
       evalCrate = project: crate: let
         crateCfg = nci.crates.${crate.name} or moduleDefaults.crate;
       in
@@ -222,10 +256,13 @@ in {
             inherit lib;
             inherit (pkgs) mkShell;
             name = "${name}-devshell";
-            drvs =
-              l.map
-              (name: d2nOutputs.${name})
-              allCrateNames;
+            drvs = l.map (name: d2nOutputs.${name}) allCrateNames;
+          };
+          docs = pkgs.callPackage ./functions/combineDocsPackages.nix {
+            inherit (nci-lib) buildCrate;
+            derivationName = "${name}-docs";
+            indexCrateName = project.docsIndexCrate;
+            docsPackages = l.map (name: crateOutputs.${name}.docs) (l.filter (name: !nci.crates.${name}.excludeFromProjectDocs) allCrateNames);
           };
           runtimeLibs =
             project.runtimeLibs
@@ -242,6 +279,7 @@ in {
             inherit lib runtimeLibs rawShell;
             shellToolchain = nci.toolchains.mkShell pkgs;
           };
+          inherit docs;
         })
         projectsWithLock;
     in {
@@ -255,38 +293,7 @@ in {
         # TODO: should probably warn the user here if that's the case
         projectsOutputs // (l.filterAttrs (name: attrs: attrs != null) crateOutputs);
 
-      nci.lib = {
-        buildCrate = {
-          src,
-          drvConfig ? {},
-          depsDrvConfig ? {},
-          cratePath ? "",
-        }: let
-          cargoToml = l.fromTOML (l.readFile (
-            if cratePath == ""
-            then "${src}/Cargo.toml"
-            else "${src}/${cratePath}/Cargo.toml"
-          ));
-        in (_evalCrate [
-          {
-            paths.projectRoot = src;
-            paths.projectRootFile = "Cargo.toml";
-            paths.package = "/${cratePath}";
-          }
-          drvConfig
-          {
-            deps.craneSource = inp.crane;
-            deps.mkRustToolchain = nci.toolchains.mkBuild;
-
-            name = l.mkForce cargoToml.package.name;
-            version = l.mkForce cargoToml.package.version;
-
-            mkDerivation.src = l.mkForce "${src}/${cratePath}";
-
-            rust-crane.depsDrv = depsDrvConfig;
-          }
-        ]);
-      };
+      nci.lib = nci-lib;
 
       apps =
         l.optionalAttrs
