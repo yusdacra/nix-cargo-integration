@@ -9,8 +9,8 @@ Easily and effortlessly integrate Cargo projects with Nix.
 
 ## Documentation
 
-Documentation for `master` branch is on https://flake.parts/options/nix-cargo-integration.html
-(alternatively, read options directly in `src/interface.nix` and `src/modules`)
+Documentation for `master` branch is on [flake-parts website](https://flake.parts/options/nix-cargo-integration.html)
+(alternatively, read options directly in [`src/interface.nix`](./src/interface.nix) and [`src/modules`](./src/modules)).
 
 Examples can be found at [`examples`](./examples) directory.
 Also see the [discussions](https://github.com/yusdacra/nix-cargo-integration/discussions) for answers to possible questions.
