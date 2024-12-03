@@ -84,7 +84,14 @@ in {
             buildCrate = l.mkOption {
               type = t.functionTo t.package;
               readOnly = true;
-              description = "A function to build a crate from a provided source (and crate name if workspace) automagically";
+              description = ''
+                A function to build a crate from a provided source (and crate path if workspace) automagically
+
+                The arguments are:
+                - `src`: the source for the project (or crate if it's just a crate)
+                - `cratePath`: relative path to the provided `src`, used to find the crate if it's a workspace
+                - `drvConfig` and `depsDrvConfig`: see `nci.crates.<name>.<drvConfig/depsDrvConfig>` in this documentation (optional)
+              '';
             };
           };
         };
