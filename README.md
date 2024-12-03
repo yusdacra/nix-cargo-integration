@@ -13,6 +13,7 @@ Documentation for `master` branch is on https://flake.parts/options/nix-cargo-in
 (alternatively, read options directly in `src/interface.nix` and `src/modules`)
 
 Examples can be found at [`examples`](./examples) directory.
+Also see the [discussions](https://github.com/yusdacra/nix-cargo-integration/discussions) for answers to possible questions.
 
 Important (mostly breaking) changes can be found in [`CHANGELOG.md`](./CHANGELOG.md).
 
