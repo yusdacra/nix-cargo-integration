@@ -262,7 +262,18 @@ in {
             inherit (nci-lib) buildCrate;
             derivationName = "${name}-docs";
             indexCrateName = project.docsIndexCrate;
-            docsPackages = l.map (name: crateOutputs.${name}.docs) (l.filter (name: !nci.crates.${name}.excludeFromProjectDocs) allCrateNames);
+            docsPackages =
+              l.map
+              (name: crateOutputs.${name}.docs)
+              (
+                l.filter
+                (name:
+                  !(
+                    nci.crates.${name}.excludeFromProjectDocs
+                    or moduleDefaults.crate.excludeFromProjectDocs
+                  ))
+                allCrateNames
+              );
           };
           runtimeLibs =
             project.runtimeLibs
