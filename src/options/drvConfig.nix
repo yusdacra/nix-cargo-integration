@@ -3,7 +3,7 @@
   t = l.types;
   mkDrvConfig = desc:
     l.mkOption {
-      type = t.attrs;
+      type = t.attrsOf t.anything;
       default = {};
       description = ''
         ${desc}
