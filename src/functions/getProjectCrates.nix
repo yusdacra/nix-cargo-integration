@@ -13,7 +13,8 @@
       l.map
       (
         memberName: let
-          components = l.splitString "/" memberName;
+          _components = l.splitString "/" memberName;
+          components = l.filter (c: c != ".") _components;
         in
           # Resolve globs if there are any
           if l.last components == "*"
@@ -24,7 +25,7 @@
             l.mapAttrsToList
             (name: _: "${parentDirRel}/${name}")
             (l.filterAttrs (_: t: t == "directory") dirs)
-          else memberName
+          else l.concatStringsSep "/" components
       )
       (manifest.workspace.members or [])
     );
