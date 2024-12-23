@@ -32,7 +32,10 @@
     {}
     envs;
   combine = envs:
-    l.filterAttrs (_: v: if l.isList v then (l.length v) != 0 else true) (_combine envs);
+    l.filterAttrs (_: v:
+      if l.isList v
+      then (l.length v) != 0
+      else true) (_combine envs);
   _shellEnv = combine (l.flatten (l.map getEnvs drvs));
   _shellInputs = combine (l.flatten (l.map getMkDerivations drvs));
   shellAttrs =
