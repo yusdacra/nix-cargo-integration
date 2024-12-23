@@ -10,6 +10,11 @@
     # declare projects
     nci.projects."simple".path = ./.;
     # configure crates
-    nci.crates.${crateName} = {};
+    nci.crates.${crateName} = {
+      drvConfig = {
+        env.HELLO_WORLD = true;
+        mkDerivation.buildInputs = [pkgs.hello];
+      };
+    };
   };
 }

@@ -46,5 +46,6 @@
       passthru.env = _shellEnv;
       passthru.packages = l.unique (l.flatten (l.map (name: _shellInputs.${name} or []) inputsNames));
     };
+  final = (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellAttrs;
 in
-  (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellAttrs
+  final
