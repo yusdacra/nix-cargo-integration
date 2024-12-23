@@ -32,10 +32,7 @@
     {}
     envs;
   combine = envs:
-    l.filterAttrs (_: v:
-      if l.isList v
-      then (l.length v) != 0
-      else true) (_combine envs);
+    l.filterAttrs (_: v: if l.isList v then (l.length v) != 0 else true) (_combine envs);
   _shellEnv = combine (l.flatten (l.map getEnvs drvs));
   _shellInputs = combine (l.flatten (l.map getMkDerivations drvs));
   shellAttrs =
@@ -46,5 +43,6 @@
       passthru.env = _shellEnv;
       passthru.packages = l.unique (l.flatten (l.map (name: _shellInputs.${name} or []) inputsNames));
     };
+  final = (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellAttrs;
 in
-  (mkShell.override {stdenv = (lib.head drvs).out.stdenv;}) shellAttrs
+  final

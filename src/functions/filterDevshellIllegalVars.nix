@@ -46,7 +46,7 @@
         n: v:
           if l.isStringLike v || l.isFloat v || l.isInt v
           then l.toString v
-          else null
+          else v
       )
       cfg
     );
