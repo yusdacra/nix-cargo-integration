@@ -25,7 +25,9 @@
       all: el: let
         mergeList = name: l.unique ((all.${name} or []) ++ (el.${name} or []));
       in
-        all // el // (
+        all
+        // el
+        // (
           l.mapAttrs (name: _: mergeList name) (l.filterAttrs (_: l.isList) el)
         )
     )
