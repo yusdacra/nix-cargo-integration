@@ -19,23 +19,18 @@
     (filterIllegal drv.config.mkDerivation)
     (filterIllegal drv.config.rust-crane.depsDrv.mkDerivation)
   ];
-  _combine = envs:
+  combine = envs:
     l.foldl'
     (
-      all: env: let
-        mergeInputs = name: l.unique ((all.${name} or []) ++ (env.${name} or []));
+      all: el: let
+        mergeList = name: l.unique ((all.${name} or []) ++ (el.${name} or []));
       in
-        all
-        // env
-        // (l.genAttrs inputsNames mergeInputs)
+        all // el // (
+          l.mapAttrs (name: _: mergeList name) (l.filterAttrs (_: l.isList) el)
+        )
     )
     {}
     envs;
-  combine = envs:
-    l.filterAttrs (_: v:
-      if l.isList v
-      then (l.length v) != 0
-      else true) (_combine envs);
   _shellEnv = combine (l.flatten (l.map getEnvs drvs));
   _shellInputs = combine (l.flatten (l.map getMkDerivations drvs));
   shellAttrs =

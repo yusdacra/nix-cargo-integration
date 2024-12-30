@@ -235,8 +235,8 @@ in {
               rawShell = import ./functions/mkRawshellFromDrvs.nix {
                 inherit lib;
                 inherit (pkgs) mkShell;
-                name = package.devShell.name;
-                drvs = [package];
+                name = "${name}-devshell";
+                drvs = [(packages.dev.unwrapped or packages.dev)];
               };
               shellToolchain = nci.toolchains.mkShell pkgs;
             };
@@ -256,7 +256,7 @@ in {
             inherit lib;
             inherit (pkgs) mkShell;
             name = "${name}-devshell";
-            drvs = l.map (name: d2nOutputs.${name}) allCrateNames;
+            drvs = l.map (name: crateOutputs.${name}.packages.dev) allCrateNames;
           };
           docs = pkgs.callPackage ./functions/combineDocsPackages.nix {
             inherit (nci-lib) buildCrate;
