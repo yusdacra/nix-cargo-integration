@@ -9,6 +9,7 @@ pkg: let
     '';
     mkDerivation.checkPhase = ":";
     mkDerivation.installPhase = "env > $out";
+    rust-crane.buildFlags = ["--all-features" "--all-targets"];
   };
 in
   (pkg.extendModules {modules = [cfg];}).config.public
