@@ -7,7 +7,7 @@
   systemlessNci = args.config.nci;
   inp = systemlessNci._inputs;
 in {
-  # Make sure the top-level optiopn devshells exists
+  # Make sure the top-level option devshells exists
   # even when the numtide devshell is not included.
   # We don't want to depend on adding the numtide devshell
   # module and this doesn't interfere with it when it is added.
@@ -30,9 +30,24 @@ in {
         crate = getModuleDefaults ./modules/crate.nix;
         project = getModuleDefaults ./modules/project.nix;
       };
+      # gets crate option, if null or is not defined then returns the project wide option, if also does not exist then returns module default
+      _getCrateOption = crateName: optName: merge: let
+        crate = nci.crates.${crateName} or moduleDefaults.crate;
+        project = nci.projects.${cratesToProjects.${crateName} or crateName} or moduleDefaults.project;
+      in
+        if crate.${optName} == null
+        then project.${optName} or null
+        else if merge && l.isList crate.${optName}
+        then project.${optName} ++ crate.${optName}
+        else if merge && l.isAttrs crate.${optName}
+        then project.${optName} // crate.${optName}
+        else crate.${optName};
+      getCrateOption = crateName: optName: _getCrateOption crateName optName true;
+      getUnmergedCrateOption = crateName: optName: _getCrateOption crateName optName false;
 
       nci = config.nci;
 
+      # project name -> nci crate cfg
       projectsToCrates =
         l.mapAttrs
         (
@@ -43,6 +58,7 @@ in {
             }
         )
         nci.projects;
+      # crate name -> project name
       cratesToProjects = l.listToAttrs (l.flatten (
         l.mapAttrsToList
         (
@@ -52,7 +68,7 @@ in {
         projectsToCrates
       ));
       getCrateName = currentName: let
-        newName = nci.crates.${currentName}.renameTo or moduleDefaults.crate.renameTo;
+        newName = getCrateOption currentName "renameTo";
       in
         if newName != null
         then newName
@@ -60,15 +76,7 @@ in {
 
       outputsToExport =
         l.filterAttrs
-        (
-          name: out: let
-            crateExport = nci.crates.${name}.export or moduleDefaults.crate.export;
-            projectExport = nci.projects.${cratesToProjects.${name} or name}.export;
-          in
-            if crateExport == null
-            then projectExport
-            else crateExport
-        )
+        (name: out: getCrateOption name "export")
         nci.outputs;
 
       projectsChecked =
@@ -196,25 +204,12 @@ in {
         l.mapAttrs
         (
           name: package: let
-            project = nci.projects.${cratesToProjects.${name}} or moduleDefaults.project;
-            crate = nci.crates.${name} or moduleDefaults.crate;
-            getOption = name: merge:
-              if (crate.${name} or null) == null
-              then project.${name}
-              else if merge
-              then
-                if l.isList crate.${name}
-                then project.${name} ++ crate.${name}
-                else if l.isAttrs crate.${name}
-                then project.${name} // crate.${name}
-                else crate.${name}
-              else crate.${name};
-            runtimeLibs = getOption "runtimeLibs" true;
-            profiles = getOption "profiles" true;
-            targets = getOption "targets" false;
-            clippyProfile = getOption "clippyProfile" false;
-            checkProfile = getOption "checkProfile" false;
-            docsProfile = getOption "docsProfile" false;
+            runtimeLibs = getCrateOption name "runtimeLibs";
+            profiles = getCrateOption name "profiles";
+            targets = getUnmergedCrateOption name "targets";
+            clippyProfile = getCrateOption name "clippyProfile";
+            checkProfile = getCrateOption name "checkProfile";
+            docsProfile = getCrateOption name "docsProfile";
             allTargets = import ./functions/mkPackagesFromRaw.nix {
               inherit pkgs runtimeLibs profiles targets;
               rawPkg = package;
@@ -264,14 +259,12 @@ in {
             indexCrateName = project.docsIndexCrate;
             docsPackages =
               l.map
-              (name: crateOutputs.${name}.docs)
+              (crateName: crateOutputs.${crateName}.docs)
               (
                 l.filter
                 (
-                  name:
-                    if (nci.crates.${name}.includeInProjectDocs or null) == null
-                    then nci.projects.${name}.includeInProjectDocs
-                    else nci.crates.${name}.includeInProjectDocs
+                  crateName:
+                    getCrateOption crateName "includeInProjectDocs"
                 )
                 allCrateNames
               );
@@ -281,7 +274,7 @@ in {
             ++ (
               l.flatten (
                 l.map
-                (name: nci.crates.${name}.runtimeLibs or moduleDefaults.crate.runtimeLibs)
+                (name: getCrateOption name "runtimeLibs")
                 allCrateNames
               )
             );
