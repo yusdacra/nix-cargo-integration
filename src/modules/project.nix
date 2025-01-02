@@ -46,6 +46,11 @@ in {
       default = "release";
       example = "custom-profile";
     };
+    includeInProjectDocs = mkOpt "includeInProjectDocs" {
+      type = t.bool;
+      default = true;
+      example = false;
+    };
     docsIndexCrate = l.mkOption {
       type = t.nullOr t.str;
       default = null;

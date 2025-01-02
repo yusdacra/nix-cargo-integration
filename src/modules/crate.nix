@@ -40,11 +40,11 @@ in {
       example = "custom-profile";
       description = "Profile to use for the docs only package";
     };
-    excludeFromProjectDocs = l.mkOption {
-      type = t.bool;
-      default = false;
-      example = true;
-      description = "Whether to exclude this crate's docs from project docs package";
+    includeInProjectDocs = l.mkOption {
+      type = t.nullOr t.bool;
+      default = null;
+      example = false;
+      description = "Whether to include this crate's docs in the project docs package";
     };
 
     profiles = l.mkOption {

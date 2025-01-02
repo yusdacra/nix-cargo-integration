@@ -267,11 +267,12 @@ in {
               (name: crateOutputs.${name}.docs)
               (
                 l.filter
-                (name:
-                  !(
-                    nci.crates.${name}.excludeFromProjectDocs
-                    or moduleDefaults.crate.excludeFromProjectDocs
-                  ))
+                (
+                  name:
+                    if (nci.crates.${name}.includeInProjectDocs or null) == null
+                    then nci.projects.${name}.includeInProjectDocs
+                    else nci.crates.${name}.includeInProjectDocs
+                )
                 allCrateNames
               );
           };
