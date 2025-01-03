@@ -140,7 +140,7 @@ in {
         in (_evalCrate [
           {
             paths.projectRoot = src;
-            paths.projectRootFile = "Cargo.toml";
+            paths.projectRootFile = "Cargo.lock";
             paths.package = "/${cratePath}";
           }
           drvConfig
@@ -151,7 +151,7 @@ in {
             name = l.mkForce cargoToml.package.name;
             version = l.mkForce cargoToml.package.version;
 
-            mkDerivation.src = l.mkForce "${src}/${cratePath}";
+            mkDerivation.src = l.mkForce src;
 
             rust-crane.depsDrv = depsDrvConfig;
           }
