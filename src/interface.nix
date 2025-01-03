@@ -90,6 +90,7 @@ in {
                 The arguments are:
                 - `src`: the source for the project (or crate if it's just a crate)
                 - `cratePath`: relative path to the provided `src`, used to find the crate if it's a workspace
+                - `mkRustToolchain`: function that outputs a rust toolchain package (like `nci.toolchains.mkBuild`, which is also the default), will be used when building
                 - `drvConfig` and `depsDrvConfig`: see `nci.crates.<name>.<drvConfig/depsDrvConfig>` in this documentation (optional)
               '';
             };

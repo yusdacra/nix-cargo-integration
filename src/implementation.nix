@@ -131,6 +131,7 @@ in {
           drvConfig ? {},
           depsDrvConfig ? {},
           cratePath ? "",
+          mkRustToolchain ? nci.toolchains.mkBuild,
         }: let
           cargoToml = l.fromTOML (l.readFile (
             if cratePath == ""
@@ -146,7 +147,7 @@ in {
           drvConfig
           {
             deps.craneSource = inp.crane;
-            deps.mkRustToolchain = nci.toolchains.mkBuild;
+            deps.mkRustToolchain = mkRustToolchain;
 
             name = l.mkForce cargoToml.package.name;
             version = l.mkForce cargoToml.package.version;
