@@ -21,7 +21,7 @@ in {
   options = {
     path = l.mkOption {
       type = t.path;
-      example = "./path/to/project";
+      example = lib.literalExpression "./path/to/project";
       description = "The absolute path of this project";
     };
 
