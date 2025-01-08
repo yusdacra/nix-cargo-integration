@@ -252,7 +252,7 @@ in {
             inherit lib;
             inherit (pkgs) mkShell;
             name = "${name}-devshell";
-            drvs = l.map (name: crateOutputs.${name}.packages.dev) allCrateNames;
+            drvs = l.map (name: crateOutputs.${name}.packages.dev.unwrapped or crateOutputs.${name}.packages.dev) allCrateNames;
           };
           docs = pkgs.callPackage ./functions/combineDocsPackages.nix {
             inherit (nci-lib) buildCrate;
